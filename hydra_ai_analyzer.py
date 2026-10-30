@@ -1,6 +1,7 @@
 
 import csv
 import json
+import sys
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
@@ -41,19 +42,24 @@ def get_technical_metrics():
 
 
 def main():
-    technical_report = get_technical_metrics()
-    print("\n--- ТЕХНИЧЕСКИЙ РАСЧЁТ PYTHON ---\n")
-    print(technical_report)
+    # Сначала проверяем исходные данные: не запускаем расчёты и Ollama,
+    # если наблюдатель ещё не сохранил ни одной свечи.
     if not CSV_FILE.exists():
-        print(f"Не найден файл свечей: {CSV_FILE}")
-        return
+        raise FileNotFoundError(f"Не найден файл свечей: {CSV_FILE}")
 
     with CSV_FILE.open("r", encoding="utf-8-sig", newline="") as f:
         candles = list(csv.DictReader(f))
 
     if not candles:
-        print("В CSV нет свечей.")
-        return
+        raise RuntimeError("В CSV нет свечей.")
+
+    required = {"datetime_utc", "open", "high", "low", "close"}
+    if not required.issubset(candles[-1]):
+        raise RuntimeError("В CSV отсутствуют обязательные столбцы OHLC.")
+
+    technical_report = get_technical_metrics()
+    print("\n--- ТЕХНИЧЕСКИЙ РАСЧЁТ PYTHON ---\n")
+    print(technical_report)
 
     candles = candles[-60:]
     times = [c["datetime_utc"] for c in candles]
@@ -146,5 +152,7 @@ if __name__ == "__main__":
         print("Не удалось подключиться к Ollama.")
         print("Проверь, что Ollama запущена и доступна по адресу localhost:11434.")
         print(error)
+        sys.exit(1)
     except Exception as error:
         print(f"Ошибка анализа: {error!r}")
+        sys.exit(1)
