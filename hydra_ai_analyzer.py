@@ -137,8 +137,8 @@ def extract_python_changes(report):
 
     changes = {}
     patterns = (
-        r"Изменение за {n} интервалов:\\s*([+-]?\\d+(?:\\.\\d+)?)%",
-        r"За {n} минут:\\s*([+-]?\\d+(?:\\.\\d+)?)%",
+        r"Изменение за {n} интервалов:\s*([+-]?\d+(?:\.\d+)?)%",
+        r"За {n} минут:\s*([+-]?\d+(?:\.\d+)?)%",
     )
     for n in (5, 15, 30):
         for pattern in patterns:
@@ -162,7 +162,6 @@ def build_authoritative_summary(report):
         direction = "рост" if value > 0 else "снижение" if value < 0 else "без изменения"
         lines.append(f"- За {n} минут: {value:+.5f}% ({direction}).")
 
-    # Поддерживаем фактические подписи обоих вариантов технического отчёта.
     labels = (
         "Средний high-low диапазон:",
         "Средний диапазон high-low:",
@@ -188,7 +187,7 @@ def build_authoritative_summary(report):
         stripped = line.strip()
         if any(stripped.startswith(label) for label in labels):
             lines.append("- " + stripped)
-    return "\\n".join(lines), changes
+    return "\n".join(lines), changes
 
 def validate_ai_direction(answer, changes):
     """Отмечает явные словесные противоречия рассчитанному направлению."""
