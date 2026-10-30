@@ -131,6 +131,72 @@ def build_prompt(technical_report, candles, gaps):
 """.strip()
 
 
+def extract_python_changes(report):
+    """Извлекает рассчитанные Python изменения без повторного расчёта."""
+    import re
+
+    changes = {}
+    for n in (5, 15, 30):
+        match = re.search(
+            rf"Изменение за {n} интервалов:\\s*([+-]?\\d+(?:\\.\\d+)?)%",
+            report
+        )
+        if match:
+            changes[n] = float(match.group(1))
+    return changes
+
+
+def build_authoritative_summary(report):
+    """Формирует фактическую сводку только из чисел Python."""
+    changes = extract_python_changes(report)
+    lines = ["ПОДТВЕРЖДЁННЫЕ ФАКТЫ (РАССЧИТАНО PYTHON):"]
+
+    for n in (5, 15, 30):
+        if n not in changes:
+            lines.append(f"- Изменение за {n} интервалов: не рассчитано.")
+            continue
+        value = changes[n]
+        direction = "рост" if value > 0 else "снижение" if value < 0 else "без изменения"
+        lines.append(
+            f"- За {n} интервалов: {value:+.5f}% ({direction})."
+        )
+
+    # Метрики диапазона и качества данных печатаются дословно из отчёта.
+    for line in report.splitlines():
+        if any(label in line for label in (
+            "Средний high-low диапазон:",
+            "Максимальный диапазон свечи:",
+            "Минимальный диапазон свечи:",
+            "Стандартное отклонение close-to-close:",
+            "Временных разрывов более 90 секунд:",
+            "Корректных свечей в расчёте:",
+            "Последняя свеча UTC:",
+            "Последний close:",
+        )):
+            lines.append("- " + line)
+    return "\\n".join(lines), changes
+
+
+def validate_ai_direction(answer, changes):
+    """Отмечает явные словесные противоречия рассчитанному направлению."""
+    lowered = answer.lower()
+    down_terms = ("сниж", "пад", "нисход", "движение вниз", "идёт вниз", "идет вниз")
+    up_terms = ("рост", "повыш", "восход", "движение вверх", "идёт вверх", "идет вверх")
+    found_down = any(term in lowered for term in down_terms)
+    found_up = any(term in lowered for term in up_terms)
+
+    contradictions = []
+    for interval, value in changes.items():
+        if value > 0 and found_down:
+            contradictions.append(
+                f"Qwen упоминает снижение, но Python рассчитал рост за {interval} интервалов."
+            )
+        elif value < 0 and found_up:
+            contradictions.append(
+                f"Qwen упоминает рост, но Python рассчитал снижение за {interval} интервалов."
+            )
+    return list(dict.fromkeys(contradictions))
+
 def main():
     # Не запускаем расчёты и Ollama, если наблюдатель ещё не сохранил свечи.
     if not CSV_FILE.exists():
@@ -153,7 +219,17 @@ def main():
     print("\n--- ТЕХНИЧЕСКИЙ РАСЧЁТ PYTHON ---\n")
     print(technical_report)
 
+    authoritative_summary, python_changes = build_authoritative_summary(technical_report)
     prompt = build_prompt(technical_report, candles, gaps)
+    prompt += """
+
+ДОПОЛНИТЕЛЬНОЕ ОГРАНИЧЕНИЕ:
+- Не делай вывод о росте или снижении самостоятельно.
+- Не переиначивай направление и числа из отчёта.
+- Твоя часть — только осторожное описание формы последних OHLC-свечей.
+- Если не можешь уверенно описать структуру без пересчёта, прямо скажи об этом.
+- Не классифицируй волатильность словами.
+"""
     payload = json.dumps({
         "model": MODEL,
         "prompt": prompt,
