@@ -190,24 +190,63 @@ def build_authoritative_summary(report):
     return "\n".join(lines), changes
 
 def validate_ai_direction(answer, changes):
-    """Отмечает явные словесные противоречия рассчитанному направлению."""
-    lowered = answer.lower()
-    down_terms = ("сниж", "пад", "нисход", "движение вниз", "идёт вниз", "идет вниз")
-    up_terms = ("рост", "повыш", "восход", "движение вверх", "идёт вверх", "идет вверх")
-    found_down = any(term in lowered for term in down_terms)
-    found_up = any(term in lowered for term in up_terms)
+    """Проверяет только явные утверждения о направлении, игнорируя отрицания и описание колебаний."""
+    import re
+
+    text = answer.lower().replace("ё", "е")
+    # Убираем типичные фразы-ограничения: они не утверждают направление движения.
+    neutral_phrases = (
+        "не можем сделать вывод о росте",
+        "не можем сделать вывод о снижении",
+        "нельзя сделать вывод о росте",
+        "нельзя сделать вывод о снижении",
+        "нет оснований утверждать рост",
+        "нет оснований утверждать снижение",
+        "не позволяет сделать вывод о росте",
+        "не позволяет сделать вывод о снижении",
+    )
+    for phrase in neutral_phrases:
+        text = text.replace(phrase, " ")
+
+    # Ищем именно утверждения о тренде/динамике, а не отдельные слова
+    # вроде «падения» в описании колебаний «падения и подъёмы».
+    down_patterns = (
+        r"(?:цена|курс|котировка|пара)\\s+(?:постепенно\\s+|устойчиво\\s+|продолжает\\s+)?(?:снижается|падает|идет вниз|движется вниз)",
+        r"(?:наблюдается|преобладает|сформировалось)\\s+(?:общее\\s+)?(?:снижение|нисходящее движение|нисходящий тренд)",
+        r"(?:нисходящий тренд|движение вниз|направление вниз)",
+        r"(?:за период|за последние\\s+\\d+\\s+минут)\\s+(?:цена\\s+)?(?:снизилась|упала)",
+    )
+    up_patterns = (
+        r"(?:цена|курс|котировка|пара)\\s+(?:постепенно\\s+|устойчиво\\s+|продолжает\\s+)?(?:растет|повышается|идет вверх|движется вверх)",
+        r"(?:наблюдается|преобладает|сформировался)\\s+(?:общий\\s+)?(?:рост|восходящее движение|восходящий тренд)",
+        r"(?:восходящий тренд|движение вверх|направление вверх)",
+        r"(?:за период|за последние\\s+\\d+\\s+минут)\\s+(?:цена\\s+)?(?:выросла|повысилась)",
+    )
+
+    def has_assertion(patterns):
+        for pattern in patterns:
+            for match in re.finditer(pattern, text):
+                prefix = text[max(0, match.start() - 24):match.start()]
+                # Непосредственное отрицание меняет смысл утверждения.
+                if re.search(r"(?:не|нет|без|нельзя)\\s+(?:наблюдается\\s+|видно\\s+|фиксируется\\s+)?$", prefix):
+                    continue
+                return True
+        return False
+
+    asserts_down = has_assertion(down_patterns)
+    asserts_up = has_assertion(up_patterns)
 
     contradictions = []
-    for interval, value in changes.items():
-        if value > 0 and found_down:
+    for interval, value in sorted(changes.items()):
+        if value > 0 and asserts_down:
             contradictions.append(
-                f"Qwen упоминает снижение, но Python рассчитал рост за {interval} интервалов."
+                f"Qwen утверждает снижение, но Python рассчитал рост за {interval} минут."
             )
-        elif value < 0 and found_up:
+        elif value < 0 and asserts_up:
             contradictions.append(
-                f"Qwen упоминает рост, но Python рассчитал снижение за {interval} интервалов."
+                f"Qwen утверждает рост, но Python рассчитал снижение за {interval} минут."
             )
-    return list(dict.fromkeys(contradictions))
+    return contradictions
 
 def main():
     # Не запускаем расчёты и Ollama, если наблюдатель ещё не сохранил свечи.
