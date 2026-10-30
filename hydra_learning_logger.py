@@ -63,6 +63,17 @@ def main():
         "streak_length": streak_len,
     }
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    # Не записываем повторно тот же последний бар в каждом цикле.
+    if LOG_FILE.exists() and LOG_FILE.stat().st_size > 0:
+        with LOG_FILE.open("r", encoding="utf-8-sig", newline="") as f:
+            previous_records = list(csv.DictReader(f))
+        if previous_records and previous_records[-1].get("latest_candle_utc") == record["latest_candle_utc"]:
+            print(
+                "Запись пропущена: эта последняя свеча уже есть в журнале "
+                f"({record['latest_candle_utc']})."
+            )
+            return
+
     new_file = not LOG_FILE.exists() or LOG_FILE.stat().st_size == 0
     with LOG_FILE.open("a", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDS)
