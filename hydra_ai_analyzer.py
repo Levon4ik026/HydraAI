@@ -174,7 +174,7 @@ def build_authoritative_summary(report):
             "Последний close:",
         )):
             lines.append("- " + line)
-    return "\\n".join(lines), changes
+    return "\n".join(lines), changes
 
 
 def validate_ai_direction(answer, changes):
@@ -258,14 +258,31 @@ def main():
     last_candle_time = candles[-1].get("datetime_utc", "неизвестно")
 
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    contradictions = validate_ai_direction(answer, python_changes)
+
     with LOG_FILE.open("a", encoding="utf-8") as f:
         f.write(f"\n{'=' * 70}\n")
         f.write(f"Время анализа UTC: {timestamp}\n")
         f.write(f"Модель: {MODEL}\n")
         f.write(f"Последняя свеча: {last_candle_time}\n")
+        f.write("\n--- ФАКТЫ PYTHON ---\n")
+        f.write(authoritative_summary + "\n")
+        f.write("\n--- ПРОВЕРКА QWEN ---\n")
+        if contradictions:
+            f.write("НЕСОГЛАСОВАННОСТЬ: " + " | ".join(contradictions) + "\n")
+        else:
+            f.write("Явное противоречие направления не обнаружено.\n")
         f.write(answer + "\n")
 
-    print("\n--- АНАЛИЗ QWEN ---\n")
+    print("\n--- ПОДТВЕРЖДЁННЫЕ ФАКТЫ: PYTHON ---\n")
+    print(authoritative_summary)
+    print("\n--- ДОПОЛНИТЕЛЬНОЕ НАБЛЮДЕНИЕ QWEN ---\n")
+    if contradictions:
+        print("СТАТУС: НЕСОГЛАСОВАННОСТЬ — ИНТЕРПРЕТАЦИЯ QWEN НЕНАДЁЖНА.")
+        for item in contradictions:
+            print("- " + item)
+    else:
+        print("Автоматическая проверка явного противоречия направления не выявила.")
     print(answer)
     print(f"\nРезультат сохранён в: {LOG_FILE}")
 
