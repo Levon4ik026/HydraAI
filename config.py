@@ -1,1 +1,5 @@
-API_KEY = "4a5000703dbc454c8bcc326b0c68fde2"
+import os
+
+# Храни ключ Twelve Data только в переменной окружения.
+# Windows PowerShell: $env:TWELVE_DATA_API_KEY = "твой_новый_ключ"
+API_KEY = os.getenv("TWELVE_DATA_API_KEY", "").strip()
