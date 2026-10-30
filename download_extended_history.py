@@ -166,6 +166,7 @@ def main():
 
     requests_made = 0
     consecutive_empty = 0
+    max_consecutive_empty = 100  # запас для выходных и длинных рыночных пауз
 
     while len(rows_by_time) < TARGET_CANDLES:
         if requests_made >= MAX_REQUESTS_PER_RUN:
@@ -186,9 +187,9 @@ def main():
 
         if not values:
             consecutive_empty += 1
-            print(f"Пустая порция ({consecutive_empty}/5).")
-            if consecutive_empty >= 5:
-                print("Пять пустых порций подряд — остановка.")
+            print(f"Пустая порция ({consecutive_empty}/{max_consecutive_empty}).")
+            if consecutive_empty >= max_consecutive_empty:
+                print("Слишком много пустых порций подряд — остановка.")
                 break
 
             end_dt = start_dt - timedelta(minutes=1)
