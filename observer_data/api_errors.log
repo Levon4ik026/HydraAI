@@ -1,0 +1,4 @@
+2026-10-29T17:05:00+00:00 | ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.twelvedata.com', port=443): Read timed out. (read timeout=20)"))
+2026-10-29T17:06:44+00:00 | ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.twelvedata.com', port=443): Read timed out. (read timeout=20)"))
+2026-10-29T17:08:04+00:00 | ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.twelvedata.com', port=443): Read timed out. (read timeout=20)"))
+2026-10-29T17:09:13+00:00 | ConnectionError(ProtocolError('Connection aborted.', ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение', None, 10054, None)))

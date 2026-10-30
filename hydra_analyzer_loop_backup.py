@@ -1,0 +1,83 @@
+import subprocess
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+ANALYZER = BASE_DIR / "hydra_market_analyzer.py"
+LEARNING_LOGGER = BASE_DIR / "hydra_learning_logger.py"
+LOG_FILE = BASE_DIR / "observer_data" / "analysis_log.txt"
+
+INTERVAL_SECONDS = 900
+
+def run_script(script):
+    return subprocess.run(
+        [sys.executable, str(script)],
+        cwd=BASE_DIR,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=120,
+    )
+
+def main():
+    print("Hydra Analyzer запущен. Интервал: 15 минут.")
+
+    while True:
+        started = datetime.now().astimezone()
+
+        try:
+            # Сначала анализируем рыночные данные.
+            analysis = run_script(ANALYZER)
+
+            # Записываем результаты анализа в журнал.
+            with LOG_FILE.open("a", encoding="utf-8") as log:
+                log.write("\n" + "=" * 60 + "\n")
+                log.write(f"Время запуска: {started.isoformat()}\n")
+                log.write(analysis.stdout or "")
+
+                if analysis.stderr:
+                    log.write("\nОШИБКИ АНАЛИЗАТОРА:\n")
+                    log.write(analysis.stderr)
+
+                log.write(
+                    f"\nКод завершения анализатора: "
+                    f"{analysis.returncode}\n"
+                )
+
+            # При успешном анализе сохраняем отдельное наблюдение.
+            if analysis.returncode == 0:
+                learning = run_script(LEARNING_LOGGER)
+
+                with LOG_FILE.open("a", encoding="utf-8") as log:
+                    log.write("\nЖУРНАЛ НАБЛЮДЕНИЙ:\n")
+                    log.write(learning.stdout or "")
+
+                    if learning.stderr:
+                        log.write("\nОШИБКИ ЖУРНАЛА:\n")
+                        log.write(learning.stderr)
+
+                    log.write(
+                        f"\nКод завершения журнала: "
+                        f"{learning.returncode}\n"
+                    )
+
+            print(
+                f"[{started:%Y-%m-%d %H:%M:%S}] "
+                f"Анализ завершён, код: {analysis.returncode}"
+            )
+
+        except Exception as error:
+            with LOG_FILE.open("a", encoding="utf-8") as log:
+                log.write(
+                    f"\nОшибка {started.isoformat()}: {error!r}\n"
+                )
+
+            print("Ошибка анализатора:", error)
+
+        time.sleep(INTERVAL_SECONDS)
+
+if __name__ == "__main__":
+    main()
