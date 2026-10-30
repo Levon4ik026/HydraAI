@@ -132,50 +132,63 @@ def build_prompt(technical_report, candles, gaps):
 
 
 def extract_python_changes(report):
-    """Извлекает рассчитанные Python изменения без повторного расчёта."""
+    """Извлекает значения изменений из обоих поддерживаемых форматов отчёта."""
     import re
 
     changes = {}
+    patterns = (
+        r"Изменение за {n} интервалов:\\s*([+-]?\\d+(?:\\.\\d+)?)%",
+        r"За {n} минут:\\s*([+-]?\\d+(?:\\.\\d+)?)%",
+    )
     for n in (5, 15, 30):
-        match = re.search(
-            rf"Изменение за {n} интервалов:\\s*([+-]?\\d+(?:\\.\\d+)?)%",
-            report
-        )
-        if match:
-            changes[n] = float(match.group(1))
+        for pattern in patterns:
+            match = re.search(pattern.format(n=n), report, flags=re.IGNORECASE)
+            if match:
+                changes[n] = float(match.group(1))
+                break
     return changes
 
 
 def build_authoritative_summary(report):
-    """Формирует фактическую сводку только из чисел Python."""
+    """Формирует фактическую сводку из реально присутствующих строк Python."""
     changes = extract_python_changes(report)
     lines = ["ПОДТВЕРЖДЁННЫЕ ФАКТЫ (РАССЧИТАНО PYTHON):"]
 
     for n in (5, 15, 30):
         if n not in changes:
-            lines.append(f"- Изменение за {n} интервалов: не рассчитано.")
+            lines.append(f"- Изменение за {n} минут: не рассчитано.")
             continue
         value = changes[n]
         direction = "рост" if value > 0 else "снижение" if value < 0 else "без изменения"
-        lines.append(
-            f"- За {n} интервалов: {value:+.5f}% ({direction})."
-        )
+        lines.append(f"- За {n} минут: {value:+.5f}% ({direction}).")
 
-    # Метрики диапазона и качества данных печатаются дословно из отчёта.
+    # Поддерживаем фактические подписи обоих вариантов технического отчёта.
+    labels = (
+        "Средний high-low диапазон:",
+        "Средний диапазон high-low:",
+        "Максимальный диапазон свечи:",
+        "Минимальный диапазон свечи:",
+        "Стандартное отклонение close-to-close:",
+        "Стандартное отклонение изменений close-to-close:",
+        "Временных разрывов более 90 секунд:",
+        "Временных разрывов более 1.5 минут:",
+        "Корректных свечей в расчёте:",
+        "Свечей в расчёте:",
+        "Последняя свеча UTC:",
+        "Последняя цена закрытия:",
+        "Последний close:",
+        "Рост закрытия между соседними строками:",
+        "Снижение закрытия между соседними строками:",
+        "Без изменения:",
+        "Некорректных строк пропущено:",
+        "Повторных временных меток удалено:",
+        "В выбранном отрезке крупных временных разрывов не обнаружено.",
+    )
     for line in report.splitlines():
-        if any(label in line for label in (
-            "Средний high-low диапазон:",
-            "Максимальный диапазон свечи:",
-            "Минимальный диапазон свечи:",
-            "Стандартное отклонение close-to-close:",
-            "Временных разрывов более 90 секунд:",
-            "Корректных свечей в расчёте:",
-            "Последняя свеча UTC:",
-            "Последний close:",
-        )):
-            lines.append("- " + line)
-    return "\n".join(lines), changes
-
+        stripped = line.strip()
+        if any(stripped.startswith(label) for label in labels):
+            lines.append("- " + stripped)
+    return "\\n".join(lines), changes
 
 def validate_ai_direction(answer, changes):
     """Отмечает явные словесные противоречия рассчитанному направлению."""
