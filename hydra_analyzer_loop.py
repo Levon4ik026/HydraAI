@@ -25,6 +25,7 @@ def run_script(script):
     )
 
 def main():
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     print("Hydra Analyzer запущен. Интервал: 15 минут.")
 
     while True:
