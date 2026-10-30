@@ -30,6 +30,7 @@ def main():
 
     while True:
         started = datetime.now().astimezone()
+        analysis_ok = False
 
         try:
             # Сначала анализируем рыночные данные.
@@ -52,6 +53,7 @@ def main():
 
             # При успешном анализе сохраняем отдельное наблюдение.
             if analysis.returncode == 0:
+                analysis_ok = True
                 learning = run_script(LEARNING_LOGGER)
 
                 with LOG_FILE.open("a", encoding="utf-8") as log:
@@ -79,34 +81,37 @@ def main():
                 )
 
             print("Ошибка анализатора:", error)
-        # Запускаем локальный ИИ-анализ Qwen.
-        try:
-            ai_analysis = run_script(AI_ANALYZER)
+        # Qwen запускаем только после успешной проверки рыночных данных.
+        if analysis_ok:
+            try:
+                ai_analysis = run_script(AI_ANALYZER)
 
-            with LOG_FILE.open("a", encoding="utf-8") as log:
-                log.write("\n" + "=" * 60 + "\n")
-                log.write("ЛОКАЛЬНЫЙ ИИ-АНАЛИЗ QWEN:\n")
-                log.write(ai_analysis.stdout or "")
+                with LOG_FILE.open("a", encoding="utf-8") as log:
+                    log.write("\n" + "=" * 60 + "\n")
+                    log.write("ЛОКАЛЬНЫЙ ИИ-АНАЛИЗ QWEN:\n")
+                    log.write(ai_analysis.stdout or "")
 
-                if ai_analysis.stderr:
-                    log.write("\nОШИБКИ ИИ-АНАЛИЗАТОРА:\n")
-                    log.write(ai_analysis.stderr)
+                    if ai_analysis.stderr:
+                        log.write("\nОШИБКИ ИИ-АНАЛИЗАТОРА:\n")
+                        log.write(ai_analysis.stderr)
 
-                log.write(
-                    f"\nКод завершения ИИ-анализатора: "
-                    f"{ai_analysis.returncode}\n"
+                    log.write(
+                        f"\nКод завершения ИИ-анализатора: "
+                        f"{ai_analysis.returncode}\n"
+                    )
+
+                print(
+                    f"[{datetime.now().astimezone():%Y-%m-%d %H:%M:%S}] "
+                    f"Qwen завершён, код: {ai_analysis.returncode}"
                 )
 
-            print(
-                f"[{datetime.now().astimezone():%Y-%m-%d %H:%M:%S}] "
-                f"Qwen завершён, код: {ai_analysis.returncode}"
-            )
+            except Exception as error:
+                with LOG_FILE.open("a", encoding="utf-8") as log:
+                    log.write(f"\nОшибка Qwen: {error!r}\n")
 
-        except Exception as error:
-            with LOG_FILE.open("a", encoding="utf-8") as log:
-                log.write(f"\nОшибка Qwen: {error!r}\n")
-
-            print("Ошибка ИИ-анализатора:", error)
+                print("Ошибка ИИ-анализатора:", error)
+        else:
+            print("Qwen пропущен: анализатор не подтвердил корректность данных.")
 
         time.sleep(INTERVAL_SECONDS)
 
