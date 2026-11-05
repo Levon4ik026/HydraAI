@@ -8,6 +8,7 @@ The following previously uploaded Library files were recovered and inspected. Th
 
 `HYDRA_CURRENT_SOURCE.zip`
 - Size: 27,887 bytes
+- SHA-256: `b6ff220b03191de059d18a59a8914861e2004abe99bdc175f49c564b2c838354`
 - Root entries: `main.py` (30,610 bytes), `guest_feed_reconnect.py` (37,467 bytes), `hydra_technical_metrics.py` (9,930 bytes)
 - These three sizes match the latest local file-size snapshot reported by the user on 2026-11-05.
 - The archive does not include `hydra_indicators.py` or `hydra_strategy_core.py`; it is therefore not a complete project snapshot and must not be treated as one.
