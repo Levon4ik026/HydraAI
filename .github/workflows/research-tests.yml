@@ -1,0 +1,24 @@
+name: Research data audit tests
+
+on:
+  push:
+    branches: [hydra/research-lab]
+    paths:
+      - "research/**"
+      - ".github/workflows/research-tests.yml"
+  pull_request:
+    branches: [hydra/research-lab]
+    paths:
+      - "research/**"
+      - ".github/workflows/research-tests.yml"
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run research unit tests
+        run: python -m unittest discover -s research/tests -v
