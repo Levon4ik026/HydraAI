@@ -24,9 +24,17 @@ jobs:
 
       - name: Run direction-separated winner-loser audit
         run: python research/win_loss_feature_audit.py --data eurusd_history_extended.csv --out research/WIN_LOSS_FEATURE_AUDIT.md
+      - name: Run train-only interaction screen
+        run: python research/interaction_screen.py --data eurusd_history_extended.csv --out research/INTERACTION_SCREEN.md
       - name: Upload winner-loser audit
         uses: actions/upload-artifact@v4
         with:
           name: call-put-win-loss-feature-audit
           path: research/WIN_LOSS_FEATURE_AUDIT.md
+          if-no-files-found: error
+      - name: Upload interaction screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-train-only-interaction-screen
+          path: research/INTERACTION_SCREEN.md
           if-no-files-found: error
