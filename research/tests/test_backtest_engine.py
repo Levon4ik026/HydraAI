@@ -54,7 +54,8 @@ class BacktestEngineTests(unittest.TestCase):
         candles = series([1.100, 1.101, 1.102, 1.103, 1.104, 1.105])
         signals = {0: "CALL", 1: "CALL", 2: "CALL"}
         trades = backtest_signals(candles, signals, 2)
-        self.assertEqual([t.signal_time for t in trades], [candles[0].timestamp])
+        self.assertEqual([t.signal_time for t in trades],
+                         [candles[0].timestamp, candles[2].timestamp])
 
     def test_draw_and_summary_at_92_percent(self):
         candles = series([1.1, 1.1, 1.101, 1.100])
