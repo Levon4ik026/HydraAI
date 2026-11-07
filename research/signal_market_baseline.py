@@ -60,8 +60,16 @@ def build_market_rows(segments, split, signal_times):
     return rows
 
 def outcome_counts(rows, direction):
-    wins = sum(bool(r["up"] if direction == "CALL" else r["down"]) for r in rows)
-    draws = sum(bool(r["draw"]) for r in rows)
+    """Count signal-ledger outcomes or background candle directions."""
+    wins = 0
+    draws = 0
+    for row in rows:
+        if "outcome" in row:
+            wins += row["outcome"] == "WIN"
+            draws += row["outcome"] == "DRAW"
+        else:
+            wins += bool(row["up"] if direction == "CALL" else row["down"])
+            draws += bool(row["draw"])
     return wins, len(rows)-wins-draws, draws
 
 def fmt_net(w, l):
