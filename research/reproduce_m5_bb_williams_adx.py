@@ -216,7 +216,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=Path, default=DATA_PATH)
     parser.add_argument("--verify-known-results", action="store_true",
-                        help="verify trade outcome accounting invariants")
+                        help="verify corrected frozen holdout counts and net units at 92% payout")
     args = parser.parse_args()
     m1 = load_m1(args.data)
     segments = make_m5(m1)
