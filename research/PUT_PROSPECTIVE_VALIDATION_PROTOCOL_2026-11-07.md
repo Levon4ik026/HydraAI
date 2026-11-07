@@ -86,3 +86,19 @@ The monitor is deliberately a separate process rather than a modification to the
 
 
 Windows launcher: from the repository folder, double-click `start_put_forward_monitor.bat`. It expects the guest-feed CSV at `C:\\HydraAI_Desktop\\observer_data\\eurusd_guest_candles.csv` and opens the monitor in the current console. Keep the guest-feed collector running in its own window.
+
+
+
+## Live-observation integrity safeguard (2026-11-07)
+
+The continuous monitor now uses an observation cursor in addition to the latest-candle freshness check:
+
+- Its first fresh CSV snapshot establishes a baseline only; no pre-existing rows are replayed into the prospective ledger.
+- A settlement is eligible for prospective scoring only when the latest completed M1 timestamp advances by exactly one minute from the previous fresh observation, and the settlement falls in that newly observed minute.
+- An unchanged timestamp records nothing.
+- A jump of more than one minute (including reconnect, weekend gap, or history backfill) is quarantined. The cursor is reset to the new latest timestamp, and scoring resumes only after the next exact one-minute advance.
+- A timestamp rollback is quarantined without moving the cursor backward.
+- When the feed is stale, the observation cursor is held.
+- On restart, previously appended ledger keys are reloaded from the CSV ledger as well as the JSON state, preventing duplicate trade rows if the process stopped between append and state save.
+
+This is intentionally conservative: some otherwise valid trades around reconnects or market closures may be excluded. Avoiding false prospective evidence is more important than maximizing the sample size. The safeguard does not prove tick-level quote parity; it only prevents historical catch-up rows from being silently treated as continuously observed live candles.
