@@ -254,6 +254,21 @@ def main() -> None:
     print(f"M1 rows: {len(m1)} | M5 bars: {len(rows)} | M5 segments: {len(segments)}")
     print(f"Range: {rows[0]['bar'].timestamp.isoformat()} .. {rows[-1]['bar'].timestamp.isoformat()}")
     print(f"Chronological 70/30 boundary: {boundary.isoformat()} | payout: {PAYOUT:.2f}")
+    raw_call = sum(r["signal"] == 1 for r in rows)
+    raw_put = sum(r["signal"] == -1 for r in rows)
+    baseline = {"UP": 0, "DOWN": 0, "DRAW": 0}
+    baseline_weekly: dict[str, dict[str, int]] = defaultdict(lambda: {"UP": 0, "DOWN": 0, "DRAW": 0})
+    for i in range(len(rows) - 1):
+        cur, nxt = rows[i], rows[i + 1]
+        if cur["segment_id"] != nxt["segment_id"] or nxt["bar"].timestamp - cur["bar"].timestamp != timedelta(minutes=5):
+            continue
+        delta = nxt["bar"].close - nxt["bar"].open
+        outcome = "UP" if delta > 1e-12 else "DOWN" if delta < -1e-12 else "DRAW"
+        baseline[outcome] += 1
+        week_start = (nxt["bar"].timestamp - timedelta(days=nxt["bar"].timestamp.weekday())).strftime("%Y-%m-%d")
+        baseline_weekly[week_start][outcome] += 1
+    print(f"Raw BB+Williams signal triggers before ADX/scheduler: CALL={raw_call} | PUT={raw_put}")
+    print(f"Descriptive next-M5 candle baseline (all continuous adjacent bars, overlapping): {baseline}")
     holdout_results = {}
     for threshold in ADX_THRESHOLDS:
         all_trades = run_trades(rows, threshold)
@@ -281,7 +296,7 @@ def main() -> None:
         for week in sorted(weekly):
             week_trades = weekly[week]
             comp = direction_comparison(week_trades)
-            print(f"  WEEK {week} UTC: ALL={summary(week_trades)} | CALL={comp['call']} | PUT={comp['put']} | Fisher p={comp['fisher_two_sided_p']}")
+            print(f"  WEEK {week} UTC: ALL={summary(week_trades)} | CALL={comp['call']} | PUT={comp['put']} | Fisher p={comp['fisher_two_sided_p']} | baseline_next_candle={baseline_weekly.get(week, {})}")
     if args.verify_known_results:
         expected = {
             15: (48, 31, 17, 0, 11.52),
