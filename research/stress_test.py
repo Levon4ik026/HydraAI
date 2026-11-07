@@ -102,6 +102,13 @@ def next_candle_baseline_by_regime(candles: Sequence[Candle], regime_rows: Seque
     validate_candles(candles, interval_seconds)
     if len(candles) != len(regime_rows):
         raise ValueError("regime_rows must align one-to-one with candles")
+    for i, (candle, row) in enumerate(zip(candles, regime_rows)):
+        if row.get("timestamp") != candle.timestamp:
+            raise ValueError(f"regime_rows timestamp mismatch at index {i}")
+        if row.get("regime") not in {
+            REGIME_NORMAL, REGIME_ELEVATED, REGIME_EXTREME, REGIME_UNAVAILABLE
+        }:
+            raise ValueError(f"unknown volatility regime at index {i}")
     buckets = {name: {"up": 0, "down": 0, "draw": 0}
                for name in (REGIME_NORMAL, REGIME_ELEVATED, REGIME_EXTREME)}
     for i in range(len(candles) - 1):
@@ -109,7 +116,7 @@ def next_candle_baseline_by_regime(candles: Sequence[Candle], regime_rows: Seque
         if (following.timestamp-current.timestamp).total_seconds() != interval_seconds:
             continue
         regime = regime_rows[i]["regime"]
-        if regime not in buckets:
+        if regime == REGIME_UNAVAILABLE:
             continue
         delta = following.close-following.open
         if abs(delta) <= 1e-12:
