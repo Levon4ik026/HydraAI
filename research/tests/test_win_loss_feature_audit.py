@@ -25,8 +25,8 @@ class WinLossFeatureAuditTests(unittest.TestCase):
     def test_bh_is_monotone_in_sorted_p_values(self):
         q = benjamini_hochberg([("a", 0.01), ("b", 0.04), ("c", 0.03)])
         self.assertAlmostEqual(q["a"], 0.03)
-        self.assertAlmostEqual(q["c"], 0.045)
-        self.assertAlmostEqual(q["b"], 0.045)
+        self.assertAlmostEqual(q["c"], 0.04)
+        self.assertAlmostEqual(q["b"], 0.04)
 
     def test_bh_preserves_missing(self):
         q = benjamini_hochberg([("a", None), ("b", 0.2)])
