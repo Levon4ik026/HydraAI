@@ -424,6 +424,8 @@ def main() -> None:
             week_trades = weekly[week]
             comp = direction_comparison(week_trades)
             print(f"  WEEK {week} UTC: ALL={summary(week_trades)} | CALL={comp['call']} | PUT={comp['put']} | Fisher p={comp['fisher_two_sided_p']} | baseline_next_candle={baseline_weekly.get(week, {})}")
+            if threshold == 15:
+                contextual_baseline_comparison(rows, week_trades, f"WEEK {week}")
     if args.verify_known_results:
         expected = {
             15: (48, 31, 17, 0, 11.52),
