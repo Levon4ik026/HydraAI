@@ -141,8 +141,8 @@ def backtest_signals(
     validate_candles(candles, interval_seconds)
     if horizon_min <= 0 or horizon_min * 60 % interval_seconds:
         raise ValueError("horizon_min must be a positive multiple of candle interval")
-    if draw_epsilon < 0:
-        raise ValueError("draw_epsilon cannot be negative")
+    if not math.isfinite(draw_epsilon) or draw_epsilon < 0:
+        raise ValueError("draw_epsilon must be finite and non-negative")
 
     normalized: dict[int, str] = {}
     for raw_index, raw_direction in signals.items():
