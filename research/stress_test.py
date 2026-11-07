@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 import math
 import statistics
+from research.statistical_validation import wilson_interval
 from typing import Iterable, Sequence
 from research.backtest_engine import Candle, Trade, summarize_trades, validate_candles
 
@@ -64,8 +65,18 @@ def summarize_by_signal_regime(trades: Iterable[Trade], regime_rows: Sequence[di
             missing += 1
         else:
             buckets[regime].append(trade)
-    result = {name: summarize_trades(buckets.get(name, []))
-              for name in (REGIME_NORMAL, REGIME_ELEVATED, REGIME_EXTREME)}
+    result = {}
+    for name in (REGIME_NORMAL, REGIME_ELEVATED, REGIME_EXTREME):
+        trades_in_regime = buckets.get(name, [])
+        summary = summarize_trades(trades_in_regime)
+        interval = wilson_interval(summary["wins"], summary["decisive_trades"])
+        summary["wilson_95_low_pct"] = round(interval[0] * 100, 4) if interval else None
+        summary["wilson_95_high_pct"] = round(interval[1] * 100, 4) if interval else None
+        summary["inference_warning"] = (
+            "Descriptive only: trades may be serially dependent and this regime "
+            "was not necessarily pre-registered."
+        )
+        result[name] = summary
     result["excluded_unavailable_or_unmatched"] = {"trades": missing}
     return result
 
