@@ -210,6 +210,12 @@ def main() -> None:
         print(f"ADX >= {threshold}: train={summary(train_trades)} | holdout={summary(test_trades)}")
         for direction in ("CALL", "PUT"):
             print(f"  {direction} full sample: {summary([t for t in all_trades if t['direction'] == direction])}")
+        if threshold == 15:
+            monthly: dict[str, list[dict]] = defaultdict(list)
+            for trade in all_trades:
+                monthly[trade["signal_time"].strftime("%Y-%m")].append(trade)
+            for month in sorted(monthly):
+                print(f"  {month} full sample: {summary(monthly[month])}")
     if args.verify_known_results:
         expected = {15: (48, 31, 17, 0), 20: (39, 23, 16, 0), 25: (21, 13, 8, 0)}
         for threshold, (count, wins, losses, draws) in expected.items():
