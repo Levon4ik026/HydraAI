@@ -60,3 +60,28 @@ The script writes `research/frozen_put_candidate_trades.csv` (or the path passed
 ## Decision
 
 Keep the candidate outside production. Keep CALL unchanged. Start forward collection with the exact frozen rule, then review at the precommitted checkpoints without retuning.
+
+
+## Continuous monitor (added after protocol freeze)
+
+Use `research/watch_frozen_put_candidate.py` alongside the existing guest-feed collector. It watches the collector's M1 CSV; it does not connect to Pocket Option itself and does not alter the collector.
+
+First launch automatically freezes the forward boundary at the next UTC M5 boundary and stores it in `observer_data/hydra_put_forward_state.json`. On restart, the same boundary is reused. The monitor refuses a different `--forward-start` when a state file already exists.
+
+Example from the repository root (PowerShell):
+
+```powershell
+python research/watch_frozen_put_candidate.py --data "C:\HydraAI_Desktop\observer_data\eurusd_guest_candles.csv"
+```
+
+Run this in a second PowerShell window while the existing EUR/USD guest-feed collector is running. The monitor:
+- polls the CSV every 15 seconds;
+- requires a fresh latest M1 timestamp (maximum age 180 seconds);
+- only records a trade after its M5 expiry candle has completed;
+- appends settled trades to `observer_data/hydra_put_forward_trades.csv`;
+- persists the frozen start, data hash, latest timestamp, and cumulative W/L/draw counts in `observer_data/hydra_put_forward_state.json`;
+- never sends orders or calls a trading endpoint.
+
+Do not delete the state or ledger during the experiment. The ledger and state are local runtime outputs and are not committed to Git. If the collector CSV is located elsewhere, change only the `--data` path. The first launch time is the actual prospective start; old records already present in the CSV are excluded by the automatically frozen boundary.
+
+The monitor is deliberately a separate process rather than a modification to the Desktop GUI or collector. This keeps the research experiment isolated and lets collection continue if the UI is closed.
