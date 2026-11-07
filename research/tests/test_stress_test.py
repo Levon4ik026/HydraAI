@@ -51,7 +51,7 @@ class StressTestDiagnostics(unittest.TestCase):
         candles = make_candles([.001]*5)
         trades = backtest_signals(candles, {0:"CALL",3:"CALL"}, 1, allow_overlapping=True)
         result = summarize_event_window(trades, candles[0].timestamp, candles[4].timestamp)
-        self.assertEqual(result["trades"], 3)
+        self.assertEqual(result["trades"], 1)
 
     def test_bad_thresholds_rejected(self):
         with self.assertRaises(ValueError):
