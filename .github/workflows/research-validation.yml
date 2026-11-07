@@ -32,6 +32,14 @@ jobs:
         run: python research/loss_context_audit.py --data eurusd_history_extended.csv --out research/LOSS_CONTEXT_AUDIT.md
       - name: Run causal sequence-state audit
         run: python research/sequence_state_audit.py --data eurusd_history_extended.csv --out research/SEQUENCE_STATE_AUDIT.md
+      - name: Run causal market-regime audit
+        run: python research/market_regime_audit.py --data eurusd_history_extended.csv --out research/MARKET_REGIME_AUDIT.md
+      - name: Upload market-regime audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-market-regime-audit
+          path: research/MARKET_REGIME_AUDIT.md
+          if-no-files-found: error
       - name: Upload sequence-state audit
         uses: actions/upload-artifact@v4
         with:
