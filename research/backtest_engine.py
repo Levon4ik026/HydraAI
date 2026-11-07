@@ -200,7 +200,9 @@ def backtest_signals(
             profit_units=profit,
         ))
         if not allow_overlapping:
-            next_available_signal = exit_index + 1
+            # The current trade settles at the exit candle close. A signal evaluated
+            # on that same close may enter at the following candle open.
+            next_available_signal = exit_index
 
     return trades
 
