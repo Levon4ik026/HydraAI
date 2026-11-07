@@ -206,6 +206,8 @@ def build_candidate_trades(segments: list[list[Bar]], candidate: str) -> list[di
                          "plus_di": f["base"][i]["plus_di"],
                          "minus_di": f["base"][i]["minus_di"],
                          "ema20": f["ema20"][i], "ema50": f["ema50"][i],
+                         "ema50_slope3": (f["ema50"][i] - f["ema50"][i - 3]
+                                          if i >= 3 and f["ema50"][i] is not None and f["ema50"][i - 3] is not None else None),
                          "rsi": f["rsi"][i], "momentum3": (
                              bar.close - bars[i - 3].close if i >= 3 else None)})
     trades = []
@@ -224,8 +226,9 @@ def build_candidate_trades(segments: list[list[Bar]], candidate: str) -> list[di
         trades.append({"outcome": outcome, "profit": 0.0 if outcome == "DRAW" else PAYOUT if outcome == "WIN" else -1.0,
                        "signal_time": r["bar"].timestamp, "entry_time": n["bar"].timestamp,
                        "adx": r["adx"], "plus_di": r["plus_di"], "minus_di": r["minus_di"],
-                       "ema20": r["ema20"], "ema50": r["ema50"], "rsi": r["rsi"],
-                       "momentum3": r["momentum3"]})
+                       "ema20": r["ema20"], "ema50": r["ema50"], "ema50_slope3": r["ema50_slope3"],
+                       "rsi": r["rsi"], "momentum3": r["momentum3"],
+                       "settlement_time": n["bar"].timestamp + timedelta(minutes=5)})
         i += 1
     return trades
 
@@ -250,8 +253,8 @@ def main() -> None:
     results = []
     for candidate in candidates():
         trades = build_candidate_trades(segments, candidate)
-        train = [t for t in trades if t["signal_time"] < boundary]
-        test = [t for t in trades if t["signal_time"] >= boundary]
+        train = [t for t in trades if t["settlement_time"] < boundary]
+        test = [t for t in trades if t["settlement_time"] >= boundary]
         results.append((candidate, train, test))
     eligible = [x for x in results if concise(x[1])["decisive"] >= 25]
     eligible.sort(key=lambda x: (concise(x[1])["net_92"], concise(x[1])["win_rate"]), reverse=True)
@@ -265,6 +268,45 @@ def main() -> None:
             weekly[week].append(t)
         if weekly:
             print("    HOLDOUT WEEKS " + " | ".join(f"{w}: {concise(v)}" for w, v in sorted(weekly.items())))
+    # Diagnostic-only regime breakdowns for the leading structurally different candidates.
+    print("CONTEXT DIAGNOSTICS (descriptive, small groups; not used to select candidates)")
+    for target in ("STOCH_TREND:80", "EMA_PULLBACK:20", "ATR_EXPANSION:20", "DONCHIAN_BREAK:40"):
+        trades = next((x[1] + x[2] for x in results if x[0] == target), [])
+        if not trades:
+            continue
+        print(f"  {target}")
+        dimensions = {
+            "DMI": lambda t: ("BEARISH" if t["minus_di"] is not None and t["plus_di"] is not None and t["minus_di"] > t["plus_di"] else "BULLISH_OR_NA"),
+            "MOM3": lambda t: ("DOWN" if t["momentum3"] is not None and t["momentum3"] < 0 else "UP_OR_FLAT"),
+            "ADX": lambda t: ("<15" if t["adx"] is not None and t["adx"] < 15 else "15-25" if t["adx"] is not None and t["adx"] < 25 else ">=25" if t["adx"] is not None else "NA"),
+            "EMA50_SLOPE": lambda t: ("DOWN" if t["ema50_slope3"] is not None and t["ema50_slope3"] < 0 else "UP_OR_NA"),
+            "RSI": lambda t: ("<40" if t["rsi"] is not None and t["rsi"] < 40 else "40-50" if t["rsi"] is not None and t["rsi"] < 50 else ">=50_OR_NA"),
+        }
+        for dim, classify in dimensions.items():
+            groups = defaultdict(list)
+            for trade in trades:
+                groups[classify(trade)].append(trade)
+            print("    " + dim + ": " + " | ".join(f"{key}={concise(val)}" for key, val in sorted(groups.items())))
+    # One-factor-at-a-time diagnostics for the EMA pullback candidate. These
+    # are descriptive probes, not an invitation to optimize against this holdout.
+    base_ema = next((x[1] + x[2] for x in results if x[0] == "EMA_PULLBACK:20"), [])
+    if base_ema:
+        filters = {
+            "base": lambda t: True,
+            "bearish_DMI": lambda t: t["minus_di"] is not None and t["plus_di"] is not None and t["minus_di"] > t["plus_di"],
+            "ADX>=15": lambda t: t["adx"] is not None and t["adx"] >= 15,
+            "ADX>=20": lambda t: t["adx"] is not None and t["adx"] >= 20,
+            "MOM3_down": lambda t: t["momentum3"] is not None and t["momentum3"] < 0,
+            "EMA50_slope_down": lambda t: t["ema50_slope3"] is not None and t["ema50_slope3"] < 0,
+            "RSI<45": lambda t: t["rsi"] is not None and t["rsi"] < 45,
+            "bearish_DMI+MOM3_down": lambda t: t["minus_di"] is not None and t["plus_di"] is not None and t["minus_di"] > t["plus_di"] and t["momentum3"] is not None and t["momentum3"] < 0,
+        }
+        print("EMA_PULLBACK ONE-FACTOR CONTEXT PROBES")
+        for label, predicate in filters.items():
+            selected = [t for t in base_ema if predicate(t)]
+            tr = [t for t in selected if t["settlement_time"] < boundary]
+            ho = [t for t in selected if t["settlement_time"] >= boundary]
+            print(f"  {label}: TRAIN={concise(tr)} | HOLDOUT={concise(ho)}")
     print("NOTE: exploratory search over multiple rules on a short, previously inspected October sample; no candidate is validated or production-approved.")
     print("Break-even decisive WR at 92% payout: 52.0833%.")
 
