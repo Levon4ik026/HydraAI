@@ -1,6 +1,6 @@
 # M5 Bollinger re-entry + Williams %R + ADX — independent rule specification test
 
-> **STATUS UPDATE — 2026-11-07:** The original trade scheduler in this report was found to skip a valid signal formed at the close of the expiry candle, and the flattened segment list could permit a theoretical trade to cross a data gap. The old counts below (including 48-trade holdout) are **withdrawn pending corrected rerun**. The script now allows a new signal at expiry close, enforces same-segment immediate-next-M5 entry, and has regression tests. See [scheduler audit](M5_SCHEDULER_AUDIT_2026-11-07.md). Do not use the earlier performance figures as current results.
+> **STATUS UPDATE — 2026-11-07:** Scheduler defects were corrected and the dataset was rerun. The updated corrected results are in the section below. This report uses **92% payout only**; older scenario figures are superseded. The test remains research-only and does not establish a durable edge. See [scheduler audit](M5_SCHEDULER_AUDIT_2026-11-07.md).
 
 Date: 2026-11-07
 
@@ -25,18 +25,18 @@ The larger 2026-11-06 screening report found a weak PUT-only M5 lead, but the fu
 - ADX regime filter: ADX >= 15, 20, or 25.
 - Signal is known after the M5 candle closes. Entry is next M5 candle open; settlement is that candle close.
 - Shared CALL/PUT scheduler, no overlapping positions.
-- Payout scenarios are net +0.80 or +0.92 per win, -1 per loss, 0 for draw. These are scenarios, not measured platform payouts.
+- Payout convention: +0.92 per win, -1.00 per loss, 0 for draw. Only the 92% payout assumption is evaluated.
 
 ## Results
 
-| ADX minimum | Period | Trades | Wins | Losses | Draws | Win rate (decisive) | Net @92% | Net @80% |
-|---:|---|---:|---:|---:|---:|---:|---:|---:|
-| 15 | Train | 97 | 48 | 43 | 6 | 52.75% | +1.16 | -4.60 |
-| 15 | Holdout | 48 | 31 | 17 | 0 | 64.58% | +11.52 | +7.80 |
-| 20 | Train | 77 | 38 | 36 | 3 | 51.35% | -1.04 | -5.60 |
-| 20 | Holdout | 39 | 23 | 16 | 0 | 58.97% | +5.16 | +2.40 |
-| 25 | Train | 52 | 24 | 26 | 2 | 48.00% | -3.92 | -6.80 |
-| 25 | Holdout | 21 | 13 | 8 | 0 | 61.90% | +3.96 | +2.40 |
+| ADX minimum | Period | Trades | Wins | Losses | Draws | Win rate (decisive) | Net @92% |
+|---:|---|---:|---:|---:|---:|---:|---:|
+| 15 | Train | 97 | 48 | 43 | 6 | 52.75% | +1.16 |
+| 15 | Holdout | 48 | 31 | 17 | 0 | 64.58% | +11.52 |
+| 20 | Train | 77 | 38 | 36 | 3 | 51.35% | -1.04 |
+| 20 | Holdout | 39 | 23 | 16 | 0 | 58.97% | +5.16 |
+| 25 | Train | 52 | 24 | 26 | 2 | 48.00% | -3.92 |
+| 25 | Holdout | 21 | 13 | 8 | 0 | 61.90% | +3.96 |
 
 ### Direction breakdown, full sample
 
