@@ -37,7 +37,11 @@ class StressTestDiagnostics(unittest.TestCase):
         self.assertEqual(before, after)
 
     def test_shock_requires_extreme_range_and_body(self):
-        rows = classify_volatility_regimes(make_candles([.001]*5 + [.004]), lookback=5)
+        candles = make_candles([.001]*5 + [.004])
+        last = candles[-1]
+        candles[-1] = Candle(last.timestamp, last.open, last.open + .004,
+                             last.open - .001, last.open + .003)
+        rows = classify_volatility_regimes(candles, lookback=5)
         self.assertEqual(len(shock_candles(rows)), 1)
 
     def test_grouping_by_signal_regime(self):
