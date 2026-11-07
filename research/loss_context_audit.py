@@ -27,7 +27,7 @@ CONTEXT_FEATURES = (
     "range_overlap_3", "range_compression_3v12",
     "close_location", "position_in_prior_12_range",
     "distance_to_prior_high_atr", "distance_to_prior_low_atr",
-    "body_direction_agreement_3", "median_range_atr_6",
+    "body_direction_agreement_3", "median_range_to_true_range_6",
     "same_color_run",
 )
 
@@ -57,7 +57,7 @@ def context_rows(bars):
                 signs[k] != 0 and signs[k-1] != 0 and signs[k] != signs[k-1]
                 for k in range(1, len(signs)))
             base = statistics.median(true_ranges[i-5:i+1])
-            out["median_range_atr_6"] = (
+            out["median_range_to_true_range_6"] = (
                 statistics.median(ranges[i-5:i+1]) / base if base > 0 else None)
         if i >= 12:
             diffs = [bars[j].close - bars[j-1].close for j in range(i-11, i+1)]
@@ -93,7 +93,7 @@ def context_rows(bars):
         if i >= 1:
             sign = 1 if b.close > bars[i-1].close else -1 if b.close < bars[i-1].close else 0
             run = 0
-            for j in range(i, max(-1, i-6), -1):
+            for j in range(i, max(0, i-6), -1):
                 sj = 1 if bars[j].close > bars[j-1].close else -1 if bars[j].close < bars[j-1].close else 0
                 if sj == 0 or sj != sign:
                     break
