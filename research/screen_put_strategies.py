@@ -307,6 +307,24 @@ def main() -> None:
             tr = [t for t in selected if t["settlement_time"] < boundary]
             ho = [t for t in selected if t["settlement_time"] >= boundary]
             print(f"  {label}: TRAIN={concise(tr)} | HOLDOUT={concise(ho)}")
+        print("EMA_PULLBACK REGIME STABILITY BY PERIOD")
+        for period, subset in (("TRAIN", [t for t in base_ema if t["settlement_time"] < boundary]),
+                               ("HOLDOUT", [t for t in base_ema if t["settlement_time"] >= boundary])):
+            print(f"  {period}")
+            groups = defaultdict(list)
+            for t in subset:
+                dmi = "BEARISH_DMI" if t["minus_di"] is not None and t["plus_di"] is not None and t["minus_di"] > t["plus_di"] else "BULLISH_OR_NA"
+                mom = "MOM3_DOWN" if t["momentum3"] is not None and t["momentum3"] < 0 else "MOM3_UP_OR_FLAT"
+                groups[(dmi, mom)].append(t)
+            for key, vals in sorted(groups.items()):
+                print(f"    {key}: {concise(vals)}")
+            for label, predicate in (
+                ("ADX>=20", lambda t: t["adx"] is not None and t["adx"] >= 20),
+                ("ADX>=20 + BULLISH_DMI", lambda t: t["adx"] is not None and t["adx"] >= 20 and t["minus_di"] is not None and t["plus_di"] is not None and t["plus_di"] >= t["minus_di"]),
+                ("ADX>=20 + MOM3_UP", lambda t: t["adx"] is not None and t["adx"] >= 20 and t["momentum3"] is not None and t["momentum3"] >= 0),
+            ):
+                vals = [t for t in subset if predicate(t)]
+                print(f"    FILTER {label}: {concise(vals)}")
     print("NOTE: exploratory search over multiple rules on a short, previously inspected October sample; no candidate is validated or production-approved.")
     print("Break-even decisive WR at 92% payout: 52.0833%.")
 
