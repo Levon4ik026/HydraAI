@@ -15,7 +15,7 @@ A code review of `research/reproduce_m5_bb_williams_adx.py` found two scheduler 
 - Every signal row now carries its source `segment_id`.
 - Entry is allowed only on the immediately following M5 candle, exactly five minutes later, in the same segment.
 - After a trade settles at the entry candle close, the scheduler advances one row, so a signal on that close can be evaluated for entry on the next candle.
-- Added regression tests for expiry-close entries, segment-boundary rejection, and missing M5 bucket rejection.
+- Added regression tests for expiry-close entries, segment-boundary rejection, and missing M5 bucket rejection. The split is now applied to completed trades by settlement time.
 
 ## Impact on previous results
 
