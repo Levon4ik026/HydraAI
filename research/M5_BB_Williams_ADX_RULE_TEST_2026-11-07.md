@@ -1,0 +1,58 @@
+# M5 Bollinger re-entry + Williams %R + ADX — independent rule specification test
+
+Date: 2026-11-07
+
+## Why this test exists
+The larger 2026-11-06 screening report found a weak PUT-only M5 lead, but the full historical research CSV used there is not currently accessible through the repository file interface. The repository does contain `eurusd_history_extended.csv`, covering 2026-10-07 04:31 UTC through 2026-10-28 01:19 UTC. This note tests a clearly specified, reproducible variant on that shorter sample. It is **not** a reproduction of the earlier screening result because the exact earlier strategy implementation and full source dataset are not available here.
+
+## Data validation
+- 30,048 one-minute OHLC rows.
+- 0 duplicate timestamps.
+- 0 invalid OHLC rows.
+- 6,008 complete UTC-aligned M5 candles.
+- 2 continuous M5 segments; incomplete buckets and gap-crossing buckets are excluded.
+- Chronological split: first 70% train, final 30% holdout; boundary 2026-10-21 19:05 UTC.
+- Timestamps interpreted as UTC according to the repository's historical convention.
+
+## Exact tested rule
+- Bollinger Bands: 20-period simple moving average, 2 population standard deviations.
+- Williams %R: 14 periods.
+- ADX: Wilder 14.
+- CALL re-entry: previous close below previous lower band, current close back above current lower band; Williams %R crosses upward through -80.
+- PUT re-entry: previous close above previous upper band, current close back below current upper band; Williams %R crosses downward through -20.
+- ADX regime filter: ADX >= 15, 20, or 25.
+- Signal is known after the M5 candle closes. Entry is next M5 candle open; settlement is that candle close.
+- Shared CALL/PUT scheduler, no overlapping positions.
+- Payout scenarios are net +0.80 or +0.92 per win, -1 per loss, 0 for draw. These are scenarios, not measured platform payouts.
+
+## Results
+
+| ADX minimum | Period | Trades | Wins | Losses | Draws | Win rate (decisive) | Net @92% | Net @80% |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 15 | Train | 97 | 48 | 43 | 6 | 52.75% | +1.16 | -4.60 |
+| 15 | Holdout | 48 | 31 | 17 | 0 | 64.58% | +11.52 | +7.80 |
+| 20 | Train | 77 | 38 | 36 | 3 | 51.35% | -1.04 | -5.60 |
+| 20 | Holdout | 39 | 23 | 16 | 0 | 58.97% | +5.16 | +2.40 |
+| 25 | Train | 52 | 24 | 26 | 2 | 48.00% | -3.92 | -6.80 |
+| 25 | Holdout | 21 | 13 | 8 | 0 | 61.90% | +3.96 | +2.40 |
+
+### Direction breakdown, full sample
+
+| ADX minimum | Direction | Trades | Win rate (decisive) | Net @92% |
+|---:|---|---:|---:|---:|
+| 15 | CALL | 86 | 62.65% | +16.84 |
+| 15 | PUT | 59 | 48.21% | -4.16 |
+| 20 | CALL | 68 | 61.76% | +12.64 |
+| 20 | PUT | 48 | 42.22% | -8.52 |
+| 25 | CALL | 43 | 58.14% | +5.00 |
+| 25 | PUT | 30 | 42.86% | -4.96 |
+
+## Interpretation and limits
+- This explicitly defined variant is CALL-led on this October sample, opposite to the earlier PUT-only lead. That disagreement is a warning against treating either result as a stable edge.
+- The best-looking holdout cell is ADX >=15: 31 wins from 48 decisive trades (64.58%). Its approximate 95% Wilson interval is 50.44%–76.57%, which is wide because the holdout has only 48 trades.
+- The ADX >=15 train result is only +1.16 units at 92% and negative at 80%. The holdout improvement may be sampling noise or a regime change.
+- This sample is short, partly overlaps the period covered by prior research, and does not include real platform quote latency, spread, payout variation, or settlement verification.
+- This is a candidate for a longer untouched forward test only. It is **not approved for live trading**, and it does not change the manual-only/no-auto-trading design.
+
+## Next validation
+Run this exact frozen rule on a substantially longer dataset not used to select thresholds, with observed per-entry payouts, then report monthly results and confidence intervals. Do not tune the ADX threshold against this holdout.
