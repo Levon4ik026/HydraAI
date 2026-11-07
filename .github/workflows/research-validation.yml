@@ -34,6 +34,14 @@ jobs:
         run: python research/sequence_state_audit.py --data eurusd_history_extended.csv --out research/SEQUENCE_STATE_AUDIT.md
       - name: Run causal market-regime audit
         run: python research/market_regime_audit.py --data eurusd_history_extended.csv --out research/MARKET_REGIME_AUDIT.md
+      - name: Run joint matched signal vs market baseline audit
+        run: python research/joint_matched_baseline.py --data eurusd_history_extended.csv --out research/JOINT_MATCHED_BASELINE.md
+      - name: Upload joint matched baseline audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-joint-matched-baseline
+          path: research/JOINT_MATCHED_BASELINE.md
+          if-no-files-found: error
       - name: Run signal vs same-regime market baseline audit
         run: python research/signal_market_baseline.py --data eurusd_history_extended.csv --out research/SIGNAL_MARKET_BASELINE.md
       - name: Upload signal market baseline audit
