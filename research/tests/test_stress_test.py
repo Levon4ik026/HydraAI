@@ -78,6 +78,20 @@ class StressTestDiagnostics(unittest.TestCase):
         self.assertEqual(baseline[REGIME_NORMAL]["up"] + baseline[REGIME_NORMAL]["down"], 4)
         self.assertIsNotNone(baseline[REGIME_NORMAL]["call_win_rate"])
 
+    def test_regime_baseline_rejects_misaligned_timestamps(self):
+        candles = make_candles([.001]*8)
+        regimes = classify_volatility_regimes(candles, lookback=5)
+        regimes[2] = {**regimes[2], "timestamp": regimes[3]["timestamp"]}
+        with self.assertRaisesRegex(ValueError, "timestamp mismatch"):
+            next_candle_baseline_by_regime(candles, regimes)
+
+    def test_regime_baseline_rejects_unknown_regime(self):
+        candles = make_candles([.001]*8)
+        regimes = classify_volatility_regimes(candles, lookback=5)
+        regimes[2] = {**regimes[2], "regime": "FUTURE_LEAK"}
+        with self.assertRaisesRegex(ValueError, "unknown volatility regime"):
+            next_candle_baseline_by_regime(candles, regimes)
+
 
     def test_regime_summary_reports_wilson_uncertainty(self):
         candles = make_candles([.001]*5 + [.004,.001,.001,.001])
