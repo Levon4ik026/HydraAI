@@ -26,6 +26,14 @@ jobs:
         run: python research/win_loss_feature_audit.py --data eurusd_history_extended.csv --out research/WIN_LOSS_FEATURE_AUDIT.md
       - name: Run train-only interaction screen
         run: python research/interaction_screen.py --data eurusd_history_extended.csv --out research/INTERACTION_SCREEN.md
+      - name: Run paired day-cluster bootstrap
+        run: python research/day_cluster_bootstrap.py --data eurusd_history_extended.csv --out research/CLUSTER_BOOTSTRAP.md
+      - name: Upload day-cluster bootstrap
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-day-cluster-bootstrap
+          path: research/CLUSTER_BOOTSTRAP.md
+          if-no-files-found: error
       - name: Upload winner-loser audit
         uses: actions/upload-artifact@v4
         with:
