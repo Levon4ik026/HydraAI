@@ -13,7 +13,10 @@ import statistics
 from collections import defaultdict
 from pathlib import Path
 
-from win_loss_feature_audit import SPLIT_DATE, load_m1, make_m5, parse_time, build_ledger
+try:
+    from .win_loss_feature_audit import SPLIT_DATE, load_m1, make_m5, parse_time, build_ledger
+except ImportError:  # direct execution: python research/day_cluster_bootstrap.py
+    from win_loss_feature_audit import SPLIT_DATE, load_m1, make_m5, parse_time, build_ledger
 
 PAYOUT = 0.92
 REPLICATES = 20000
