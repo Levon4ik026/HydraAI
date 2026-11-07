@@ -16,7 +16,7 @@ The current exploratory screen's `screen_put_strategies.atr()` and the frozen ca
 
 The frozen candidate imports the same shared `Bar` type and `indicators()` implementation as the research screen for ADX, Bollinger and Williams %R. The duplicate ATR function is currently redundant but has matching behavior. A deterministic test compares both outputs to 15 decimal places over a synthetic 120-bar OHLC series.
 
-**Important distinction:** algorithm parity does not establish the provenance of the fixed threshold `0.0003596314`. The screen script currently contains the ATR function but does not derive that floor. The feature-separation report describes ATR/close as a ranked diagnostic, not the source of this exact floor. Until a source artifact or calculation is recovered, the threshold's calibration provenance remains unverified. It stays frozen for the live prospective experiment.
+**Important distinction:** algorithm parity does not establish the provenance of the fixed threshold `0.0003596314`. The screen script currently contains the ATR function but does not derive that floor. The feature-separation report describes ATR/close as a ranked diagnostic, not the source of this exact floor. Git history narrows the trace but does not resolve it: the exact literal first appears in the initial `Freeze PUT candidate for prospective validation` commit (`6fdba1f`, 2026-11-07). The parent commit does not contain this candidate file, and no earlier derivation or calculation is present in the inspected repository history. Therefore the value is traceable to the freeze commit, but its mathematical calibration provenance remains unverified. It stays frozen for the live prospective experiment.
 
 ### Bollinger Bands (20, 2)
 
@@ -49,7 +49,7 @@ The frozen candidate and the current screen both call this same shared implement
 - Williams %R matches an independent rolling-high/low calculation;
 - ADX remains unavailable until its 14-DX seed at index 27.
 
-These are deterministic implementation tests, not evidence of predictive edge.
+`research/tests/test_frozen_put_execution.py` additionally verifies that a signal is timestamped on the closed M5 candle, entry is the immediately following M5 open, settlement is that entry candle's close, changing the future entry candle changes only its outcome (not the prior signal or entry timestamp), and a nonconsecutive next candle is rejected.\n\nThese are deterministic implementation tests, not evidence of predictive edge.
 
 ## Decision
 
