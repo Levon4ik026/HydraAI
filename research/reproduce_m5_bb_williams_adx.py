@@ -258,6 +258,54 @@ def conditional_candle_baseline(rows: list[dict], threshold: float) -> None:
         print(f"    {dmi}/{mom}: n={decisive}, UP={up_pct:.2f}%, DOWN={down_pct:.2f}%, counts={counts}")
 
 
+def contextual_baseline_comparison(rows: list[dict], trades: list[dict], label: str) -> None:
+    """Compare strategy win rates with next-candle direction rates in matching DMI x momentum states."""
+    if not trades:
+        return
+    start = min(t["signal_time"] for t in trades)
+    end = max(t["signal_time"] for t in trades)
+    baseline: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: {"UP": 0, "DOWN": 0})
+    for i in range(len(rows) - 1):
+        cur, nxt = rows[i], rows[i + 1]
+        if (cur["bar"].timestamp < start or cur["bar"].timestamp > end or
+                cur["segment_id"] != nxt["segment_id"] or
+                nxt["bar"].timestamp - cur["bar"].timestamp != timedelta(minutes=5) or
+                cur.get("adx") is None or cur["adx"] < 15 or
+                cur.get("plus_di") is None or cur.get("minus_di") is None or
+                cur.get("momentum_3") is None):
+            continue
+        dmi = "MINUS_DI_DOMINANT" if cur["minus_di"] > cur["plus_di"] else "PLUS_DI_DOMINANT"
+        mom = "UP" if cur["momentum_3"] > 0 else "DOWN" if cur["momentum_3"] < 0 else "FLAT"
+        delta = nxt["bar"].close - nxt["bar"].open
+        if delta > 1e-12:
+            baseline[(dmi, mom)]["UP"] += 1
+        elif delta < -1e-12:
+            baseline[(dmi, mom)]["DOWN"] += 1
+    print(f"  CONTEXT-ADJUSTED BASELINE [{label}]")
+    for direction in ("CALL", "PUT"):
+        subset = [t for t in trades if t["direction"] == direction and t["outcome"] != "DRAW"]
+        wins = sum(t["outcome"] == "WIN" for t in subset)
+        expected = used = 0.0
+        excluded = 0
+        for trade in subset:
+            if trade.get("plus_di") is None or trade.get("minus_di") is None or trade.get("momentum_3") is None:
+                excluded += 1
+                continue
+            dmi = "MINUS_DI_DOMINANT" if trade["minus_di"] > trade["plus_di"] else "PLUS_DI_DOMINANT"
+            mom = "UP" if trade["momentum_3"] > 0 else "DOWN" if trade["momentum_3"] < 0 else "FLAT"
+            counts = baseline.get((dmi, mom))
+            if not counts or counts["UP"] + counts["DOWN"] == 0:
+                excluded += 1
+                continue
+            denom = counts["UP"] + counts["DOWN"]
+            p = counts["UP"] / denom if direction == "CALL" else counts["DOWN"] / denom
+            expected += p
+            used += 1
+        actual = 100.0 * wins / len(subset) if subset else 0.0
+        expected_pct = 100.0 * expected / used if used else 0.0
+        print(f"    {direction}: n={len(subset)}, matched_n={int(used)}, excluded={excluded}, observed_WR={actual:.2f}%, context_baseline_WR={expected_pct:.2f}%, lift={actual-expected_pct:+.2f} pp")
+
+
 def grouped_regime_report(trades: list[dict], label: str) -> None:
     """Print CALL/PUT results conditional on signal-time DMI and prior momentum."""
     print(f"  REGIME BREAKDOWN [{label}]")
@@ -358,6 +406,9 @@ def main() -> None:
         print(f"  HOLDOUT direction comparison: CALL={holdout_cmp['call']} | PUT={holdout_cmp['put']} | Fisher two-sided p={holdout_cmp['fisher_two_sided_p']}")
         if threshold == 15:
             conditional_candle_baseline(rows, threshold)
+            contextual_baseline_comparison(rows, all_trades, "FULL")
+            contextual_baseline_comparison(rows, train_trades, "TRAIN")
+            contextual_baseline_comparison(rows, test_trades, "HOLDOUT")
             grouped_regime_report(all_trades, "FULL")
             grouped_regime_report(train_trades, "TRAIN")
             grouped_regime_report(test_trades, "HOLDOUT")
