@@ -80,7 +80,7 @@ The ADX >= 20 result is close to 0.05, but it is not below 0.05, and the three t
 
 ## Conclusion
 
-**Current classification: a repeated CALL-favoring observation in this October sample, but not yet a proven market закономерность.** Four weekly buckets point in the same direction, and the train/holdout estimates both favor CALL. However, the sample is only about three weeks of EUR/USD M1 history, the weekly sample sizes are small, the baseline is bullish, and the exact CALL-vs-PUT tests are not statistically significant.
+**Current classification: a repeated CALL-favoring observation in this October sample, but not yet a proven persistent market effect.** Four weekly buckets point in the same direction, and the train/holdout estimates both favor CALL. However, the sample is only about three weeks of EUR/USD M1 history, the weekly sample sizes are small, the baseline is bullish, and the exact CALL-vs-PUT tests are not statistically significant.
 
 Do not remove PUT or make CALL-only a production rule based on this result. No Desktop/GUI or live-trading behavior was changed.
 
