@@ -102,3 +102,8 @@ The continuous monitor now uses an observation cursor in addition to the latest-
 - On restart, previously appended ledger keys are reloaded from the CSV ledger as well as the JSON state, preventing duplicate trade rows if the process stopped between append and state save.
 
 This is intentionally conservative: some otherwise valid trades around reconnects or market closures may be excluded. Avoiding false prospective evidence is more important than maximizing the sample size. The safeguard does not prove tick-level quote parity; it only prevents historical catch-up rows from being silently treated as continuously observed live candles.
+
+
+### Versioned clean ledger migration
+
+The integrity-checked monitor uses separate `hydra_put_forward_state_v2.json` and `hydra_put_forward_trades_v2.csv` files by default. On first v2 launch, it may carry forward only the frozen `forward_start` boundary from the legacy state file. It deliberately does not inherit the legacy observation cursor, recorded keys, counters, or ledger rows, because the earlier monitor could have counted historical catch-up data. The v2 observation cursor starts empty and establishes a new baseline. Existing legacy files are left untouched for audit. A v2 state without `observation_integrity_version=1` is rejected rather than silently trusted.
