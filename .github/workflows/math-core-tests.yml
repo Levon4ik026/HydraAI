@@ -18,3 +18,5 @@ jobs:
           python-version: "3.11"
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
+      - name: Reproduce frozen M5 research holdout at 92% payout
+        run: python research/reproduce_m5_bb_williams_adx.py --verify-known-results
