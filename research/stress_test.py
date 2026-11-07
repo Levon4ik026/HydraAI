@@ -79,3 +79,41 @@ def shock_candles(regime_rows: Sequence[dict], minimum_body_ratio: float = 2.0) 
         raise ValueError("minimum_body_ratio must be finite and positive")
     return [r for r in regime_rows if r["regime"] == REGIME_EXTREME
             and r["body_to_baseline"] is not None and r["body_to_baseline"] >= minimum_body_ratio]
+
+def next_candle_baseline_by_regime(candles: Sequence[Candle], regime_rows: Sequence[dict],
+                                   interval_seconds: int = 60) -> dict[str, dict]:
+    """Descriptive all-bar CALL/PUT baseline conditioned on signal-time regime.
+
+    Each candle is an observation only if the immediately following candle is
+    contiguous. This baseline is intentionally overlapping and is not a
+    tradable strategy result.
+    """
+    validate_candles(candles, interval_seconds)
+    if len(candles) != len(regime_rows):
+        raise ValueError("regime_rows must align one-to-one with candles")
+    buckets = {name: {"up": 0, "down": 0, "draw": 0}
+               for name in (REGIME_NORMAL, REGIME_ELEVATED, REGIME_EXTREME)}
+    for i in range(len(candles) - 1):
+        current, following = candles[i], candles[i + 1]
+        if (following.timestamp-current.timestamp).total_seconds() != interval_seconds:
+            continue
+        regime = regime_rows[i]["regime"]
+        if regime not in buckets:
+            continue
+        delta = following.close-current.close
+        if abs(delta) <= 1e-12:
+            buckets[regime]["draw"] += 1
+        elif delta > 0:
+            buckets[regime]["up"] += 1
+        else:
+            buckets[regime]["down"] += 1
+    result = {}
+    for regime, counts in buckets.items():
+        decisive = counts["up"] + counts["down"]
+        result[regime] = {
+            **counts,
+            "decisive": decisive,
+            "call_win_rate": counts["up"] / decisive if decisive else None,
+            "put_win_rate": counts["down"] / decisive if decisive else None,
+        }
+    return result
