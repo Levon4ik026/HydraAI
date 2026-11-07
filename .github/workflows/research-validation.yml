@@ -28,6 +28,14 @@ jobs:
         run: python research/interaction_screen.py --data eurusd_history_extended.csv --out research/INTERACTION_SCREEN.md
       - name: Run paired day-cluster bootstrap
         run: python research/day_cluster_bootstrap.py --data eurusd_history_extended.csv --out research/CLUSTER_BOOTSTRAP.md
+      - name: Run causal loss-context audit
+        run: python research/loss_context_audit.py --data eurusd_history_extended.csv --out research/LOSS_CONTEXT_AUDIT.md
+      - name: Upload loss-context audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-loss-context-audit
+          path: research/LOSS_CONTEXT_AUDIT.md
+          if-no-files-found: error
       - name: Upload day-cluster bootstrap
         uses: actions/upload-artifact@v4
         with:
