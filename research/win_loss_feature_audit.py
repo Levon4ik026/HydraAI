@@ -272,8 +272,8 @@ def build_ledger(segments: list[list[Bar]], split: datetime, adx_min: float) -> 
                 "WIN" if (change > 0 if call else change < 0) else "LOSS")
             ledger.append({
                 "direction": direction, "outcome": outcome,
-                "period": "TRAIN" if cur.timestamp < split else "HOLDOUT",
-                "signal_time": cur.timestamp.isoformat(),
+                "period": "TRAIN" if bars[i].timestamp < split else "HOLDOUT",
+                "signal_time": bars[i].timestamp.isoformat(),
                 "profit": 0.0 if outcome == "DRAW" else PAYOUT if outcome == "WIN" else -1.0,
                 "features": feats[i],
             })
