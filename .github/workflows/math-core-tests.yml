@@ -20,5 +20,11 @@ jobs:
           python-version: "3.11"
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
-      - name: Reproduce frozen M5 research holdout at 92% payout
-        run: python research/reproduce_m5_bb_williams_adx.py --verify-known-results
+      - name: Reproduce frozen M5 research holdout and weekly direction report at 92% payout
+        run: python research/reproduce_m5_bb_williams_adx.py --verify-known-results | tee m5_direction_weekly_report.txt
+      - name: Upload reproducible M5 report
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5-direction-weekly-report
+          path: m5_direction_weekly_report.txt
+          if-no-files-found: error
