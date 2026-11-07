@@ -112,11 +112,19 @@ def backtest_non_overlapping(rows: Sequence[Mapping[str, Any]], horizon: int, pa
     payout_by_entry: Mapping[datetime, float] | None = None, start_time: datetime | None = None,
     end_time: datetime | None = None) -> list[Trade]:
     """One CALL/PUT scheduler. Win=+payout, loss=-1, draw=0; payout is net."""
-    if horizon < 1: raise ValueError("horizon must be >= 1")
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon < 1:
+        raise ValueError("horizon must be a positive integer")
     if not isfinite(payout) or payout < 0: raise ValueError("payout must be finite and non-negative")
     start = _timestamp(start_time) if start_time is not None else None
     end = _timestamp(end_time) if end_time is not None else None
     times = [_timestamp(r["timestamp"]) for r in rows]
+    if any(current <= previous for previous, current in zip(times, times[1:])):
+        raise ValueError("row timestamps must be strictly increasing; duplicates or reversals are not repaired")
+    for index, row in enumerate(rows):
+        for key in ("open", "close"):
+            value = float(row[key])
+            if not isfinite(value) or value <= 0:
+                raise ValueError(f"{key} must be finite and positive at row {index}")
     trades: list[Trade] = []
     i = 0
     while i + horizon < len(rows):
