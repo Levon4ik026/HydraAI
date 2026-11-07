@@ -58,6 +58,14 @@ jobs:
           name: hydra-long-horizon-audit
           path: research/LONG_HORIZON_AUDIT.md
           if-no-files-found: error
+      - name: Run intratrade path and paired expiry audit
+        run: python research/intratrade_path_audit.py --data eurusd_history_extended.csv --out research/INTRATRADE_PATH_AUDIT.md
+      - name: Upload intratrade path audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-intratrade-path-audit
+          path: research/INTRATRADE_PATH_AUDIT.md
+          if-no-files-found: error
       - name: Upload market-regime audit
         uses: actions/upload-artifact@v4
         with:
