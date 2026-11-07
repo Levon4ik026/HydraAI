@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "research"))
-from reproduce_m5_bb_williams_adx import Bar, run_trades
+from reproduce_m5_bb_williams_adx import Bar, run_trades, summary, wilson_interval
 
 
 UTC = timezone.utc
@@ -32,6 +32,22 @@ class M5ResearchSchedulerTests(unittest.TestCase):
     def test_trade_cannot_cross_missing_m5_bucket(self):
         rows = [row(0, 1, 0), row(2, 0, 0), row(3, 0, 0)]
         self.assertEqual(run_trades(rows, 15), [])
+
+    def test_summary_reports_confidence_interval_and_drawdown(self):
+        trades = [
+            {"outcome": "WIN", "profit": 0.92},
+            {"outcome": "LOSS", "profit": -1.0},
+            {"outcome": "WIN", "profit": 0.92},
+        ]
+        result = summary(trades)
+        self.assertEqual(result["trades"], 3)
+        self.assertEqual(result["decisive"], 3)
+        self.assertEqual(result["net_92"], 0.84)
+        self.assertEqual(result["max_drawdown_units"], 1.0)
+        self.assertIsNotNone(result["wilson_95_pct"])
+
+    def test_wilson_interval_is_none_without_decisive_trades(self):
+        self.assertIsNone(wilson_interval(0, 0))
 
 
 if __name__ == "__main__":
