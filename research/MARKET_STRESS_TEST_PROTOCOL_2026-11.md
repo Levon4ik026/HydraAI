@@ -22,7 +22,7 @@ The 2026-11-07 guest-feed audit found 605 exactly flat rows in a Saturday tail a
 
 ## Diagnostic implementation
 research/stress_test.py provides causal volatility-state diagnostics:
-- True range for each candle.
+- True range for each candle; the previous-close component and rolling baseline reset at every missing interval, so no gap is bridged. Pass interval_seconds=300 for M5 inputs.
 - NORMAL / ELEVATED / EXTREME classification using the median of the preceding 20 true ranges; current candle is excluded from its own baseline.
 - Fixed descriptive ratios: ELEVATED at 1.5x and EXTREME at 2.5x prior median true range.
 - Trade performance grouped by regime known at signal-candle close.
