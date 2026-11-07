@@ -100,7 +100,7 @@ def next_candle_baseline_by_regime(candles: Sequence[Candle], regime_rows: Seque
         regime = regime_rows[i]["regime"]
         if regime not in buckets:
             continue
-        delta = following.close-current.close
+        delta = following.close-following.open
         if abs(delta) <= 1e-12:
             buckets[regime]["draw"] += 1
         elif delta > 0:
