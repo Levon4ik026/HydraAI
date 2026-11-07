@@ -79,6 +79,8 @@ def indicators(bars: list[Bar]) -> list[dict[str, float | None]]:
     lower: list[float | None] = [None] * n
     willr: list[float | None] = [None] * n
     adx: list[float | None] = [None] * n
+    plus_di_values: list[float | None] = [None] * n
+    minus_di_values: list[float | None] = [None] * n
 
     for i in range(19, n):
         window = bars[i - 19:i + 1]
@@ -115,6 +117,8 @@ def indicators(bars: list[Bar]) -> list[dict[str, float | None]]:
                 minus_sum += (down if down > up and down > 0 else 0.0) - minus_sum / 14.0
             plus_di = 100.0 * plus_sum / tr_sum if tr_sum else 0.0
             minus_di = 100.0 * minus_sum / tr_sum if tr_sum else 0.0
+            plus_di_values[i] = plus_di
+            minus_di_values[i] = minus_di
             denom = plus_di + minus_di
             dx[i] = 100.0 * abs(plus_di - minus_di) / denom if denom else 0.0
         valid_dx = [(i, value) for i, value in enumerate(dx) if value is not None]
@@ -126,7 +130,8 @@ def indicators(bars: list[Bar]) -> list[dict[str, float | None]]:
                 state = (state * 13.0 + value) / 14.0
                 adx[i] = state
 
-    return [{"upper": upper[i], "lower": lower[i], "willr": willr[i], "adx": adx[i]}
+    return [{"upper": upper[i], "lower": lower[i], "willr": willr[i], "adx": adx[i],
+             "plus_di": plus_di_values[i], "minus_di": minus_di_values[i]}
             for i in range(n)]
 
 
@@ -148,7 +153,12 @@ def build_signals(segments: list[list[Bar]]) -> list[dict]:
                     elif (bars[i - 1].close > prev["upper"] and bar.close < cur["upper"]
                           and prev["willr"] >= -20.0 and cur["willr"] < -20.0):
                         signal = -1
-            output.append({"bar": bar, "signal": signal, "adx": ind[i]["adx"], "segment_id": segment_id})
+            momentum_3 = (bar.close - bars[i - 3].close) if i >= 3 else None
+            momentum_6 = (bar.close - bars[i - 6].close) if i >= 6 else None
+            output.append({"bar": bar, "signal": signal, "adx": ind[i]["adx"],
+                           "plus_di": ind[i]["plus_di"], "minus_di": ind[i]["minus_di"],
+                           "momentum_3": momentum_3, "momentum_6": momentum_6,
+                           "segment_id": segment_id})
     return output
 
 
@@ -178,7 +188,11 @@ def run_trades(rows: list[dict], threshold: float) -> list[dict]:
                        "outcome": outcome, "profit": profit,
                        "signal_time": row["bar"].timestamp,
                        "entry_time": entry.timestamp,
-                       "settlement_time": entry.timestamp + timedelta(minutes=5)})
+                       "settlement_time": entry.timestamp + timedelta(minutes=5),
+                       "adx": row["adx"], "plus_di": row.get("plus_di"),
+                       "minus_di": row.get("minus_di"),
+                       "momentum_3": row.get("momentum_3"),
+                       "momentum_6": row.get("momentum_6")})
         i += 1  # expiry closes on entry candle; a signal on that close may enter the next candle
     return trades
 
@@ -218,6 +232,39 @@ def direction_comparison(trades: list[dict]) -> dict:
     return {"call": summary([t for t in trades if t["direction"] == "CALL"]),
             "put": summary([t for t in trades if t["direction"] == "PUT"]),
             "fisher_two_sided_p": fisher_exact_two_sided(cw, cl, pw, pl)}
+
+
+def grouped_regime_report(trades: list[dict], label: str) -> None:
+    """Print CALL/PUT results conditional on signal-time DMI and prior momentum."""
+    print(f"  REGIME BREAKDOWN [{label}]")
+    dimensions = {
+        "DMI": lambda t: ("PLUS_DI_DOMINANT" if t.get("plus_di") is not None and t.get("minus_di") is not None and t["plus_di"] > t["minus_di"]
+                          else "MINUS_DI_DOMINANT" if t.get("plus_di") is not None and t.get("minus_di") is not None and t["minus_di"] > t["plus_di"]
+                          else "DI_TIE_OR_NA"),
+        "MOMENTUM_3": lambda t: ("UP" if t.get("momentum_3") is not None and t["momentum_3"] > 0
+                                 else "DOWN" if t.get("momentum_3") is not None and t["momentum_3"] < 0
+                                 else "FLAT_OR_NA"),
+        "MOMENTUM_6": lambda t: ("UP" if t.get("momentum_6") is not None and t["momentum_6"] > 0
+                                 else "DOWN" if t.get("momentum_6") is not None and t["momentum_6"] < 0
+                                 else "FLAT_OR_NA"),
+    }
+    for dim, classify in dimensions.items():
+        buckets: dict[str, list[dict]] = defaultdict(list)
+        for trade in trades:
+            buckets[classify(trade)].append(trade)
+        for regime in sorted(buckets):
+            subset = buckets[regime]
+            comp = direction_comparison(subset)
+            print(f"    {dim}={regime}: CALL={comp['call']} | PUT={comp['put']} | Fisher p={comp['fisher_two_sided_p']}")
+    # Combined DMI x 3-bar momentum context tests whether direction asymmetry
+    # persists after conditioning on contemporaneous trend and recent impulse.
+    combined: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for trade in trades:
+        combined[(dimensions["DMI"](trade), dimensions["MOMENTUM_3"](trade))].append(trade)
+    for (dmi, mom), subset in sorted(combined.items()):
+        if len(subset) >= 6:
+            comp = direction_comparison(subset)
+            print(f"    DMIxMOM3={dmi}/{mom}: CALL={comp['call']} | PUT={comp['put']} | Fisher p={comp['fisher_two_sided_p']}")
 
 
 def summary(trades: list[dict]) -> dict:
@@ -285,6 +332,10 @@ def main() -> None:
         print(f"  FULL direction comparison: CALL={full_cmp['call']} | PUT={full_cmp['put']} | Fisher two-sided p={full_cmp['fisher_two_sided_p']}")
         print(f"  TRAIN direction comparison: CALL={train_cmp['call']} | PUT={train_cmp['put']} | Fisher two-sided p={train_cmp['fisher_two_sided_p']}")
         print(f"  HOLDOUT direction comparison: CALL={holdout_cmp['call']} | PUT={holdout_cmp['put']} | Fisher two-sided p={holdout_cmp['fisher_two_sided_p']}")
+        if threshold == 15:
+            grouped_regime_report(all_trades, "FULL")
+            grouped_regime_report(train_trades, "TRAIN")
+            grouped_regime_report(test_trades, "HOLDOUT")
         # Weekly slices cover the entire available history, not only holdout.
         # Trades are grouped by signal week (Monday 00:00 UTC), with CALL/PUT
         # split and exact directional comparison shown for each week.
