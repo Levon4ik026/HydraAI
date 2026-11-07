@@ -220,14 +220,15 @@ def main():
             lines.append(f"| {side} | {h_b*5}m − {h_a*5}m | {paired['n']} | {paired['days']} | {fmt_ci(paired['delta_net_ci'])} | {fmt_ci(paired['delta_wr_ci'], ' pp')} |")
     lines += ["",
               "Intervals preserve within-day dependence but cannot correct strategy selection, regime drift, or the already-inspected historical holdout.", ""]
-    lines += ["## Period split: 25-minute expiry", "",
-              "| Period | Side | n | W/L/D | Decisive WR | Net u |",
-              "|---|---|---:|---:|---:|---:|"]
-    for period in ("PRE_SPLIT", "POST_SPLIT"):
-        for side in ("CALL", "PUT"):
-            sub = [x for x in events if x["h"] == 5 and x["period"] == period and x["direction"] == side]
-            w,l,d,wr,net = summary(sub)
-            lines.append(f"| {period} | {side} | {len(sub)} | {w}/{l}/{d} | {wr:.1f}% | {net:+.2f} |" if wr is not None else f"| {period} | {side} | {len(sub)} | {w}/{l}/{d} | n/a | {net:+.2f} |")
+    lines += ["## Period split: 20m and 25m expiries", "",
+              "| Expiry | Period | Side | n | W/L/D | Decisive WR | Net u |",
+              "|---:|---|---|---:|---:|---:|---:|"]
+    for h in (4, 5):
+        for period in ("PRE_SPLIT", "POST_SPLIT"):
+            for side in ("CALL", "PUT"):
+                sub = [x for x in events if x["h"] == h and x["period"] == period and x["direction"] == side]
+                w,l,d,wr,net = summary(sub)
+                lines.append(f"| {h*5}m | {period} | {side} | {len(sub)} | {w}/{l}/{d} | {wr:.1f}% | {net:+.2f} |" if wr is not None else f"| {h*5}m | {period} | {side} | {len(sub)} | {w}/{l}/{d} | n/a | {net:+.2f} |")
     lines += ["", "## Guardrails", "",
               "- MFE/MAE are path descriptions, not a tradable stop/target strategy; no stop-loss or take-profit was simulated.",
               "- The first-touch table uses closes only. High/low touch order inside an M5 bar is unknowable from these candles.",
