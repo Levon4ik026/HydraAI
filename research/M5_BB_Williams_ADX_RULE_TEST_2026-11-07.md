@@ -52,7 +52,7 @@ The larger 2026-11-06 screening report found a weak PUT-only M5 lead, but the fu
 ## Interpretation and limits
 - This explicitly defined variant is CALL-led on this October sample, opposite to the earlier PUT-only lead. That disagreement is a warning against treating either result as a stable edge.
 - The best-looking holdout cell is ADX >=15: 31 wins from 48 decisive trades (64.58%). Its approximate 95% Wilson interval is 50.44%–76.57%, which is wide because the holdout has only 48 trades.
-- The ADX >=15 train result is only +1.16 units at 92% and negative at 80%. The holdout improvement may be sampling noise or a regime change.
+- The ADX >=15 train result is only +1.16 units at 92%. The holdout improvement may be sampling noise or a regime change.
 - This sample is short, partly overlaps the period covered by prior research, and does not include real platform quote latency, spread, payout variation, or settlement verification.
 - This is a candidate for a longer untouched forward test only. It is **not approved for live trading**, and it does not change the manual-only/no-auto-trading design.
 
