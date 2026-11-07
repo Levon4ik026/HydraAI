@@ -70,7 +70,7 @@ class StressTestDiagnostics(unittest.TestCase):
 
     def test_regime_matched_baseline_skips_gap_and_warmup(self):
         candles = make_candles([.001]*8)
-        later = make_candles([.001]*8, candles[-1].timestamp + timedelta(minutes=2)
+        later = make_candles([.001]*8, candles[-1].timestamp + timedelta(minutes=2))
         candles += later
         regimes = classify_volatility_regimes(candles, lookback=5)
         baseline = next_candle_baseline_by_regime(candles, regimes)
