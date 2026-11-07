@@ -1,6 +1,6 @@
 # HydraAI — reconciliation of the short M5 candidate and broad indicator screening
 
-> **STATUS UPDATE — 2026-11-07:** The short-sample backtest scheduler was found to skip a valid signal at expiry close and lacked an explicit segment-boundary guard. All short-sample metrics in this document are withdrawn pending corrected rerun. The broader screening summary remains a separate previously documented result, not affected by this code correction. See [scheduler audit](M5_SCHEDULER_AUDIT_2026-11-07.md).
+> **STATUS UPDATE — 2026-11-07:** The short-sample M5 test was rerun after fixing the expiry-close scheduler, explicit segment guard, and settlement-time split. Corrected aggregate holdout counts reproduced the previous totals; the updated report now includes direction-specific results and confidence intervals. The broader screening summary remains a separate previously documented result, not affected by this code correction. See [scheduler audit](M5_SCHEDULER_AUDIT_2026-11-07.md) and [corrected rule-test report](M5_BB_Williams_ADX_RULE_TEST_2026-11-07.md).
 Date: 2026-11-07
 Branch: `hydra/stabilization`
 Payout convention: **92% only** (win +0.92, loss -1.00, draw 0).
