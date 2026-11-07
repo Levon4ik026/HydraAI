@@ -58,8 +58,8 @@ class StressTestDiagnostics(unittest.TestCase):
         self.assertEqual(result["trades"], 1)
 
     def test_gap_resets_regime_warmup_and_true_range(self):
-        candles = make_candles([.001]*6)
-        later = make_candles([.001]*6, candles[-1].timestamp + timedelta(minutes=2))
+        candles = make_candles([.001]*8)
+        later = make_candles([.001]*8, candles[-1].timestamp + timedelta(minutes=2))
         combined = candles + later
         rows = classify_volatility_regimes(combined, lookback=5)
         self.assertEqual(rows[5]["regime"], REGIME_NORMAL)
@@ -73,7 +73,7 @@ class StressTestDiagnostics(unittest.TestCase):
         candles += later
         regimes = classify_volatility_regimes(candles, lookback=5)
         baseline = next_candle_baseline_by_regime(candles, regimes)
-        self.assertEqual(baseline[REGIME_NORMAL]["decisive"], 2)
+        self.assertEqual(baseline[REGIME_NORMAL]["decisive"], 4)
         self.assertEqual(baseline[REGIME_NORMAL]["up"] + baseline[REGIME_NORMAL]["down"], 2)
         self.assertIsNotNone(baseline[REGIME_NORMAL]["call_win_rate"])
 
