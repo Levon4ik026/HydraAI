@@ -234,6 +234,30 @@ def direction_comparison(trades: list[dict]) -> dict:
             "fisher_two_sided_p": fisher_exact_two_sided(cw, cl, pw, pl)}
 
 
+def conditional_candle_baseline(rows: list[dict], threshold: float) -> None:
+    """Background next-candle direction rates under the same DMI/momentum states."""
+    buckets: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: {"UP": 0, "DOWN": 0, "DRAW": 0})
+    for i in range(len(rows) - 1):
+        cur, nxt = rows[i], rows[i + 1]
+        if (cur["segment_id"] != nxt["segment_id"] or
+                nxt["bar"].timestamp - cur["bar"].timestamp != timedelta(minutes=5) or
+                cur.get("adx") is None or cur["adx"] < threshold or
+                cur.get("plus_di") is None or cur.get("minus_di") is None or
+                cur.get("momentum_3") is None):
+            continue
+        dmi = "MINUS_DI_DOMINANT" if cur["minus_di"] > cur["plus_di"] else "PLUS_DI_DOMINANT"
+        mom = "UP" if cur["momentum_3"] > 0 else "DOWN" if cur["momentum_3"] < 0 else "FLAT"
+        delta = nxt["bar"].close - nxt["bar"].open
+        outcome = "UP" if delta > 1e-12 else "DOWN" if delta < -1e-12 else "DRAW"
+        buckets[(dmi, mom)][outcome] += 1
+    print("  CONDITIONAL NEXT-CANDLE BASELINE (all eligible M5 bars, overlapping; descriptive only)")
+    for (dmi, mom), counts in sorted(buckets.items()):
+        decisive = counts["UP"] + counts["DOWN"]
+        up_pct = 100.0 * counts["UP"] / decisive if decisive else 0.0
+        down_pct = 100.0 * counts["DOWN"] / decisive if decisive else 0.0
+        print(f"    {dmi}/{mom}: n={decisive}, UP={up_pct:.2f}%, DOWN={down_pct:.2f}%, counts={counts}")
+
+
 def grouped_regime_report(trades: list[dict], label: str) -> None:
     """Print CALL/PUT results conditional on signal-time DMI and prior momentum."""
     print(f"  REGIME BREAKDOWN [{label}]")
@@ -333,6 +357,7 @@ def main() -> None:
         print(f"  TRAIN direction comparison: CALL={train_cmp['call']} | PUT={train_cmp['put']} | Fisher two-sided p={train_cmp['fisher_two_sided_p']}")
         print(f"  HOLDOUT direction comparison: CALL={holdout_cmp['call']} | PUT={holdout_cmp['put']} | Fisher two-sided p={holdout_cmp['fisher_two_sided_p']}")
         if threshold == 15:
+            conditional_candle_baseline(rows, threshold)
             grouped_regime_report(all_trades, "FULL")
             grouped_regime_report(train_trades, "TRAIN")
             grouped_regime_report(test_trades, "HOLDOUT")
