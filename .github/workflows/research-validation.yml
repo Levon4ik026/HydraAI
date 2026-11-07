@@ -21,3 +21,12 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Run research tests
         run: python -m unittest discover -s research/tests -v
+
+      - name: Run direction-separated winner-loser audit
+        run: python research/win_loss_feature_audit.py --data eurusd_history_extended.csv --out research/WIN_LOSS_FEATURE_AUDIT.md
+      - name: Upload winner-loser audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-win-loss-feature-audit
+          path: research/WIN_LOSS_FEATURE_AUDIT.md
+          if-no-files-found: error
