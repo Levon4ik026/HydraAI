@@ -55,3 +55,13 @@
 
 ## Conclusion
 The files are readable and structurally valid, but the sample is not a clean continuous market dataset. The 605-row flat tail and repeated connection failures are the dominant integrity issues. The dataset is useful for diagnosing the collector; it is not suitable for a strategy validation claim.
+
+
+## Frozen PUT candidate diagnostic on the three non-flat runs
+- Applied the currently frozen selector exactly as specified in `research/frozen_put_candidate.py` to complete M5 bars built only from the three large non-flat runs above.
+- Complete M5 segment lengths: 56, 105, and 39 bars (200 total).
+- Candidate trades: 2 total, both in the 105-bar 2026-11-05 segment:
+  - Signal 17:30 UTC, entry 17:35 UTC: LOSS.
+  - Signal 17:50 UTC, entry 17:55 UTC: WIN.
+- At 92% payout: 1 WIN / 1 LOSS, 50% decisive win rate, net -0.08 units.
+- This is only a mechanical smoke test showing the selector can be applied to this feed. Two trades are not statistically informative and do not validate or invalidate the strategy. No threshold was changed.
