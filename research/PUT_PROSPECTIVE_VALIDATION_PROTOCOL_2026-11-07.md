@@ -27,9 +27,7 @@ Execution simulation:
 
 ## Prospective boundary and source
 
-The frozen M1 research source ends at 2026-11-05 16:08 UTC. The script default forward boundary is **2026-11-05 16:10 UTC**, the first subsequent UTC M5 bucket start. All records before the boundary are labelled historical and must not be counted as validation. Only genuinely newly collected candles at or after the boundary qualify.
-
-If the local feed has a different final timestamp, do not move the boundary backwards. Move it forward to the first complete UTC M5 bucket strictly after the last historical candle, document the change before observing outcomes, and then keep it fixed.
+The frozen M1 research source ends at 2026-11-05 16:08 UTC. The one-shot replay script retains **2026-11-05 16:10 UTC** as its historical comparison boundary; that date is not the start of the new prospective experiment. The continuous monitor described below creates a fresh forward boundary at its first launch (next UTC M5 boundary) and persists it. Only genuinely new candles after that launch boundary qualify.
 
 ## Running
 
