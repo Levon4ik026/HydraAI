@@ -137,7 +137,7 @@ def main() -> None:
             o, h, l, c = (float(row[k]) for k in ("open", "high", "low", "close"))
             if not all(math.isfinite(x) and x > 0 for x in (o, h, l, c)):
                 raise ValueError(f"Invalid OHLC at {ts.isoformat()}")
-            if h < max(o, l, c) or l > min(o, c):
+            if h < max(o, l, c) or l > min(o, h, c):
                 raise ValueError(f"Invalid OHLC ordering at {ts.isoformat()}")
             parsed[ts] = Bar(ts, o, h, l, c)
     m1 = [parsed[t] for t in sorted(parsed)]
