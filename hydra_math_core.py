@@ -140,7 +140,7 @@ def backtest_non_overlapping(rows: Sequence[Mapping[str, Any]], horizon: int, pa
         if (start is None or exit_time >= start) and (end is None or exit_time < end):
             trades.append(Trade(signal_time, entry_time, exit_time, "CALL" if signal == 1 else "PUT",
                 entry_price, exit_price, actual_payout, outcome, profit))
-        i = exit_i + 1
+        i = exit_i
     return trades
 
 def summarize(trades: Sequence[Trade]) -> dict[str, float | int]:
