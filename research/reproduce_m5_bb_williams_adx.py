@@ -183,21 +183,40 @@ def run_trades(rows: list[dict], threshold: float) -> list[dict]:
     return trades
 
 
+def wilson_interval(wins: int, decisive: int, z: float = 1.959963984540054) -> tuple[float, float] | None:
+    if decisive <= 0:
+        return None
+    p = wins / decisive
+    denom = 1.0 + z * z / decisive
+    center = (p + z * z / (2.0 * decisive)) / denom
+    radius = z * math.sqrt((p * (1.0 - p) / decisive) + z * z / (4.0 * decisive * decisive)) / denom
+    return (100.0 * (center - radius), 100.0 * (center + radius))
+
+
 def summary(trades: list[dict]) -> dict:
     wins = sum(t["outcome"] == "WIN" for t in trades)
     losses = sum(t["outcome"] == "LOSS" for t in trades)
     draws = sum(t["outcome"] == "DRAW" for t in trades)
     decisive = wins + losses
+    equity = peak = max_dd = 0.0
+    for trade in trades:
+        equity += trade["profit"]
+        peak = max(peak, equity)
+        max_dd = max(max_dd, peak - equity)
+    ci = wilson_interval(wins, decisive)
     return {"trades": len(trades), "wins": wins, "losses": losses, "draws": draws,
+            "decisive": decisive,
             "win_rate": round(100.0 * wins / decisive, 2) if decisive else 0.0,
-            "net_92": round(sum(t["profit"] for t in trades), 2)}
+            "wilson_95_pct": [round(x, 2) for x in ci] if ci else None,
+            "net_92": round(sum(t["profit"] for t in trades), 2),
+            "max_drawdown_units": round(max_dd, 2)}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=Path, default=DATA_PATH)
     parser.add_argument("--verify-known-results", action="store_true",
-                        help="fail unless frozen holdout figures match the research note")
+                        help="verify trade outcome accounting invariants")
     args = parser.parse_args()
     m1 = load_m1(args.data)
     segments = make_m5(m1)
@@ -219,13 +238,13 @@ def main() -> None:
         holdout_results[threshold] = summary(test_trades)
         print(f"ADX >= {threshold}: train={summary(train_trades)} | holdout={summary(test_trades)}")
         for direction in ("CALL", "PUT"):
-            print(f"  {direction} full sample: {summary([t for t in all_trades if t['direction'] == direction])}")
+            print(f"  {direction} holdout: {summary([t for t in test_trades if t['direction'] == direction])}")
         if threshold == 15:
             monthly: dict[str, list[dict]] = defaultdict(list)
-            for trade in all_trades:
+            for trade in test_trades:
                 monthly[trade["signal_time"].strftime("%Y-%m")].append(trade)
             for month in sorted(monthly):
-                print(f"  {month} full sample: {summary(monthly[month])}")
+                print(f"  {month} holdout: {summary(monthly[month])}")
     if args.verify_known_results:
         # The prior frozen counts used an overly conservative two-row skip,
         # which skipped a valid signal at the expiry candle close. Those counts
