@@ -56,3 +56,15 @@ The larger 2026-11-06 screening report found a weak PUT-only M5 lead, but the fu
 
 ## Next validation
 Run this exact frozen rule on a substantially longer dataset not used to select thresholds, with observed per-entry payouts, then report monthly results and confidence intervals. Do not tune the ADX threshold against this holdout.
+
+
+## Reproducibility confirmation (2026-11-07)
+
+The exact rule is now implemented in `research/reproduce_m5_bb_williams_adx.py` using only the Python standard library. It rebuilds UTC-aligned complete M5 candles from the committed M1 CSV, resets indicators at the two M5 continuity segments, applies one shared non-overlapping scheduler, and uses **0.92 net payout only**.
+
+GitHub Actions run [#42368016020](https://github.com/Levon4ik026/HydraAI/actions/runs/42368016020) completed successfully on `hydra/stabilization`. The seven math-core unit tests passed, and the research step independently reproduced all three frozen holdout outcome counts exactly:
+- ADX >= 15: 48 trades, 31 wins, 17 losses, 0 draws; **+11.52 units at 92%**.
+- ADX >= 20: 39 trades, 23 wins, 16 losses, 0 draws; **+5.16 units at 92%**.
+- ADX >= 25: 21 trades, 13 wins, 8 losses, 0 draws; **+3.96 units at 92%**.
+
+This confirms the calculation is repeatable from repository data; it does not establish a durable trading edge. The holdout is only 48 decisive trades at the best-looking threshold, and it is from the same short October sample used during research. Monthly breakdown is emitted by the script for regime inspection.
