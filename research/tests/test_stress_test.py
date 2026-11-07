@@ -78,6 +78,18 @@ class StressTestDiagnostics(unittest.TestCase):
         self.assertIsNotNone(baseline[REGIME_NORMAL]["call_win_rate"])
 
 
+    def test_regime_summary_reports_wilson_uncertainty(self):
+        candles = make_candles([.001]*5 + [.004,.001,.001,.001])
+        trades = backtest_signals(candles, {5:"CALL",6:"PUT",7:"CALL"}, 1,
+                                  allow_overlapping=True)
+        grouped = summarize_by_signal_regime(
+            trades, classify_volatility_regimes(candles, lookback=5))
+        extreme = grouped[REGIME_EXTREME]
+        self.assertEqual(extreme["decisive_trades"], 1)
+        self.assertIsNotNone(extreme["wilson_95_low_pct"])
+        self.assertIsNotNone(extreme["wilson_95_high_pct"])
+        self.assertIn("Descriptive only", extreme["inference_warning"])
+
     def test_bad_thresholds_rejected(self):
         with self.assertRaises(ValueError):
             classify_volatility_regimes(make_candles([.001]*5), lookback=1)
