@@ -91,6 +91,13 @@ class BacktestEngineTests(unittest.TestCase):
                          [candles[0].timestamp, candles[2].timestamp])
         self.assertEqual(trades[0].settlement_time, trades[1].entry_time)
 
+    def test_draw_epsilon_must_be_finite_and_non_negative(self):
+        candles = series([1.100, 1.101, 1.102])
+        for epsilon in (float("nan"), float("inf"), float("-inf"), -1e-9):
+            with self.subTest(epsilon=epsilon):
+                with self.assertRaises(ValueError):
+                    backtest_signals(candles, {0: "CALL"}, 1, draw_epsilon=epsilon)
+
     def test_duplicate_timestamps_rejected(self):
         candles = series([1.1, 1.101, 1.102])
         candles[2] = Candle(candles[1].timestamp, candles[2].open, candles[2].high,
