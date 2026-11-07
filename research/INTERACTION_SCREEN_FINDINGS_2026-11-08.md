@@ -25,8 +25,9 @@ Only seven predeclared two-feature interactions were screened, separately for CA
 ### CALL
 Frozen train rule: `ema20_50_atr <= -0.43772535` AND `body_range > 0.56454248`.
 - Train selected cell: 17 trades, 14W/3L/0D; 82.35% decisive WR; +9.88u; ROI +58.12%; PF 4.29; max DD 3.00u; max losing streak 3.
-- Holdout selected cell: 14 trades, 10W/4L/0D; 71.43% decisive WR; +5.20u; ROI +37.14%; PF 2.30; max DD 1.16u; max losing streak 1.
+- Holdout selected cell: 14 trades, 10W/4L/0D; 71.43% decisive WR (Wilson 95% CI 45.35–88.28%); +5.20u; ROI +37.14%; PF 2.30; max DD 1.16u; max losing streak 1.
 - Holdout coverage: 14/32 CALL signals (43.8%).
+- Crucial comparison: the unfiltered CALL base on the same holdout was 23W/9L/0D, 71.88% WR, +12.16u, ROI +38.00%. The selected filter's holdout WR was 0.45 percentage points LOWER, ROI was 0.86 pp lower, and it retained only 43.8% of signals. Thus it did not demonstrate incremental predictive value; it simply discarded more than half the opportunities.
 
 ### PUT
 Frozen train rule: `atr14_close > 0.00029368424` AND `upper_wick_range > 0.19354839`.
@@ -35,8 +36,8 @@ Frozen train rule: `atr14_close > 0.00029368424` AND `upper_wick_range > 0.19354
 - Holdout coverage: 2/16 PUT signals (12.5%).
 
 ## Verdict
-- CALL interaction is a hypothesis worth prospective observation: its train-selected cell retained positive results in this historical holdout, but only 14 holdout trades. The holdout period has already been examined in earlier project research, so it is not genuinely untouched; the 56-cell selection process adds substantial optimism. This is not evidence of a confirmed edge.
-- PUT interaction does not generalize: the frozen cell covered only two holdout signals and produced -0.08u. It is not a usable PUT filter.
+- CALL interaction looked strong in train (14/17 wins; Wilson 95% CI 58.97–93.81%) but failed the practical test of incremental value in holdout: 10/14 wins versus 23/32 for the unfiltered base. It delivered no WR or ROI improvement and materially reduced trade count. Do not adopt it as a filter. The holdout has also been inspected in earlier research, and 56 direction/cell candidates were screened, so selection optimism is substantial.
+- PUT interaction does not generalize: the frozen cell covered only two holdout signals and produced -0.08u (1/2 WR; Wilson 95% CI 9.45–90.55%). It is not a usable PUT filter.
 - Do not alter the desktop math core, claim confirmed profitability, or merge this rule. Keep CALL/PUT separate.
 - Next valid step: freeze the CALL candidate exactly as above and observe it prospectively on new, continuous, non-OTC data. Keep all new observations out of tuning; report counts, W/L/D, decisive WR, net at 92%, ROI, PF, drawdown, losing streak, coverage, and uncertainty. Do not treat the historical holdout as independent confirmation.
 
