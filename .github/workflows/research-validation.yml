@@ -1,0 +1,23 @@
+name: Research validation tests
+
+on:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/**"
+      - ".github/workflows/research-validation.yml"
+  pull_request:
+    branches: [hydra/research-validation, hydra/stabilization]
+
+jobs:
+  research-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run existing project tests
+        run: python -m unittest discover -s tests -v
+      - name: Run research tests
+        run: python -m unittest discover -s research/tests -v

@@ -12,6 +12,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -21,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "research"))
 from frozen_put_candidate import build_candidate, parse_utc  # noqa: E402
 from reproduce_m5_bb_williams_adx import Bar, make_m5  # noqa: E402
+from statistical_validation import wilson_interval  # noqa: E402
 
 
 def utc_now() -> datetime:
@@ -65,9 +67,51 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_or_create_state(path: Path, requested_start: str | None) -> dict:
+def load_ledger_keys(path: Path) -> set[str]:
+    """Recover committed trade keys so a crash after CSV append cannot duplicate rows."""
+    if not path.exists():
+        return set()
+    keys: set[str] = set()
+    with path.open("r", encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            key = row.get("signal_time_utc")
+            if key:
+                keys.add(parse_utc(key).isoformat())
+    return keys
+
+
+def newly_observed_settlements(
+    trades: list[dict],
+    previous_latest: datetime | None,
+    latest: datetime,
+) -> list[dict]:
+    """Return only settlements covered by exactly one newly observed M1 candle.
+
+    A jump, rollback, or unchanged timestamp is not evidence of continuous live
+    observation. Callers must advance their cursor after a jump without scoring it.
+    """
+    if previous_latest is None or latest - previous_latest != timedelta(minutes=1):
+        return []
+    lower_exclusive = previous_latest + timedelta(minutes=1)
+    upper_inclusive = latest + timedelta(minutes=1)
+    return [
+        trade for trade in trades
+        if lower_exclusive < trade["settlement_time"] <= upper_inclusive
+    ]
+
+
+def load_or_create_state(
+    path: Path,
+    requested_start: str | None,
+    legacy_state_path: Path | None = None,
+) -> dict:
     if path.exists():
         state = json.loads(path.read_text(encoding="utf-8"))
+        if state.get("observation_integrity_version") != 1:
+            raise SystemExit(
+                "State file lacks observation_integrity_version=1. "
+                "Use a fresh v2 state/ledger pair; legacy records are not trusted."
+            )
         saved_start = parse_utc(state["forward_start"])
         if requested_start and parse_utc(requested_start) != saved_start:
             raise SystemExit(
@@ -75,8 +119,17 @@ def load_or_create_state(path: Path, requested_start: str | None) -> dict:
                 "refusing to change it. Use the existing state file."
             )
         return state
-    start = parse_utc(requested_start) if requested_start else next_m5_boundary(utc_now())
+    # Preserve the already-frozen prospective boundary, but deliberately do
+    # not inherit legacy cursor/keys/counters: the old monitor could score
+    # historical catch-up rows. The v2 ledger starts clean.
+    legacy_start = None
+    if legacy_state_path and legacy_state_path.exists():
+        legacy = json.loads(legacy_state_path.read_text(encoding="utf-8"))
+        if legacy.get("forward_start"):
+            legacy_start = parse_utc(legacy["forward_start"])
+    start = parse_utc(requested_start) if requested_start else legacy_start or next_m5_boundary(utc_now())
     state = {
+        "observation_integrity_version": 1,
         "forward_start": start.isoformat(),
         "created_at_utc": utc_now().isoformat(),
         "recorded_trade_keys": [],
@@ -111,6 +164,7 @@ def append_trade_rows(path: Path, trades: list[dict]) -> None:
                 "momentum3": f'{t["momentum3"]:.8f}',
             })
         f.flush()
+        os.fsync(f.fileno())
 
 
 def save_state(path: Path, state: dict) -> None:
@@ -132,10 +186,19 @@ def main() -> None:
     args = ap.parse_args()
     if args.poll_seconds < 5 or args.max_age_seconds < 60:
         raise SystemExit("poll-seconds must be >=5 and max-age-seconds >=60")
-    state_path = args.state or args.data.parent / "hydra_put_forward_state.json"
-    ledger_path = args.ledger or args.data.parent / "hydra_put_forward_trades.csv"
-    state = load_or_create_state(state_path, args.forward_start)
+    legacy_state_path = args.data.parent / "hydra_put_forward_state.json"
+    state_path = args.state or args.data.parent / "hydra_put_forward_state_v2.json"
+    ledger_path = args.ledger or args.data.parent / "hydra_put_forward_trades_v2.csv"
+    state = load_or_create_state(
+        state_path, args.forward_start,
+        legacy_state_path=legacy_state_path if args.state is None else None,
+    )
     forward_start = parse_utc(state["forward_start"])
+    # Recover keys from the append-only ledger as well as JSON state. This
+    # closes the crash window between appending rows and saving state.
+    state_keys = set(state.get("recorded_trade_keys", []))
+    state_keys.update(load_ledger_keys(ledger_path))
+    state["recorded_trade_keys"] = sorted(state_keys)
 
     print("=" * 68)
     print("HYDRA — FROZEN PUT FORWARD MONITOR | RESEARCH ONLY | NO TRADING")
@@ -170,18 +233,41 @@ def main() -> None:
                         if t["settlement_time"] <= now - timedelta(seconds=10)]
             keys = set(state.get("recorded_trade_keys", []))
             fresh = -60 <= age <= args.max_age_seconds
+            previous_latest_raw = state.get("last_latest_m1_utc")
+            previous_latest = parse_utc(previous_latest_raw) if previous_latest_raw else None
             new_trades = []
-            if fresh:
-                for trade in eligible:
+            observation_note = "waiting for first live M1 advance"
+            if fresh and previous_latest is not None and latest == previous_latest + timedelta(minutes=1):
+                observed = newly_observed_settlements(eligible, previous_latest, latest)
+                for trade in observed:
                     key = trade["signal_time"].isoformat()
                     if key not in keys:
                         new_trades.append(trade)
                         keys.add(key)
+                state["last_latest_m1_utc"] = latest.isoformat()
+                observation_note = "continuous +1m observation"
+            elif fresh and previous_latest is None:
+                # First fresh snapshot establishes a baseline only; pre-existing
+                # CSV history must never be replayed as prospective evidence.
+                state["last_latest_m1_utc"] = latest.isoformat()
+                observation_note = "baseline established; no historical backfill scored"
+            elif fresh and latest > previous_latest:
+                # Any jump (including weekend/reconnect/history backfill) is
+                # quarantined. Re-baseline at the new latest candle and wait
+                # for the next exact one-minute advance.
+                jump_seconds = (latest - previous_latest).total_seconds()
+                state["last_latest_m1_utc"] = latest.isoformat()
+                observation_note = f"QUARANTINE timestamp jump {jump_seconds:.0f}s; cursor reset"
+            elif fresh and latest < previous_latest:
+                observation_note = "QUARANTINE timestamp rollback; cursor preserved"
+            elif fresh:
+                observation_note = "waiting for next M1 candle; no new outcomes scored"
+            else:
+                observation_note = "STALE; observation cursor held"
             if new_trades:
                 append_trade_rows(ledger_path, new_trades)
-                state["recorded_trade_keys"] = sorted(keys)
+            state["recorded_trade_keys"] = sorted(keys)
             state["last_data_sha256"] = digest
-            state["last_latest_m1_utc"] = latest.isoformat()
             state["last_check_utc"] = now.isoformat()
             state["last_data_age_seconds"] = round(age, 1)
             state["recorded_decisive"] = sum(
@@ -206,13 +292,15 @@ def main() -> None:
             wins = state["recorded_wins"]
             wr = 100.0 * wins / decisive if decisive else 0.0
             net = 0.92 * wins - state["recorded_losses"]
+            ci = wilson_interval(wins, decisive)
+            ci_text = f"{100.0 * ci[0]:.2f}–{100.0 * ci[1]:.2f}%" if ci else "n/a"
             print(
                 f"[{now.isoformat(timespec='seconds')}] {status} | "
                 f"M1={len(m1)} M5={bars_count} segments={len(segments)} | "
                 f"new trades={len(new_trades)} | "
                 f"forward W/L/D={state['recorded_wins']}/"
                 f"{state['recorded_losses']}/{state['recorded_draws']} | "
-                f"WR={wr:.2f}% net={net:.2f} | sha256={digest[:12]}"
+                f"WR={wr:.2f}% CI95={ci_text} net={net:.2f} | sha256={digest[:12]} | {observation_note}"
             )
             if not fresh:
                 print("[HOLD] No outcomes recorded until the feed is fresh.")
