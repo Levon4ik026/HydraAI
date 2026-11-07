@@ -193,6 +193,33 @@ def wilson_interval(wins: int, decisive: int, z: float = 1.959963984540054) -> t
     return (100.0 * (center - radius), 100.0 * (center + radius))
 
 
+
+def fisher_exact_two_sided(a: int, b: int, c: int, d: int) -> float | None:
+    """Two-sided Fisher exact p-value for [[a,b],[c,d]], conditioning on margins."""
+    r1, r2, col1 = a + b, c + d, a + c
+    total = r1 + r2
+    if total == 0 or r1 == 0 or r2 == 0 or col1 == 0 or col1 == total:
+        return None
+    lo, hi = max(0, r1 - (total - col1)), min(r1, col1)
+    denom = math.comb(total, r1)
+    def probability(x: int) -> float:
+        return math.comb(col1, x) * math.comb(total - col1, r1 - x) / denom
+    observed = probability(a)
+    return min(1.0, sum(probability(x) for x in range(lo, hi + 1)
+                        if probability(x) <= observed + 1e-15))
+
+
+def direction_comparison(trades: list[dict]) -> dict:
+    call = [t for t in trades if t["direction"] == "CALL" and t["outcome"] != "DRAW"]
+    put = [t for t in trades if t["direction"] == "PUT" and t["outcome"] != "DRAW"]
+    cw = sum(t["outcome"] == "WIN" for t in call)
+    pw = sum(t["outcome"] == "WIN" for t in put)
+    cl, pl = len(call) - cw, len(put) - pw
+    return {"call": summary([t for t in trades if t["direction"] == "CALL"]),
+            "put": summary([t for t in trades if t["direction"] == "PUT"]),
+            "fisher_two_sided_p": fisher_exact_two_sided(cw, cl, pw, pl)}
+
+
 def summary(trades: list[dict]) -> dict:
     wins = sum(t["outcome"] == "WIN" for t in trades)
     losses = sum(t["outcome"] == "LOSS" for t in trades)
@@ -236,21 +263,25 @@ def main() -> None:
         train_trades = [t for t in all_trades if t["settlement_time"] < boundary]
         test_trades = [t for t in all_trades if t["settlement_time"] >= boundary]
         holdout_results[threshold] = summary(test_trades)
+        train_cmp = direction_comparison(train_trades)
+        holdout_cmp = direction_comparison(test_trades)
+        full_cmp = direction_comparison(all_trades)
         print(f"ADX >= {threshold}: train={summary(train_trades)} | holdout={summary(test_trades)}")
-        for direction in ("CALL", "PUT"):
-            print(f"  {direction} holdout: {summary([t for t in test_trades if t['direction'] == direction])}")
-        if threshold == 15:
-            monthly: dict[str, list[dict]] = defaultdict(list)
-            weekly: dict[str, list[dict]] = defaultdict(list)
-            for trade in test_trades:
-                stamp = trade["signal_time"]
-                monthly[stamp.strftime("%Y-%m")].append(trade)
-                week_start = (stamp - timedelta(days=stamp.weekday())).strftime("%Y-%m-%d")
-                weekly[week_start].append(trade)
-            for month in sorted(monthly):
-                print(f"  {month} holdout: {summary(monthly[month])}")
-            for week in sorted(weekly):
-                print(f"  week from {week} UTC holdout: {summary(weekly[week])}")
+        print(f"  FULL direction comparison: CALL={full_cmp['call']} | PUT={full_cmp['put']} | Fisher two-sided p={full_cmp['fisher_two_sided_p']}")
+        print(f"  TRAIN direction comparison: CALL={train_cmp['call']} | PUT={train_cmp['put']} | Fisher two-sided p={train_cmp['fisher_two_sided_p']}")
+        print(f"  HOLDOUT direction comparison: CALL={holdout_cmp['call']} | PUT={holdout_cmp['put']} | Fisher two-sided p={holdout_cmp['fisher_two_sided_p']}")
+        # Weekly slices cover the entire available history, not only holdout.
+        # Trades are grouped by signal week (Monday 00:00 UTC), with CALL/PUT
+        # split and exact directional comparison shown for each week.
+        weekly: dict[str, list[dict]] = defaultdict(list)
+        for trade in all_trades:
+            stamp = trade["signal_time"]
+            week_start = (stamp - timedelta(days=stamp.weekday())).strftime("%Y-%m-%d")
+            weekly[week_start].append(trade)
+        for week in sorted(weekly):
+            week_trades = weekly[week]
+            comp = direction_comparison(week_trades)
+            print(f"  WEEK {week} UTC: ALL={summary(week_trades)} | CALL={comp['call']} | PUT={comp['put']} | Fisher p={comp['fisher_two_sided_p']}")
     if args.verify_known_results:
         expected = {
             15: (48, 31, 17, 0, 11.52),
