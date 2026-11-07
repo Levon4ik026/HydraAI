@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "research"))
-from reproduce_m5_bb_williams_adx import Bar, run_trades, summary, wilson_interval
+from reproduce_m5_bb_williams_adx import Bar, indicators, run_trades, summary, wilson_interval
 
 
 UTC = timezone.utc
@@ -48,6 +48,21 @@ class M5ResearchSchedulerTests(unittest.TestCase):
 
     def test_wilson_interval_is_none_without_decisive_trades(self):
         self.assertIsNone(wilson_interval(0, 0))
+
+    def test_dmi_directional_components_are_exposed(self):
+        rising = [
+            Bar(T0 + timedelta(minutes=5 * i),
+                1.0 + i * 0.001,
+                1.01 + i * 0.001,
+                0.995 + i * 0.001,
+                1.005 + i * 0.001)
+            for i in range(40)
+        ]
+        result = indicators(rising)
+        valid = [x for x in result if x["plus_di"] is not None and x["minus_di"] is not None]
+        self.assertTrue(valid)
+        self.assertGreater(valid[-1]["plus_di"], valid[-1]["minus_di"])
+        self.assertIsNotNone(valid[-1]["adx"])
 
 
 if __name__ == "__main__":
