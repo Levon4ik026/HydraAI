@@ -35,6 +35,15 @@ class MathCoreTests(unittest.TestCase):
         for a, b in zip(trades, trades[1:]):
             self.assertGreater(b.entry_time, a.exit_time)
 
+
+    def test_new_signal_at_expiry_close_can_enter_next_candle(self):
+        rows = [{"timestamp": T0+timedelta(minutes=i), "open": 1.0, "close": 1.1,
+                 "signal": 1 if i in (0, 2) else 0} for i in range(5)]
+        trades = backtest_non_overlapping(rows, 2)
+        self.assertEqual(len(trades), 2)
+        self.assertEqual(trades[0].exit_time, trades[1].signal_time)
+        self.assertGreater(trades[1].entry_time, trades[0].exit_time)
+
     def test_actual_payout_override(self):
         rows = [{"timestamp": T0+timedelta(minutes=i), "open": 1.0, "close": 1.1, "signal": 1 if i == 0 else 0} for i in range(3)]
         entry = T0 + timedelta(minutes=1)
