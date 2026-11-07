@@ -97,3 +97,65 @@ The expanded script prints train, holdout, full-sample, and every-week CALL/PUT 
 
 GitHub Actions run: [run #13](https://github.com/Levon4ik026/HydraAI/actions/runs/42369674782) — success.  
 Script: [reproduce_m5_bb_williams_adx.py](https://github.com/Levon4ik026/HydraAI/blob/hydra/stabilization/research/reproduce_m5_bb_williams_adx.py).
+
+
+## Second-stage diagnostic: DMI, momentum, and context-adjusted baseline
+
+Added Wilder +DI/-DI components from the same ADX(14) calculation, plus prior 3- and 6-candle M5 close-to-close momentum. These values are measured at the signal candle close, so no future information enters the regime label. The strategy entry/settlement scheduler and frozen rules are unchanged.
+
+### Important structural finding
+
+The signal directions are strongly associated with opposite DMI states:
+- 82 of 86 CALL trades occurred with -DI > +DI.
+- 55 of 59 PUT trades occurred with +DI > -DI.
+
+This is expected to some extent for a mean-reversion rule: CALLs trigger near the lower Bollinger band after downward pressure; PUTs trigger near the upper band after upward pressure. It means a simple comparison of CALL and PUT inside the same DMI bucket is not a balanced experiment: there are very few CALLs in +DI-dominant states and very few PUTs in -DI-dominant states.
+
+### Directional results by momentum state
+
+For ADX >= 15, full-sample M3 momentum:
+- M3 momentum DOWN: CALL 63.93% (39/61 decisive), PUT 43.48% (10/23).
+- M3 momentum UP: CALL 59.09% (13/22), PUT 53.12% (17/32).
+- In the untouched holdout, M3 DOWN: CALL 68.00% (17/25), PUT 28.57% (2/7); M3 UP: CALL 85.71% (6/7), PUT 75.00% (6/8).
+
+These splits are descriptive only. The holdout groups are tiny, and none supplies reliable proof of a directional interaction. The full-sample M6-UP split showed CALL 90% (9/10) versus PUT 51.02% (25/49), Fisher p=0.0338, but this result does not persist in holdout (CALL 80% of 5; PUT 53.85% of 13; p=0.596). Treat the M6 result as a likely small-sample/multiple-testing artifact, not a filter.
+
+### Context-adjusted baseline
+
+For every eligible M5 candle with ADX >= 15, the diagnostic estimates the next candle's UP/DOWN rate within its signal-time DMI x M3-momentum bucket. Each strategy trade is then compared with the corresponding same-context background probability (UP for CALL, DOWN for PUT). This is a descriptive, overlapping-candle benchmark, not a causal matched-control study; it can still be affected by serial dependence and the limited date range.
+
+| Period | Direction | Observed strategy WR | Same-context background WR | Lift |
+|---|---|---:|---:|---:|
+| Full | CALL | 62.65% | 59.20% | +3.45 pp |
+| Full | PUT | 48.21% | 46.82% | +1.39 pp |
+| Train | CALL | 56.86% | 58.85% | -1.98 pp |
+| Train | PUT | 47.50% | 46.47% | +1.03 pp |
+| Holdout | CALL | 71.88% | 60.40% | +11.47 pp |
+| Holdout | PUT | 50.00% | 47.53% | +2.47 pp |
+
+This materially changes the interpretation. Across the full sample, the raw CALL-versus-PUT WR gap is 14.44 pp, but the same-context background rates already differ by about 12.38 pp (59.20% CALL-side UP baseline versus 46.82% PUT-side DOWN baseline). After this coarse context adjustment, the strategy's residual lifts are only +3.45 pp CALL and +1.39 pp PUT. Most of the apparent CALL/PUT gap is therefore consistent with the different market states in which the two kinds of mean-reversion signals occur, rather than a demonstrated intrinsic superiority of CALL.
+
+### Week-by-week context-adjusted lift
+
+| Signal week UTC | CALL lift vs context baseline | PUT lift vs context baseline |
+|---|---:|---:|
+| 2026-10-05 | -0.75 pp (n=16) | -4.37 pp (n=10) |
+| 2026-10-12 | -6.81 pp (n=26) | +2.94 pp (n=24) |
+| 2026-10-19 | +9.66 pp (n=26) | +5.16 pp (n=17) |
+| 2026-10-26 | +16.54 pp (n=15) | -10.25 pp (n=5) |
+
+CALL's incremental lift is not consistent across weeks: it was negative in the first two weeks, then positive in the last two. The strong last two weeks coincide with the prior holdout. PUT is also mixed. This pattern is more consistent with a change in market conditions during the holdout than with a stable, always-present CALL advantage. The last week's PUT estimate is especially noisy (five decisive trades).
+
+### Revised verdict
+
+**We have not established that CALL is intrinsically better than PUT.** The unadjusted CALL win rate is higher, but the signal types occur in substantially different DMI/momentum states, and the broad background next-candle rates already explain most of the observed gap. After coarse context adjustment, the full-sample incremental lift is small for both directions; CALL's lift appears concentrated in the last two weeks and is negative in the training period.
+
+Do not disable PUT, enable CALL-only, or encode a directional preference in the Desktop. The next valid test is a longer independent EUR/USD M1 history with a pre-registered, frozen regime adjustment and non-overlapping, signal-time matched controls. Use the same 92% payout and report each month separately. Any proposed DMI/momentum filter must be specified using train data only and evaluated once on a genuinely untouched later period.
+
+## Reproducibility update
+
+- Added +DI/-DI and 3-/6-bar momentum features to the research script.
+- Added full/train/holdout regime splits and week-by-week context-adjusted baselines.
+- Added a unit test for DMI component calculation.
+- Latest GitHub Actions run #18: success — [run #18](https://github.com/Levon4ik026/HydraAI/actions/runs/42370418521).
+- Latest script: [reproduce_m5_bb_williams_adx.py](https://github.com/Levon4ik026/HydraAI/blob/hydra/stabilization/research/reproduce_m5_bb_williams_adx.py).
