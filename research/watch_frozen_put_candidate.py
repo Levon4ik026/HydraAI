@@ -100,9 +100,18 @@ def newly_observed_settlements(
     ]
 
 
-def load_or_create_state(path: Path, requested_start: str | None) -> dict:
+def load_or_create_state(
+    path: Path,
+    requested_start: str | None,
+    legacy_state_path: Path | None = None,
+) -> dict:
     if path.exists():
         state = json.loads(path.read_text(encoding="utf-8"))
+        if state.get("observation_integrity_version") != 1:
+            raise SystemExit(
+                "State file lacks observation_integrity_version=1. "
+                "Use a fresh v2 state/ledger pair; legacy records are not trusted."
+            )
         saved_start = parse_utc(state["forward_start"])
         if requested_start and parse_utc(requested_start) != saved_start:
             raise SystemExit(
@@ -110,8 +119,17 @@ def load_or_create_state(path: Path, requested_start: str | None) -> dict:
                 "refusing to change it. Use the existing state file."
             )
         return state
-    start = parse_utc(requested_start) if requested_start else next_m5_boundary(utc_now())
+    # Preserve the already-frozen prospective boundary, but deliberately do
+    # not inherit legacy cursor/keys/counters: the old monitor could score
+    # historical catch-up rows. The v2 ledger starts clean.
+    legacy_start = None
+    if legacy_state_path and legacy_state_path.exists():
+        legacy = json.loads(legacy_state_path.read_text(encoding="utf-8"))
+        if legacy.get("forward_start"):
+            legacy_start = parse_utc(legacy["forward_start"])
+    start = parse_utc(requested_start) if requested_start else legacy_start or next_m5_boundary(utc_now())
     state = {
+        "observation_integrity_version": 1,
         "forward_start": start.isoformat(),
         "created_at_utc": utc_now().isoformat(),
         "recorded_trade_keys": [],
@@ -168,9 +186,13 @@ def main() -> None:
     args = ap.parse_args()
     if args.poll_seconds < 5 or args.max_age_seconds < 60:
         raise SystemExit("poll-seconds must be >=5 and max-age-seconds >=60")
-    state_path = args.state or args.data.parent / "hydra_put_forward_state.json"
-    ledger_path = args.ledger or args.data.parent / "hydra_put_forward_trades.csv"
-    state = load_or_create_state(state_path, args.forward_start)
+    legacy_state_path = args.data.parent / "hydra_put_forward_state.json"
+    state_path = args.state or args.data.parent / "hydra_put_forward_state_v2.json"
+    ledger_path = args.ledger or args.data.parent / "hydra_put_forward_trades_v2.csv"
+    state = load_or_create_state(
+        state_path, args.forward_start,
+        legacy_state_path=legacy_state_path if args.state is None else None,
+    )
     forward_start = parse_utc(state["forward_start"])
     # Recover keys from the append-only ledger as well as JSON state. This
     # closes the crash window between appending rows and saving state.
