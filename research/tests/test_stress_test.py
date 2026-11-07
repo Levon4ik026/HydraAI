@@ -53,6 +53,16 @@ class StressTestDiagnostics(unittest.TestCase):
         result = summarize_event_window(trades, candles[0].timestamp, candles[4].timestamp)
         self.assertEqual(result["trades"], 1)
 
+    def test_gap_resets_regime_warmup_and_true_range(self):
+        candles = make_candles([.001]*6)
+        later = make_candles([.001]*6, candles[-1].timestamp + timedelta(minutes=2))
+        combined = candles + later
+        rows = classify_volatility_regimes(combined, lookback=5)
+        self.assertEqual(rows[5]["regime"], REGIME_NORMAL)
+        self.assertEqual(rows[6]["regime"], REGIME_UNAVAILABLE)
+        self.assertEqual(rows[10]["regime"], REGIME_UNAVAILABLE)
+        self.assertEqual(rows[11]["regime"], REGIME_NORMAL)
+
     def test_bad_thresholds_rejected(self):
         with self.assertRaises(ValueError):
             classify_volatility_regimes(make_candles([.001]*5), lookback=1)
