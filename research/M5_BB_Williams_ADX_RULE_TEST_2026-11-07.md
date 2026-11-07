@@ -1,5 +1,7 @@
 # M5 Bollinger re-entry + Williams %R + ADX — independent rule specification test
 
+> **STATUS UPDATE — 2026-11-07:** The original trade scheduler in this report was found to skip a valid signal formed at the close of the expiry candle, and the flattened segment list could permit a theoretical trade to cross a data gap. The old counts below (including 48-trade holdout) are **withdrawn pending corrected rerun**. The script now allows a new signal at expiry close, enforces same-segment immediate-next-M5 entry, and has regression tests. See [scheduler audit](M5_SCHEDULER_AUDIT_2026-11-07.md). Do not use the earlier performance figures as current results.
+
 Date: 2026-11-07
 
 ## Why this test exists
