@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from research.backtest_engine import Candle, backtest_signals
 from research.stress_test import (REGIME_ELEVATED, REGIME_EXTREME, REGIME_NORMAL,
     REGIME_UNAVAILABLE, classify_volatility_regimes, shock_candles,
-    summarize_by_signal_regime, summarize_event_window)
+    summarize_by_signal_regime, summarize_event_window, next_candle_baseline_by_regime)
 
 def make_candles(ranges, start=None):
     start = start or datetime(2026, 11, 1, tzinfo=timezone.utc)
@@ -66,6 +66,17 @@ class StressTestDiagnostics(unittest.TestCase):
         self.assertEqual(rows[6]["regime"], REGIME_UNAVAILABLE)
         self.assertEqual(rows[10]["regime"], REGIME_UNAVAILABLE)
         self.assertEqual(rows[11]["regime"], REGIME_NORMAL)
+
+    def test_regime_matched_baseline_skips_gap_and_warmup(self):
+        candles = make_candles([.001]*6)
+        later = make_candles([.001]*6, candles[-1].timestamp + timedelta(minutes=2))
+        candles += later
+        regimes = classify_volatility_regimes(candles, lookback=5)
+        baseline = next_candle_baseline_by_regime(candles, regimes)
+        self.assertEqual(baseline[REGIME_NORMAL]["decisive"], 2)
+        self.assertEqual(baseline[REGIME_NORMAL]["up"] + baseline[REGIME_NORMAL]["down"], 2)
+        self.assertIsNotNone(baseline[REGIME_NORMAL]["call_win_rate"])
+
 
     def test_bad_thresholds_rejected(self):
         with self.assertRaises(ValueError):
