@@ -1,0 +1,20 @@
+name: Math core tests
+on:
+  push:
+    branches: [hydra/stabilization]
+    paths:
+      - "hydra_math_core.py"
+      - "tests/**"
+      - ".github/workflows/math-core-tests.yml"
+  pull_request:
+    branches: [hydra/stabilization]
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
