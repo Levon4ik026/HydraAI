@@ -30,7 +30,7 @@ class FrozenPutExecutionTests(unittest.TestCase):
                   for _ in bars]
         # At i=3: previous close is above its upper band, current close
         # re-enters below the upper band, and Williams %R crosses below -20.
-        values[2] = {"upper": 8.4, "willr": -15.0, "adx": 20.0}
+        values[2] = {"upper": 8.3, "willr": -15.0, "adx": 20.0}
         values[3] = {"upper": 9.1, "willr": -25.0, "adx": 20.0}
         return values
 
