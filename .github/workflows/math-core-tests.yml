@@ -6,6 +6,7 @@ on:
       - "hydra_math_core.py"
       - "tests/**"
       - "research/reproduce_m5_bb_williams_adx.py"
+      - "research/screen_put_strategies.py"
       - "eurusd_history_extended.csv"
       - ".github/workflows/math-core-tests.yml"
   pull_request:
@@ -22,6 +23,14 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Reproduce frozen M5 research holdout and weekly direction report at 92% payout
         run: python research/reproduce_m5_bb_williams_adx.py --verify-known-results | tee m5_direction_weekly_report.txt
+      - name: Run exploratory PUT-only strategy screen
+        run: python research/screen_put_strategies.py --top 20 | tee put_strategy_screen.txt
+      - name: Upload PUT strategy screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: put-strategy-screen
+          path: put_strategy_screen.txt
+          if-no-files-found: error
       - name: Upload reproducible M5 report
         uses: actions/upload-artifact@v4
         with:
