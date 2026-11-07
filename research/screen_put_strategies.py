@@ -136,9 +136,9 @@ def signal_at(name: str, i: int, bars: list[Bar], f: dict) -> bool:
     name, _, setting = name.partition(":")
     if name == "BB_WILLR":
         return (p["upper"] is not None and b["upper"] is not None and
-                f["willr"][i - 1] is not None and f["willr"][i] is not None and
+                f["base"][i - 1]["willr"] is not None and f["base"][i]["willr"] is not None and
                 prev.close > p["upper"] and c.close < b["upper"] and
-                f["willr"][i - 1] >= -20 and f["willr"][i] < -20 and
+                f["base"][i - 1]["willr"] >= -20 and f["base"][i]["willr"] < -20 and
                 (setting == "any" or (b["adx"] is not None and b["adx"] >= float(setting))))
     if name == "RSI_FADE":
         level = float(setting)
@@ -232,7 +232,7 @@ def build_candidate_trades(segments: list[list[Bar]], candidate: str) -> list[di
 
 def concise(trades: list[dict]) -> dict:
     s = summary(trades)
-    return {k: s[k] for k in ("trades", "wins", "losses", "draws", "win_rate",
+    return {k: s[k] for k in ("trades", "wins", "losses", "draws", "decisive", "win_rate",
                                "wilson_95_pct", "net_92", "max_drawdown_units")}
 
 
