@@ -1,0 +1,62 @@
+# Frozen PUT candidate — prospective validation protocol (2026-11-07)
+
+## Status
+
+The candidate is now frozen as a research-only rule. No Desktop, production strategy, or CALL logic was changed. The historical sample has already been repeatedly inspected; it is not a fresh validation set.
+
+Implementation: `research/frozen_put_candidate.py`
+
+## Locked rule (do not tune during forward test)
+
+Evaluate after each completed UTC-aligned M5 candle:
+
+1. BB(20), 2 population standard deviations: previous close > previous upper band and current close < current upper band.
+2. Williams %R(14): previous value >= -20 and current value < -20.
+3. Wilder ADX(14): 15 <= ADX < 25.
+4. Prior 3-bar M5 momentum: current signal candle close minus close three M5 candles earlier > 0.
+5. Wilder ATR(14) / current signal candle close >= **0.0003596314**.
+
+Execution simulation:
+- Entry: immediately following complete M5 candle open.
+- Expiry: that entry candle close (5 minutes after entry).
+- Outcome: PUT wins if entry candle close < entry candle open; loss if greater; draw if equal within 1e-12.
+- Payout fixed at +0.92 / -1 / 0.
+- No trade across missing M5 buckets or segment boundaries.
+- Evaluate every signal in chronological order. A new signal at the prior trade's expiry candle close may enter the next candle.
+- Do not use OTC symbols.
+
+## Prospective boundary and source
+
+The frozen M1 research source ends at 2026-11-05 16:08 UTC. The script default forward boundary is **2026-11-05 16:10 UTC**, the first subsequent UTC M5 bucket start. All records before the boundary are labelled historical and must not be counted as validation. Only genuinely newly collected candles at or after the boundary qualify.
+
+If the local feed has a different final timestamp, do not move the boundary backwards. Move it forward to the first complete UTC M5 bucket strictly after the last historical candle, document the change before observing outcomes, and then keep it fixed.
+
+## Running
+
+From the repository root, after appending new non-OTC EURUSD M1 OHLC rows to a CSV with either `datetime_utc` or `datetime` plus `open,high,low,close`:
+
+```powershell
+python research/frozen_put_candidate.py --data .\observer_data\eurusd_guest_candles.csv
+```
+
+The script writes `research/frozen_put_candidate_trades.csv` (or the path passed to `--out`) and reports historical versus forward outcomes separately. Do not overwrite the frozen script or ledger between checkpoints; archive each ledger snapshot with its data-source hash.
+
+## Precommitted reporting checkpoints
+
+- First descriptive checkpoint: 50 forward decisive trades.
+- First meaningful review: 100 forward decisive trades and at least 4 calendar weeks.
+- No parameter changes or threshold search on the forward period.
+- Report all eligible trades, not only wins; include W/L/draw, net units at 92%, Wilson 95% interval, max drawdown, weekly/monthly dispersion, missing-data exclusions and data hash.
+- A candidate is not accepted solely because point WR exceeds 52.0833%. The confidence interval, chronological stability, execution delay/spread sensitivity, and sufficient independent time coverage must also be considered.
+- If fewer than 100 decisive trades accumulate, report the result as preliminary. Do not extrapolate or promote to production.
+
+## Known limitations
+
+- The exact source code and training timestamps for the legacy 376-trade PUT log remain unrecovered.
+- The earlier 81-trade regime result came from an exploratory pandas/Wilder-style reconstruction. The frozen runner uses the repository's seeded indicator implementation and an explicitly fixed ATR/close threshold; its historical replay may differ. This is intentional: the frozen runner defines the prospective rule from this point onward.
+- The forward sample is not yet available in the committed historical source. The script can only score it after genuinely new candles are appended.
+- No live quote execution, spread, payout changes, or network latency are simulated. This remains a demo/research-only signal study.
+
+## Decision
+
+Keep the candidate outside production. Keep CALL unchanged. Start forward collection with the exact frozen rule, then review at the precommitted checkpoints without retuning.
