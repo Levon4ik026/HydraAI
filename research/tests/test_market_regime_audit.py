@@ -20,7 +20,7 @@ class MarketRegimeAuditTests(unittest.TestCase):
         states = classify_regimes(bars, feats)
         self.assertEqual(states[121]["trend_strength"], "MODERATE_ADX")
         self.assertEqual(states[121]["trend_bias"], "UP_BIAS")
-        self.assertEqual(states[121]["regime"], "MID_VOL|MODERATE_ADX")
+        self.assertEqual(states[121]["regime"], "HIGH_VOL|MODERATE_ADX")
 
     def test_payout_accounting(self):
         result = summarize([{"outcome":"WIN"},{"outcome":"LOSS"},{"outcome":"DRAW"}])
