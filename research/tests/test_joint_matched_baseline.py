@@ -13,7 +13,7 @@ class JointMatchedBaselineTests(unittest.TestCase):
         rows=[{"outcome":"WIN"},{"outcome":"LOSS"},{"outcome":"DRAW"}]
         self.assertEqual(counts(rows,"CALL"),(1,1,1))
     def test_wilson(self):
-        lo,hi=wilson(8,10); self.assertLess(lo,.8); self.assertGreater(hi,.8)
+        lo,hi=wilson(8,10); self.assertAlmostEqual(lo,0.4902,places=3); self.assertAlmostEqual(hi,0.9433,places=3)
         self.assertEqual(wilson(0,0),(None,None))
 
 if __name__=="__main__": unittest.main()
