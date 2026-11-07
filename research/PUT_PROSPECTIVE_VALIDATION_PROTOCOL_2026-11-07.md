@@ -85,3 +85,6 @@ Run this in a second PowerShell window while the existing EUR/USD guest-feed col
 Do not delete the state or ledger during the experiment. The ledger and state are local runtime outputs and are not committed to Git. If the collector CSV is located elsewhere, change only the `--data` path. The first launch time is the actual prospective start; old records already present in the CSV are excluded by the automatically frozen boundary.
 
 The monitor is deliberately a separate process rather than a modification to the Desktop GUI or collector. This keeps the research experiment isolated and lets collection continue if the UI is closed.
+
+
+Windows launcher: from the repository folder, double-click `start_put_forward_monitor.bat`. It expects the guest-feed CSV at `C:\\HydraAI_Desktop\\observer_data\\eurusd_guest_candles.csv` and opens the monitor in the current console. Keep the guest-feed collector running in its own window.
