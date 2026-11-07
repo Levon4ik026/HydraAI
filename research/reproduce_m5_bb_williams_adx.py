@@ -177,7 +177,8 @@ def run_trades(rows: list[dict], threshold: float) -> list[dict]:
         trades.append({"direction": "CALL" if row["signal"] == 1 else "PUT",
                        "outcome": outcome, "profit": profit,
                        "signal_time": row["bar"].timestamp,
-                       "entry_time": entry.timestamp})
+                       "entry_time": entry.timestamp,
+                       "settlement_time": entry.timestamp + timedelta(minutes=5)})
         i += 1  # expiry closes on entry candle; a signal on that close may enter the next candle
     return trades
 
@@ -210,8 +211,11 @@ def main() -> None:
     holdout_results = {}
     for threshold in ADX_THRESHOLDS:
         all_trades = run_trades(rows, threshold)
-        train_trades = run_trades(train, threshold)
-        test_trades = run_trades(holdout, threshold)
+        # Schedule the full continuous history once, then assign each completed
+        # trade by its settlement timestamp. This prevents split-boundary overlap
+        # and avoids resetting the scheduler at the train/holdout boundary.
+        train_trades = [t for t in all_trades if t["settlement_time"] < boundary]
+        test_trades = [t for t in all_trades if t["settlement_time"] >= boundary]
         holdout_results[threshold] = summary(test_trades)
         print(f"ADX >= {threshold}: train={summary(train_trades)} | holdout={summary(test_trades)}")
         for direction in ("CALL", "PUT"):
