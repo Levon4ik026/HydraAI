@@ -18,7 +18,7 @@ PAYOUT = 0.92
 def wilson(w, n):
     if not n: return None, None
     z=1.959963984540054; p=w/n; d=1+z*z/n
-    c=(p+z*z/(2*n))/d; h=z*((p*(1-p)/n+z*z/(4*n*n))/n)**0.5
+    c=(p+z*z/(2*n))/d; h=z*(p*(1-p)/n+z*z/(4*n*n))**0.5
     return c-h,c+h
 
 def rate(w,n):
