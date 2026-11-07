@@ -84,6 +84,13 @@ class BacktestEngineTests(unittest.TestCase):
             {"train": (0, 8), "validation": (8, 11)},
         ])
 
+    def test_signal_at_expiry_close_can_enter_next_candle(self):
+        candles = series([1.100, 1.101, 1.102, 1.103, 1.104, 1.105])
+        trades = backtest_signals(candles, {0: "CALL", 1: "PUT", 2: "CALL"}, 2)
+        self.assertEqual([t.signal_time for t in trades],
+                         [candles[0].timestamp, candles[2].timestamp])
+        self.assertEqual(trades[0].settlement_time, trades[1].entry_time)
+
     def test_duplicate_timestamps_rejected(self):
         candles = series([1.1, 1.101, 1.102])
         candles[2] = Candle(candles[1].timestamp, candles[2].open, candles[2].high,
