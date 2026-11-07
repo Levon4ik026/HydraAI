@@ -128,12 +128,14 @@ def main():
     for direction, rule in RULES.items():
         xname, xcut, yname, ycut, cell = rule
         base = [r for r in holdout if r["direction"] == direction]
-        filt = [r for r in base if (
-            ("H" if r["features"][xname] > xcut else "L") +
-            ("H" if r["features"][yname] > ycut else "L")
-        ) == cell and r["features"][xname] is not None and r["features"][yname] is not None]
-        # Filter condition above is guarded after access in the comprehension; feature
-        # values are defined for every event in the frozen candidate cells.
+        filt = []
+        for row in base:
+            xval, yval = row["features"][xname], row["features"][yname]
+            if xval is None or yval is None:
+                continue
+            key = ("H" if xval > xcut else "L") + ("H" if yval > ycut else "L")
+            if key == cell:
+                filt.append(row)
         if not base:
             lines.append(f"### {direction}\nNo holdout events.")
             continue
