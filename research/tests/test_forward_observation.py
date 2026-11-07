@@ -1,7 +1,10 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
-from research.watch_frozen_put_candidate import newly_observed_settlements
+from research.watch_frozen_put_candidate import load_or_create_state, newly_observed_settlements
 
 
 class ForwardObservationTests(unittest.TestCase):
@@ -43,6 +46,32 @@ class ForwardObservationTests(unittest.TestCase):
             ),
             [],
         )
+
+
+    def test_v2_migration_preserves_boundary_but_not_legacy_cursor_or_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            legacy = root / "hydra_put_forward_state.json"
+            v2 = root / "hydra_put_forward_state_v2.json"
+            legacy.write_text(json.dumps({
+                "forward_start": "2026-11-07T13:35:00+00:00",
+                "last_latest_m1_utc": "2026-11-07T13:44:00+00:00",
+                "recorded_trade_keys": ["2026-11-07T13:35:00+00:00"],
+            }), encoding="utf-8")
+            state = load_or_create_state(v2, None, legacy_state_path=legacy)
+            self.assertEqual(state["forward_start"], "2026-11-07T13:35:00+00:00")
+            self.assertEqual(state["observation_integrity_version"], 1)
+            self.assertIsNone(state["last_latest_m1_utc"])
+            self.assertEqual(state["recorded_trade_keys"], [])
+
+    def test_unversioned_v2_state_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "state.json"
+            path.write_text(json.dumps({
+                "forward_start": "2026-11-07T13:35:00+00:00"
+            }), encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                load_or_create_state(path, None)
 
 
 if __name__ == "__main__":
