@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "research"))
 from frozen_put_candidate import build_candidate, parse_utc  # noqa: E402
 from reproduce_m5_bb_williams_adx import Bar, make_m5  # noqa: E402
+from statistical_validation import wilson_interval  # noqa: E402
 
 
 def utc_now() -> datetime:
@@ -206,13 +207,15 @@ def main() -> None:
             wins = state["recorded_wins"]
             wr = 100.0 * wins / decisive if decisive else 0.0
             net = 0.92 * wins - state["recorded_losses"]
+            ci = wilson_interval(wins, decisive)
+            ci_text = f"{100.0 * ci[0]:.2f}–{100.0 * ci[1]:.2f}%" if ci else "n/a"
             print(
                 f"[{now.isoformat(timespec='seconds')}] {status} | "
                 f"M1={len(m1)} M5={bars_count} segments={len(segments)} | "
                 f"new trades={len(new_trades)} | "
                 f"forward W/L/D={state['recorded_wins']}/"
                 f"{state['recorded_losses']}/{state['recorded_draws']} | "
-                f"WR={wr:.2f}% net={net:.2f} | sha256={digest[:12]}"
+                f"WR={wr:.2f}% CI95={ci_text} net={net:.2f} | sha256={digest[:12]}"
             )
             if not fresh:
                 print("[HOLD] No outcomes recorded until the feed is fresh.")
