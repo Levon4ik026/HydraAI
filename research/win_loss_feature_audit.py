@@ -15,7 +15,10 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-try:\n    from .reproduce_m5_bb_williams_adx import PAYOUT, Bar, make_m5, indicators\nexcept ImportError:  # direct execution: python research/win_loss_feature_audit.py\n    from reproduce_m5_bb_williams_adx import PAYOUT, Bar, make_m5, indicators
+try:
+    from .reproduce_m5_bb_williams_adx import PAYOUT, Bar, make_m5, indicators
+except ImportError:  # direct execution: python research/win_loss_feature_audit.py
+    from reproduce_m5_bb_williams_adx import PAYOUT, Bar, make_m5, indicators
 
 SPLIT_DATE = "2026-10-21T19:05:00+00:00"
 FEATURES = (
