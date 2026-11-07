@@ -109,14 +109,15 @@ def summary(items):
     return w, l, d, (100*w/n if n else None), sum(x["net"] for x in items)
 
 
-def paired_day_bootstrap(events, reps=REPS, seed=SEED):
+def paired_day_bootstrap(events, reps=REPS, seed=SEED, h_short=1, h_long=5, direction=None):
     by_signal = defaultdict(dict)
     for x in events:
-        by_signal[(x["signal_time"], x["direction"])][x["h"]] = x
+        if direction is None or x["direction"] == direction:
+            by_signal[(x["signal_time"], x["direction"])][x["h"]] = x
     paired = []
     for key, horizons in by_signal.items():
-        if 1 in horizons and 5 in horizons:
-            paired.append((horizons[1], horizons[5]))
+        if h_short in horizons and h_long in horizons:
+            paired.append((horizons[h_short], horizons[h_long]))
     by_day = defaultdict(list)
     for short, long in paired:
         by_day[short["day"]].append((short, long))
@@ -206,12 +207,19 @@ def main():
         for key, sub in sorted(grouped.items()):
             w,l,d,_,_ = summary(sub)
             lines.append(f"| {side} | {key} | {len(sub)} | {w} | {l} | {d} |")
-    paired = paired_day_bootstrap(events, args.replicates)
-    lines += ["", "## Paired day-cluster comparison: 25m minus 5m", "",
-              f"Matched events with both expiries: {paired['n']}; UTC signal days: {paired['days']}; bootstrap replicates={args.replicates:,}; seed={SEED}.",
-              f"- Incremental net 95% CI (25m minus 5m): {fmt_ci(paired['delta_net_ci'])} units.",
-              f"- Difference in decisive WR 95% CI (25m minus 5m): {fmt_ci(paired['delta_wr_ci'], ' pp')}.",
-              "The resampling unit is UTC signal day, preserving within-day dependence. It does not correct strategy selection or the already-inspected holdout.", ""]
+    lines += ["", "## Paired day-cluster comparisons across expiries", "",
+              "Each comparison uses only the same signal events with both expiries available; bootstrap resamples UTC signal days.",
+              "| Side | Comparison | Matched n | Days | Incremental net 95% CI (u) | Decisive WR difference 95% CI (pp) |",
+              "|---|---:|---:|---:|---:|---:|"]
+    comparisons = [(1, 4), (1, 5), (4, 5)]
+    for side in ("ALL", "CALL", "PUT"):
+        for h_a, h_b in comparisons:
+            paired = paired_day_bootstrap(events, args.replicates, SEED + h_a*10 + h_b + (0 if side == "ALL" else 100 if side == "CALL" else 200),
+                                          h_short=h_a, h_long=h_b,
+                                          direction=None if side == "ALL" else side)
+            lines.append(f"| {side} | {h_b*5}m − {h_a*5}m | {paired['n']} | {paired['days']} | {fmt_ci(paired['delta_net_ci'])} | {fmt_ci(paired['delta_wr_ci'], ' pp')} |")
+    lines += ["",
+              "Intervals preserve within-day dependence but cannot correct strategy selection, regime drift, or the already-inspected historical holdout.", ""]
     lines += ["## Period split: 25-minute expiry", "",
               "| Period | Side | n | W/L/D | Decisive WR | Net u |",
               "|---|---|---:|---:|---:|---:|"]
