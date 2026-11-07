@@ -28,3 +28,5 @@ All code here is research-only. Nothing in this branch is imported into or conne
 
 
 Statistical unit tests were added for Wilson intervals, binomial-tail arithmetic, 92% payout break-even, draw handling and invalid inputs.
+
+The forward monitor prints a Wilson 95% interval alongside the live decisive win rate; this is descriptive uncertainty, not a deployment signal.
