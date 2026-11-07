@@ -12,31 +12,37 @@ REGIME_ELEVATED = "ELEVATED"
 REGIME_EXTREME = "EXTREME"
 REGIME_UNAVAILABLE = "UNAVAILABLE"
 
-def true_ranges(candles: Sequence[Candle]) -> list[float]:
-    validate_candles(candles)
+def true_ranges(candles: Sequence[Candle], interval_seconds: int = 60) -> list[float]:
+    """True range resets after a timestamp gap; never bridges missing candles."""
+    validate_candles(candles, interval_seconds)
     values = []
     for i, candle in enumerate(candles):
-        if i == 0:
+        contiguous = (i > 0 and
+            (candle.timestamp - candles[i-1].timestamp).total_seconds() == interval_seconds)
+        if not contiguous:
             values.append(candle.high - candle.low)
         else:
-            pc = candles[i - 1].close
+            pc = candles[i-1].close
             values.append(max(candle.high-candle.low, abs(candle.high-pc), abs(candle.low-pc)))
     return values
 
 def classify_volatility_regimes(candles: Sequence[Candle], lookback: int = 20,
-                                elevated_ratio: float = 1.5, extreme_ratio: float = 2.5) -> list[dict]:
-    """Use current true range against median true range of prior candles only."""
-    validate_candles(candles)
+                                elevated_ratio: float = 1.5, extreme_ratio: float = 2.5,
+                                interval_seconds: int = 60) -> list[dict]:
+    """Use current true range against median true range of prior contiguous candles only."""
+    validate_candles(candles, interval_seconds)
     if lookback < 2:
         raise ValueError("lookback must be at least 2")
     if not (math.isfinite(elevated_ratio) and math.isfinite(extreme_ratio)):
         raise ValueError("thresholds must be finite")
     if elevated_ratio <= 0 or extreme_ratio <= elevated_ratio:
         raise ValueError("require 0 < elevated_ratio < extreme_ratio")
-    tr = true_ranges(candles)
-    rows = []
+    tr = true_ranges(candles, interval_seconds)
+    rows, segment_start = [], 0
     for i, candle in enumerate(candles):
-        if i < lookback:
+        if i and (candle.timestamp-candles[i-1].timestamp).total_seconds() != interval_seconds:
+            segment_start = i
+        if i-segment_start < lookback:
             rows.append({"timestamp": candle.timestamp, "regime": REGIME_UNAVAILABLE,
                          "true_range": tr[i], "baseline_median_tr": None,
                          "range_ratio": None, "body_to_baseline": None})
@@ -51,8 +57,7 @@ def classify_volatility_regimes(candles: Sequence[Candle], lookback: int = 20,
 
 def summarize_by_signal_regime(trades: Iterable[Trade], regime_rows: Sequence[dict]) -> dict[str, dict]:
     by_time = {row["timestamp"]: row["regime"] for row in regime_rows}
-    buckets = defaultdict(list)
-    missing = 0
+    buckets, missing = defaultdict(list), 0
     for trade in trades:
         regime = by_time.get(trade.signal_time)
         if regime is None or regime == REGIME_UNAVAILABLE:
