@@ -17,7 +17,7 @@ class DayClusterBootstrapTests(unittest.TestCase):
 
     def test_paired_delta_reflects_filter_minus_base(self):
         base = [row("2026-10-01", "WIN"), row("2026-10-02", "LOSS")]
-        filtered = [row("2026-10-01", "LOSS")]
+        filtered = [row("2026-10-01", "LOSS"), row("2026-10-02", "LOSS")]
         result = bootstrap(base, filtered, replicates=1000, seed=11)
         lo, hi = result["delta_net_ci"]
         # On day one the filter loses instead of winning; on day two it matches base.
