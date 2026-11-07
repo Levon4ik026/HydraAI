@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "research"))
 from reproduce_m5_bb_williams_adx import (  # noqa: E402
-    PAYOUT, Bar, indicators, load_m1, make_m5, summary,
+    PAYOUT, Bar, indicators, make_m5, summary,
 )
 
 ATR_RATIO_FLOOR = 0.0003596314
@@ -123,7 +123,24 @@ def main() -> None:
     args = ap.parse_args()
 
     forward_start = parse_utc(args.forward_start)
-    m1 = load_m1(args.data)
+    # Accept both the clean research file's datetime_utc column and the
+    # older extended-history file's datetime column.
+    parsed = {}
+    with args.data.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        time_col = "datetime_utc" if "datetime_utc" in (reader.fieldnames or []) else "datetime"
+        required = {time_col, "open", "high", "low", "close"}
+        if not required.issubset(reader.fieldnames or []):
+            raise ValueError(f"CSV must contain columns: {sorted(required)}")
+        for row in reader:
+            ts = parse_utc(row[time_col].strip())
+            o, h, l, c = (float(row[k]) for k in ("open", "high", "low", "close"))
+            if not all(math.isfinite(x) and x > 0 for x in (o, h, l, c)):
+                raise ValueError(f"Invalid OHLC at {ts.isoformat()}")
+            if h < max(o, l, c) or l > min(o, c):
+                raise ValueError(f"Invalid OHLC ordering at {ts.isoformat()}")
+            parsed[ts] = Bar(ts, o, h, l, c)
+    m1 = [parsed[t] for t in sorted(parsed)]
     segments = make_m5(m1)
     all_trades = build_candidate(segments)
     historical = [t for t in all_trades if t["signal_time"] < forward_start]
