@@ -19,7 +19,7 @@ PAYOUT = 0.92
 REPLICATES = 20000
 SEED = 20261108
 RULES = {
-    "CALL": ("ema20_50_atr", -0.43772535, "body_range", 0.56454248, "HL"),
+    "CALL": ("ema20_50_atr", -0.43772535, "body_range", 0.56454248, "LH"),
     "PUT": ("atr14_close", 0.00029368424, "upper_wick_range", 0.19354839, "HH"),
 }
 
