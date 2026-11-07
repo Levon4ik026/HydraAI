@@ -28,6 +28,7 @@ research/stress_test.py provides causal volatility-state diagnostics:
 - Trade performance grouped by regime known at signal-candle close.
 - Event-window summaries exclude trades settling after the window end.
 - Large-body shock-candle detector.
+- Regime-matched next-candle directional baseline (CALL/PUT background rates), using the same next-candle open-to-close outcome convention as the strategy engine and skipping gaps.
 
 These are descriptive thresholds, not optimized strategy parameters and not an automatic WAIT filter. Future candles cannot alter a past regime assignment.
 
