@@ -5,6 +5,8 @@ on:
     paths:
       - "hydra_math_core.py"
       - "tests/**"
+      - "research/reproduce_m5_bb_williams_adx.py"
+      - "eurusd_history_extended.csv"
       - ".github/workflows/math-core-tests.yml"
   pull_request:
     branches: [hydra/stabilization]
