@@ -264,7 +264,7 @@ def build_ledger(segments: list[list[Bar]], split: datetime, adx_min: float) -> 
             if not (call or put):
                 continue
             nxt = bars[i+1]
-            if (nxt.timestamp - cur.timestamp).total_seconds() != 300:
+            if (bars[i + 1].timestamp - bars[i].timestamp).total_seconds() != 300:
                 continue
             change = nxt.close - nxt.open
             direction = "CALL" if call else "PUT"
