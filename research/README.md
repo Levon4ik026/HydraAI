@@ -25,3 +25,6 @@ The binomial p-value assumes independent decisive outcomes. It is not a proof of
     python -m unittest discover -s research/tests -v
 
 All code here is research-only. Nothing in this branch is imported into or connected to the live Desktop application.
+
+
+Statistical unit tests were added for Wilson intervals, binomial-tail arithmetic, 92% payout break-even, draw handling and invalid inputs.
