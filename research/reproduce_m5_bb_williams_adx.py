@@ -241,20 +241,28 @@ def main() -> None:
             print(f"  {direction} holdout: {summary([t for t in test_trades if t['direction'] == direction])}")
         if threshold == 15:
             monthly: dict[str, list[dict]] = defaultdict(list)
+            weekly: dict[str, list[dict]] = defaultdict(list)
             for trade in test_trades:
-                monthly[trade["signal_time"].strftime("%Y-%m")].append(trade)
+                stamp = trade["signal_time"]
+                monthly[stamp.strftime("%Y-%m")].append(trade)
+                week_start = (stamp - timedelta(days=stamp.weekday())).strftime("%Y-%m-%d")
+                weekly[week_start].append(trade)
             for month in sorted(monthly):
                 print(f"  {month} holdout: {summary(monthly[month])}")
+            for week in sorted(weekly):
+                print(f"  week from {week} UTC holdout: {summary(weekly[week])}")
     if args.verify_known_results:
-        # The prior frozen counts used an overly conservative two-row skip,
-        # which skipped a valid signal at the expiry candle close. Those counts
-        # are intentionally retired; assert only accounting invariants here.
-        for threshold, got in holdout_results.items():
-            if got["trades"] != got["wins"] + got["losses"] + got["draws"]:
-                raise SystemExit(f"Outcome accounting mismatch for ADX {threshold}")
-            if got["trades"] <= 0:
-                raise SystemExit(f"No holdout trades for ADX {threshold}")
-        print("RESEARCH ACCOUNTING CHECK: PASS (legacy counts retired after scheduler correction)")
+        expected = {
+            15: (48, 31, 17, 0, 11.52),
+            20: (39, 23, 16, 0, 5.16),
+            25: (21, 13, 8, 0, 3.96),
+        }
+        for threshold, (count, wins, losses, draws, net) in expected.items():
+            got = holdout_results[threshold]
+            actual = (got["trades"], got["wins"], got["losses"], got["draws"], got["net_92"])
+            if actual != (count, wins, losses, draws, net):
+                raise SystemExit(f"Corrected frozen holdout mismatch for ADX {threshold}: {actual}")
+        print("CORRECTED FROZEN HOLDOUT CHECK: PASS (92% payout)")
 
 
 if __name__ == "__main__":
