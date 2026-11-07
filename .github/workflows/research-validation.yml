@@ -50,6 +50,14 @@ jobs:
           name: call-put-signal-market-baseline
           path: research/SIGNAL_MARKET_BASELINE.md
           if-no-files-found: error
+      - name: Run long-horizon M5 expiry audit
+        run: python research/long_horizon_audit.py --data eurusd_history_extended.csv --out research/LONG_HORIZON_AUDIT.md
+      - name: Upload long-horizon M5 expiry audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-long-horizon-audit
+          path: research/LONG_HORIZON_AUDIT.md
+          if-no-files-found: error
       - name: Upload market-regime audit
         uses: actions/upload-artifact@v4
         with:
