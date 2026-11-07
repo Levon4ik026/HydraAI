@@ -66,7 +66,7 @@ class StressTestDiagnostics(unittest.TestCase):
         self.assertEqual(rows[6]["regime"], REGIME_NORMAL)
         self.assertEqual(rows[7]["regime"], REGIME_NORMAL)
         self.assertEqual(rows[8]["regime"], REGIME_UNAVAILABLE)
-        self.assertEqual(rows[12]["regime"], REGIME_NORMAL)
+        self.assertEqual(rows[13]["regime"], REGIME_NORMAL)
 
     def test_regime_matched_baseline_skips_gap_and_warmup(self):
         candles = make_candles([.001]*8)
