@@ -30,3 +30,7 @@ All code here is research-only. Nothing in this branch is imported into or conne
 Statistical unit tests were added for Wilson intervals, binomial-tail arithmetic, 92% payout break-even, draw handling and invalid inputs.
 
 The forward monitor prints a Wilson 95% interval alongside the live decisive win rate; this is descriptive uncertainty, not a deployment signal.
+
+## Prospective data-integrity controls
+
+The live monitor requires exact one-minute advancement of the observed M1 cursor before scoring a newly settled trade. First observation is baseline-only; unchanged timestamps do not score; reconnect/history jumps and rollbacks are quarantined. Existing ledger keys are reloaded on restart to avoid duplicate rows after an interrupted state save. See the prospective protocol for details.
