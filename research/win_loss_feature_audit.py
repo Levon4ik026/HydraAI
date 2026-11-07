@@ -33,7 +33,7 @@ FEATURES = (
 def parse_time(s: str) -> datetime:
     d = datetime.fromisoformat(s.replace("Z", "+00:00"))
     if d.tzinfo is None:
-        raise ValueError("Timestamp must include timezone")
+        d = d.replace(tzinfo=timezone.utc)  # legacy EURUSD source timestamps are UTC-naive
     return d.astimezone(timezone.utc)
 
 
