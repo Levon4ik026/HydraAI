@@ -81,6 +81,16 @@ The post-release path median was about 4.3x the control median in the first 15 m
 
 Thus the event cluster shows a strong volatility association in this tiny sample, but it does **not** establish a consistent direction or a generalizable entry rule. It is an example of why event categories must be separated by release type and surprise magnitude rather than pooled blindly.
 
+
+
+## 4A. Critical data-integrity check on the CPI outlier
+
+A candle-level inspection found a major warning in the Oct 14 CPI window. The 12:30 UTC M1 candle is recorded as open 1.11967, high 1.12214, low 1.11726, close 1.12129 — a 48.8-pip one-minute high-low range. The next candle opens at 1.12012, 11.7 pips below the prior close. This could reflect an extraordinary real market move, a bad/stitched candle, a timestamp or feed artifact, or a quote-side/data-source issue. The repository CSV alone cannot distinguish these explanations.
+
+Therefore **the Oct 14 CPI observation must be quarantined from any strategy conclusion until independently verified against a second historical source and BID/ASK data**. The headline 3-release medians above are descriptive of this file, not confirmed market behavior.
+
+As a sensitivity check, removing Oct 14 leaves only two events (PPI and import/export prices). Their median post-event path is 37.5 pips in 15 minutes, 60.35 pips in 30 minutes and 95.9 pips in 60 minutes, versus control medians of 13.1, 24.45 and 52.6 pips. These two observations are far too few to validate a volatility effect; they are not a reliable estimate.
+
 ## 5. Other event families: first checks
 
 ### Federal Reserve H.4.1 — 4:30 p.m. ET (20:30 UTC)
