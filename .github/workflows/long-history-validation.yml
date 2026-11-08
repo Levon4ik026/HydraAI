@@ -25,7 +25,8 @@ on:
       - "research/ny_put_sensitivity_loss_audit.py"
       - "research/level_dwell_experiment.py"
       - "research/m1_move_occurrence_direction_audit.py"
-      - "research/m1_two_stage_direction_audit.py"\n      - "research/m1_two_stage_robustness_audit.py"
+      - "research/m1_two_stage_direction_audit.py"
+      - "research/m1_two_stage_robustness_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
