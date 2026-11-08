@@ -28,9 +28,12 @@ jobs:
       - name: Verify downloaded file
         run: |
           ls -lh download/
-          test -s download/eurusd-m1-bid-2024-01-01-2026-11-09.csv
+          DATA_FILE=$(find download -maxdepth 1 -name 'eurusd-m1-bid-2024-01-01-*.csv' -print -quit)
+          test -n "$DATA_FILE"
+          test -s "$DATA_FILE"
+          echo "DATA_FILE=$DATA_FILE" >> "$GITHUB_ENV"
       - name: Run frozen long-history backtest
-        run: python research/long_history_validation.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_VALIDATION.md
+        run: python research/long_history_validation.py --data "$DATA_FILE" --out research/LONG_HISTORY_VALIDATION.md
       - name: Upload long-history report
         uses: actions/upload-artifact@v4
         with:
