@@ -24,6 +24,7 @@ on:
       - "research/ny_put_random_match_sensitivity.py"
       - "research/ny_put_sensitivity_loss_audit.py"
       - "research/level_dwell_experiment.py"
+      - "research/m1_move_occurrence_direction_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -175,6 +176,14 @@ jobs:
           if-no-files-found: error
       - name: Install ML research dependencies
         run: python -m pip install --upgrade numpy scikit-learn
+      - name: Run causal M1 move-occurrence and direction audit
+        run: python research/m1_move_occurrence_direction_audit.py --data "$DATA_FILE" --out research/M1_MOVE_OCCURRENCE_DIRECTION_AUDIT.md
+      - name: Upload M1 move-occurrence and direction audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-m1-move-occurrence-direction-audit
+          path: research/M1_MOVE_OCCURRENCE_DIRECTION_AUDIT.md
+          if-no-files-found: error
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
       - name: Run AI filter robustness diagnostics
