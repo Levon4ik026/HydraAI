@@ -101,6 +101,18 @@ def stats(rows, direction=None):
     return len(chosen), w, l, d, (100*w/(w+l) if w+l else None), sum(x.get("net",0) for x in chosen)
 
 
+def wilson(wins, losses):
+    n = wins + losses
+    if not n:
+        return "n/a"
+    z = 1.959963984540054
+    p = wins / n
+    den = 1 + z*z/n
+    center = (p + z*z/(2*n)) / den
+    radius = z * ((p*(1-p)/n + z*z/(4*n*n)) ** 0.5) / den
+    return f"[{100*(center-radius):.1f}, {100*(center+radius):.1f}]"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", type=Path, default=Path("eurusd_history_extended.csv"))
@@ -119,16 +131,17 @@ def main():
         "Payout 92%; WIN +0.92u, LOSS -1u, DRAW 0u. All predictors measured at signal close; no outcome information enters features.",
         "Market baseline uses every eligible non-gap M5 bar with the same 20m entry/exit convention. It is descriptive and serially dependent.",
         "Exact matching state: EMA20-EMA50 bias x ATR14/close tertile (prior 120 bars) x ADX band (<20, 20-<30, >=30).",
-        f"Historical split {args.split_date}; holdout already inspected in earlier research and is not pristine.", "",
+        f"Historical split {args.split_date}; holdout already inspected in earlier research and is not pristine.",
+        "Nine otherwise eligible 20m signals lack the full 120-bar regime warmup needed for exact matching and are excluded; 135 of 144 complete-path events remain.", "",
         "## Signal outcomes", "",
-        "| Period | Side | n | W/L/D | Decisive WR | Net u |",
-        "|---|---|---:|---:|---:|---:|",
+        "| Period | Side | n | W/L/D | Decisive WR | Wilson 95% CI | Net u |",
+        "|---|---|---:|---:|---:|---:|---:|",
     ]
     for period in ("TRAIN","HOLDOUT","ALL"):
         for side in ("CALL","PUT","ALL"):
             subset=[x for x in events if (period=="ALL" or x["period"]==period) and (side=="ALL" or x["direction"]==side)]
             n,w,l,d,wr,net=stats(subset)
-            lines.append(f"| {period} | {side} | {n} | {w}/{l}/{d} | {wr:.1f}% | {net:+.2f} |" if wr is not None else f"| {period} | {side} | {n} | {w}/{l}/{d} | n/a | {net:+.2f} |")
+            lines.append(f"| {period} | {side} | {n} | {w}/{l}/{d} | {wr:.1f}% | {wilson(w,l)} | {net:+.2f} |" if wr is not None else f"| {period} | {side} | {n} | {w}/{l}/{d} | n/a | n/a | {net:+.2f} |")
     lines += ["", "## Exact matched market baseline", "",
               "Only events with an available exact state are included. Background excludes all frozen signal timestamps.",
               "| Period | Side | Matched signals | Signal W/L/D | Signal WR | Background n | Background same-direction rate | Lift |",
