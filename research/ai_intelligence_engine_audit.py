@@ -41,8 +41,9 @@ def feature_row(bars, ind, i, direction, ema20, ema50, atr, atr_history):
     x = ind[i]
     if any(x.get(k) is None for k in ("upper", "lower", "willr", "adx", "plus_di", "minus_di")):
         return None
-    history = atr_history[max(0, i - 120):i]
-    vol_rank = sum(v <= av for v in history) / len(history) if len(history) >= 60 else 0.5
+    history = [v for v in atr_history[max(0, i - 120):i] if v is not None]
+    current_atr_pct = av / cur.close
+    vol_rank = sum(v <= current_atr_pct for v in history) / len(history) if len(history) >= 60 else 0.5
     e20, e50 = ema20[i], ema50[i]
     if e20 is None or e50 is None:
         return None
@@ -116,14 +117,9 @@ def build_dataset(segments, adx_min):
             if i < 50 or i + HORIZON_BARS >= len(bars):
                 continue
             features = feature_row(bars, ind, i, event["direction"], e20, e50,
-                                   atr, [v for v in atr if v is not None])
-            # Recompute a strictly trailing scale-free ATR rank; no future values.
+                                   atr, atr_history)
             if features is None:
                 continue
-            current_atr_pct = atr[i] / bars[i].close
-            prior = [v for v in atr_history[max(0, i - 120):i] if v is not None]
-            if len(prior) >= 60:
-                features[17] = sum(v <= current_atr_pct for v in prior) / len(prior)
             entry = bars[i + 1].open
             exit_price = bars[i + HORIZON_BARS].close
             delta = (exit_price - entry) * (1 if event["direction"] == "CALL" else -1)
@@ -153,7 +149,10 @@ def metrics(rows, keep=None):
         max_dd = max(max_dd, peak - equity)
         streak = streak + 1 if r["outcome"] == "LOSS" else 0
         max_streak = max(max_streak, streak)
-    return {"n": len(chosen), "w": w, "l": l, "d": d, "wr": wr, "net": net,
+    all_wr = 100.0 * w / len(chosen) if chosen else float("nan")
+    roi = 100.0 * net / len(chosen) if chosen else float("nan")
+    return {"n": len(chosen), "w": w, "l": l, "d": d, "decisive": decisive,
+            "wr": wr, "all_wr": all_wr, "net": net, "roi": roi,
             "pf": pf, "dd": max_dd, "streak": max_streak}
 
 
@@ -256,47 +255,74 @@ def main():
     if len(set(y_train.tolist())) < 2:
         raise SystemExit("Training labels contain only one class.")
 
+    total_m5 = sum(map(len, segments))
+    raw_signal_pct = 100.0 * trigger_count / max(1, total_m5)
     lines = ["# HYDRA — AI Intelligence Engine chronological audit", "",
-      f"Source: Dukascopy EURUSD M1 BID; raw rows={len(m1):,}; complete M5 bars={sum(map(len, segments)):,}; continuous segments={len(segments)}.",
-      f"Frozen trigger events={trigger_count:,}; eligible feature/outcome rows={len(rows):,}; 50-bar continuous warmup required.",
+      f"Source: Dukascopy EURUSD M1 BID; raw rows={len(m1):,}; complete M5 bars={total_m5:,}; continuous segments={len(segments)}.",
+      f"Coverage: {m1[0].timestamp.isoformat()} — {m1[-1].timestamp.isoformat()}.",
+      f"Raw frozen-trigger events={trigger_count:,}; raw trigger frequency={raw_signal_pct:.3f}% of complete M5 bars; raw WAIT share={100-raw_signal_pct:.3f}%.",
+      f"Eligible feature/outcome rows={len(rows):,}; {trigger_count-len(rows):,} raw events excluded by 50-bar warmup, feature availability, or complete 20-minute path requirements.",
       f"Chronological split: TRAIN < {d1}; VALIDATION {d1} through {d2 - timedelta(days=1)}; TEST >= {d2}.",
       f"After 20-minute boundary purge: TRAIN={len(train)}, VALIDATION={len(validation)}, TEST={len(test)}.",
-      "Frozen trigger unchanged: BB(20,2) re-entry + Williams %R(14) cross + ADX(14)>=15. Entry next M5 open; settlement fourth M5 close; payout WIN +0.92u / LOSS -1u / DRAW 0u.",
-      "Models receive only signal-close/trailing features. Draws are excluded from fitting and decisive WR denominator; draws remain in scored trade counts. No test-set threshold tuning.",
+      "Frozen trigger unchanged: BB(20,2) re-entry + Williams %R(14) cross + ADX(14)>=15. Signal on closed M5; entry next M5 open; settlement at fourth M5 close; payout WIN +0.92u / LOSS -1u / DRAW 0u.",
+      "Models receive only signal-close/trailing features. Draws are excluded from fitting and decisive WR denominator; draws remain in scored trade counts. Thresholds are selected on VALIDATION and frozen before TEST.",
       "External Dukascopy BID feed, not Pocket Option's exact quote stream; no spread/platform execution model. Research-only; no live integration.", "",
-      "## Baseline before AI filtering", ""]
+      "## Baseline before AI filtering", "",
+      "| Split | Direction | n | W/L/D | Decisive WR | Wilson 95% CI | Wins / all | Net | ROI | PF | Max DD | Max loss streak |",
+      "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for label, subset in (("TRAIN", train), ("VALIDATION", validation), ("TEST", test)):
-        m = metrics(subset)
-        ci = wilson(m["w"], m["w"] + m["l"])
-        lines.append(f"- {label}: n={m['n']}, W/L/D={m['w']}/{m['l']}/{m['d']}, decisive WR={m['wr']:.2f}%, Wilson95=[{ci[0]:.2f},{ci[1]:.2f}]%, net={m['net']:+.2f}u, PF={m['pf']:.3f}, maxDD={m['dd']:.2f}u, maxLossStreak={m['streak']}.")
-    lines += ["", "## Model comparison", "",
-      "Each model is fitted only on TRAIN decisive outcomes. Its threshold is selected only on VALIDATION from the fixed grid 0.50–0.75, requiring at least 40 accepted validation trades. The selected threshold is then frozen for TEST.",
-      "| Model | Threshold | Validation accepted | Validation WR | Validation net | TEST accepted | TEST W/L/D | TEST WR | TEST net | TEST PF | TEST maxDD |",
-      "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+        for side in ("ALL", "CALL", "PUT"):
+            side_rows = subset if side == "ALL" else [r for r in subset if r["direction"] == side]
+            m = metrics(side_rows)
+            ci = wilson(m["w"], m["decisive"])
+            ci_txt = f"[{ci[0]:.2f}, {ci[1]:.2f}]" if m["decisive"] else "n/a"
+            pf_txt = "inf" if math.isinf(m["pf"]) else f"{m['pf']:.3f}"
+            lines.append(f"| {label} | {side} | {m['n']} | {m['w']}/{m['l']}/{m['d']} | {m['wr']:.2f}% | {ci_txt} | {m['all_wr']:.2f}% | {m['net']:+.2f}u | {m['roi']:+.2f}% | {pf_txt} | {m['dd']:.2f}u | {m['streak']} |")
 
+    lines += ["", "## Model comparison", "",
+      "Each model is fitted only on TRAIN decisive outcomes. Its threshold is selected only on VALIDATION from the fixed grid 0.50–0.75, requiring at least 40 accepted validation trades. The selected threshold is then frozen for TEST. Rejected model signals are WAIT.",
+      "| Model | Threshold | VAL accepted | VAL W/L/D | VAL WR | VAL net | TEST accepted | TEST W/L/D | TEST WR | TEST Wilson 95% CI | TEST net | TEST ROI | TEST PF | TEST maxDD | TEST max loss streak |",
+      "|---|---:|---:|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|",
+      "", "## Direction and WAIT-filter diagnostics", "",
+      "| Model | Split | Direction | Accepted / base signals | WAIT count (%) | W/L/D | Decisive WR | Wilson 95% CI | Wins / all | Net | ROI | PF | Max DD | Max loss streak |",
+      "|---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for name, factory in model_factories().items():
         model = factory()
         model.fit(X_train, y_train)
         p_val = model.predict_proba(X_val)[:, 1]
         selected = choose_threshold(validation, p_val)
         if selected is None:
-            lines.append(f"| {name} | no threshold met minimum validation sample | — | — | — | — | — | — | — | — | — |")
+            lines.append(f"| {name} | — | — | no threshold met minimum validation sample | — | — | — | — | — | — | — | — | — | — |")
             continue
         p_test = model.predict_proba(X_test)[:, 1]
-        accepted_test = p_test >= selected["threshold"]
-        tm = metrics(test, accepted_test)
-        vm = selected["metrics"]
-        lines.append(f"| {name} | {selected['threshold']:.3f} | {vm['n']}/{len(validation)} | {vm['wr']:.2f}% | {vm['net']:+.2f}u | {tm['n']}/{len(test)} | {tm['w']}/{tm['l']}/{tm['d']} | {tm['wr']:.2f}% | {tm['net']:+.2f}u | {tm['pf']:.3f} | {tm['dd']:.2f}u |")
-        for side in ("CALL", "PUT"):
-            side_rows = [r for r in test if r["direction"] == side]
-            side_keep = [bool(accepted_test[i]) for i, r in enumerate(test) if r["direction"] == side]
-            sm = metrics(side_rows, side_keep)
-            lines.append(f"  - {name} TEST {side}: accepted={sm['n']}/{len(side_rows)}, W/L/D={sm['w']}/{sm['l']}/{sm['d']}, WR={sm['wr']:.2f}%, net={sm['net']:+.2f}u.")
+        val_keep = p_val >= selected["threshold"]
+        test_keep = p_test >= selected["threshold"]
+        vm = metrics(validation, val_keep)
+        tm = metrics(test, test_keep)
+        tci = wilson(tm["w"], tm["decisive"])
+        tci_txt = f"[{tci[0]:.2f}, {tci[1]:.2f}]" if tm["decisive"] else "n/a"
+        pf_txt = "inf" if math.isinf(tm["pf"]) else f"{tm['pf']:.3f}"
+        lines.append(f"| {name} | {selected['threshold']:.3f} | {vm['n']}/{len(validation)} | {vm['w']}/{vm['l']}/{vm['d']} | {vm['wr']:.2f}% | {vm['net']:+.2f}u | {tm['n']}/{len(test)} | {tm['w']}/{tm['l']}/{tm['d']} | {tm['wr']:.2f}% | {tci_txt} | {tm['net']:+.2f}u | {tm['roi']:+.2f}% | {pf_txt} | {tm['dd']:.2f}u | {tm['streak']} |")
+        for split_name, split_rows, keep in (("VALIDATION", validation, val_keep), ("TEST", test, test_keep)):
+            for side in ("ALL", "CALL", "PUT"):
+                indices = [i for i, r in enumerate(split_rows) if side == "ALL" or r["direction"] == side]
+                side_rows = [split_rows[i] for i in indices]
+                side_keep = [bool(keep[i]) for i in indices]
+                sm = metrics(side_rows, side_keep)
+                base_n = len(side_rows)
+                rejected = base_n - sm["n"]
+                wait_pct = 100.0 * rejected / base_n if base_n else float("nan")
+                ci = wilson(sm["w"], sm["decisive"])
+                ci_txt = f"[{ci[0]:.2f}, {ci[1]:.2f}]" if sm["decisive"] else "n/a"
+                pf_side = "inf" if math.isinf(sm["pf"]) else f"{sm['pf']:.3f}"
+                lines.append(f"| {name} | {split_name} | {side} | {sm['n']}/{base_n} | {rejected} ({wait_pct:.2f}%) | {sm['w']}/{sm['l']}/{sm['d']} | {sm['wr']:.2f}% | {ci_txt} | {sm['all_wr']:.2f}% | {sm['net']:+.2f}u | {sm['roi']:+.2f}% | {pf_side} | {sm['dd']:.2f}u | {sm['streak']} |")
     lines += ["", "## Interpretation guardrails", "",
-      f"- 92% payout break-even decisive WR = {100/(1+PAYOUT):.4f}%. A higher WR alone is insufficient; net units and coverage matter.",
-      "- A filter may appear better by rejecting most trades. Always read accepted count and coverage alongside WR/net.",
-      "- This historical TEST is not pristine after repeated prior exploratory analysis. Treat all results as hypothesis-generating, not confirmatory.",
-      "- Model/threshold selection across several candidates introduces selection bias. A genuinely prospective Pocket Option validation is required before considering any production use.",
+      f"- 92% payout break-even decisive WR = {100/(1+PAYOUT):.4f}%. A higher WR alone is insufficient; compare net, ROI, drawdown, coverage, and confidence intervals.",
+      "- The raw signal-frequency denominator is all complete M5 bars; raw WAIT includes bars without a trigger. In model tables, WAIT means a triggered event rejected by the model.",
+      "- Wilson intervals describe decisive outcomes and assume independent Bernoulli trials; overlapping 20-minute outcomes and market clustering violate that assumption and can make intervals too narrow.",
+      "- A filter may appear better by rejecting most trades. Always read accepted count and WAIT share alongside WR/net.",
+      "- This historical TEST has already been used in repeated exploratory research. It is not an untouched independent confirmation.",
+      "- Model/threshold selection across several candidates introduces selection bias. A genuinely prospective validation on fresh Pocket Option candles is required before any production use.",
       "- No model is deployed or connected to Hydra Desktop; no trade execution exists.", ""]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     report = "\n".join(lines)
