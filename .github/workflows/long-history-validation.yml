@@ -11,6 +11,7 @@ on:
       - "research/ai_filter_robustness_audit.py"
       - "research/nonoverlap_baseline_audit.py"
       - "research/predeclared_interaction_screen.py"
+      - "research/sweep_morphology_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -115,12 +116,20 @@ jobs:
         run: python research/nonoverlap_baseline_audit.py --data "$DATA_FILE" --out research/NONOVERLAP_BASELINE_AUDIT.md
       - name: Run predeclared interaction screen
         run: python research/predeclared_interaction_screen.py --data "$DATA_FILE" --out research/PREDECLARED_INTERACTION_SCREEN.md
+      - name: Run causal sweep morphology audit
+        run: python research/sweep_morphology_audit.py --data "$DATA_FILE" --out research/SWEEP_MORPHOLOGY_AUDIT.md
       - name: Install ML research dependencies
         run: python -m pip install --upgrade numpy scikit-learn
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
       - name: Run AI filter robustness diagnostics
         run: python research/ai_filter_robustness_audit.py --data "$DATA_FILE" --out research/AI_FILTER_ROBUSTNESS.md
+      - name: Upload sweep morphology audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-sweep-morphology-audit
+          path: research/SWEEP_MORPHOLOGY_AUDIT.md
+          if-no-files-found: error
       - name: Upload predeclared interaction screen
         uses: actions/upload-artifact@v4
         with:
