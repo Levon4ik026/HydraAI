@@ -69,8 +69,7 @@ def main():
         outcome="DRAW" if abs(delta)<1e-12 else "WIN" if delta>0 else "LOSS"
         ts=sig.timestamp
         london=ts.astimezone(ZoneInfo("Europe/London"))
-        newyork=ts.astimezone(ZoneInfo("America/New_York"))
-        tokyo=ts.astimezone(ZoneInfo("Asia/Tokyo"))
+                tokyo=ts.astimezone(ZoneInfo("Asia/Tokyo"))
         utc_hour=ts.hour
         session=("Asia" if 0<=utc_hour<7 else "London" if 7<=utc_hour<13 else "New York" if 13<=utc_hour<18 else "Late")
         big_dist=abs(sig.close-round(sig.close/BIG_FIGURE)*BIG_FIGURE)/PIP
@@ -83,7 +82,7 @@ def main():
         fix_frankfurt=14*60+15
         fix_london=16*60
         mins_tokyo=tokyo.hour*60+tokyo.minute
-        mins_frankfurt=ts.astimezone(ZoneInfo("Europe/Frankfurt")).hour*60+ts.astimezone(ZoneInfo("Europe/Frankfurt")).minute
+        mins_frankfurt=ts.astimezone(ZoneInfo("Europe/Berlin")).hour*60+ts.astimezone(ZoneInfo("Europe/Frankfurt")).minute
         mins_london=london.hour*60+london.minute
         def near(a,b): return abs(a-b)<=10
         period="TRAIN" if ts.date()<d1 else "VALIDATION" if ts.date()<d2 else "TEST"
