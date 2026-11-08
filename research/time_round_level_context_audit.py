@@ -80,11 +80,11 @@ def main():
         # Local-clock windows are DST-aware; these are descriptive windows around
         # commonly watched fixing times, not claims about exact order-flow timing.
         fix_tokyo=9*60+55
+        fix_frankfurt=14*60+15
         fix_london=16*60
-        fix_ny=10*60
         mins_tokyo=tokyo.hour*60+tokyo.minute
+        mins_frankfurt=ts.astimezone(ZoneInfo("Europe/Frankfurt")).hour*60+ts.astimezone(ZoneInfo("Europe/Frankfurt")).minute
         mins_london=london.hour*60+london.minute
-        mins_ny=newyork.hour*60+newyork.minute
         def near(a,b): return abs(a-b)<=10
         period="TRAIN" if ts.date()<d1 else "VALIDATION" if ts.date()<d2 else "TEST"
         rows.append({
@@ -94,8 +94,8 @@ def main():
             "big_bin":dist_bin(big_dist),"whole_bin":dist_bin(whole_dist),
             "near_big_2p":big_dist<=2,
             "near_tokyo_fix":near(mins_tokyo,fix_tokyo),
+            "near_frankfurt_fix":near(mins_frankfurt,fix_frankfurt),
             "near_london_fix":near(mins_london,fix_london),
-            "near_ny_fix":near(mins_ny,fix_ny),
         })
 
     lines=[
@@ -106,7 +106,7 @@ def main():
       f"Entry next M5 open; settlement fourth M5 close (20m); payout +{PAYOUT:.2f}/-1/0.",
       f"Chronological signal-day boundaries: TRAIN < {d1}; VALIDATION < {d2}; TEST >= {d2}.",
       "All context is computed at signal close or earlier. Bins are fixed in advance, no threshold optimization. Results are exploratory; multiple comparisons, overlapping trades, serial dependence, and external BID-vs-platform differences remain.",
-      "UTC session labels are coarse: Asia 00-06, London 07-12, New York 13-17, Late 18-23. Local fixing windows use DST-aware Tokyo 09:55, London 16:00, New York 10:00, +/-10 minutes; these are context windows, not proof of fixing-driven flow.","",
+      "UTC session labels are coarse: Asia 00-06, London 07-12, New York 13-17, Late 18-23. Local fixing windows use DST-aware Tokyo 09:55, Frankfurt/ECB 14:15, London 16:00, +/-10 minutes; these are context windows, not proof of fixing-driven flow.","",
       "## Overall baseline by period","",
       "| Period | n | W/L/D | Decisive WR | Net | PF |","|---|---:|---:|---:|---:|---:|"
     ]
@@ -118,8 +118,8 @@ def main():
         ("big_bin",["<=2p","2-5p","5-10p",">10p"]),
         ("whole_bin",["<=2p","2-5p","5-10p",">10p"]),
         ("near_tokyo_fix",[True,False]),
+        ("near_frankfurt_fix",[True,False]),
         ("near_london_fix",[True,False]),
-        ("near_ny_fix",[True,False]),
         ("near_big_2p",[True,False]),
     ]:
         lines += ["",f"## {dimension.replace('_',' ').title()} — all periods","",
@@ -134,8 +134,8 @@ def main():
         for dim,labels in [("session",["Asia","London","New York","Late"]),
                            ("big_bin",["<=2p","2-5p","5-10p",">10p"]),
                            ("near_tokyo_fix",[True,False]),
-                           ("near_london_fix",[True,False]),
-                           ("near_ny_fix",[True,False])]:
+                           ("near_frankfurt_fix",[True,False]),
+                           ("near_london_fix",[True,False])]:
             for label in labels:
                 for side in ("CALL","PUT"):
                     grp=[r for r in sub if r[dim]==label and r["side"]==side]
