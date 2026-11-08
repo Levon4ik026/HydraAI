@@ -18,11 +18,18 @@ def read_m1(path):
     rows = {}
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         rd = csv.DictReader(f)
-        required = {"timestamp","open","high","low","close"}
+        time_col = "datetime_utc" if "datetime_utc" in (rd.fieldnames or []) else "datetime" if "datetime" in (rd.fieldnames or []) else "timestamp"
+        required = {time_col,"open","high","low","close"}
         if not required.issubset(rd.fieldnames or []):
             raise ValueError(f"Unexpected CSV header: {rd.fieldnames}")
         for r in rd:
-            ts = datetime.fromtimestamp(int(float(r["timestamp"]))/1000, tz=timezone.utc)
+            raw_time = r[time_col].strip()
+            if time_col == "timestamp":
+                ts = datetime.fromtimestamp(int(float(raw_time))/1000, tz=timezone.utc)
+            else:
+                ts = datetime.fromisoformat(raw_time.replace("Z", "+00:00"))
+                if ts.tzinfo is None: ts = ts.replace(tzinfo=timezone.utc)
+                ts = ts.astimezone(timezone.utc)
             o,h,l,c = (float(r[k]) for k in ("open","high","low","close"))
             if all(math.isfinite(x) and x > 0 for x in (o,h,l,c)) and h >= max(o,l,c) and l <= min(o,c):
                 rows[ts] = Bar(ts,o,h,l,c)
