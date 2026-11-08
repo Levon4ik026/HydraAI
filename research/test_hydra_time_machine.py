@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from types import SimpleNamespace
 from hydra_time_machine import (
     simulate_probabilities, tod_distance, trailing_vol, classify_vol,
-    candidate_pool, MIN_POOL,
+    candidate_pool, MIN_POOL, score_forecasts,
 )
 
 class TimeMachineTests(unittest.TestCase):
@@ -26,6 +26,16 @@ class TimeMachineTests(unittest.TestCase):
         bars=[SimpleNamespace(open=1,close=1+0.001*i) for i in range(13)]
         self.assertIsNone(trailing_vol(bars,11))
         self.assertIsNotNone(trailing_vol(bars,12))
+
+    def test_probability_scores_exclude_draws(self):
+        rows=[
+            {"tm":0.8,"tod":0.6,"all":0.5,"actual":"WIN"},
+            {"tm":0.3,"tod":0.4,"all":0.5,"actual":"LOSS"},
+            {"tm":0.99,"tod":0.99,"all":0.99,"actual":"DRAW"},
+        ]
+        scored=score_forecasts(rows)
+        self.assertEqual([row[1] for row in scored],[2,2,2])
+        self.assertAlmostEqual(scored[0][2],((0.8-1)**2+(0.3-0)**2)/2)
 
     def test_volatility_tercile(self):
         values=list(range(30))
