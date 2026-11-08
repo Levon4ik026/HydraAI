@@ -17,7 +17,7 @@ on:
       - "research/ny_session_mechanism_audit.py"
       - "research/ny_put_locked_candidate_audit.py"
       - "research/ny_put_time_bucket_audit.py"
-      - "research/ny_put_matched_control_audit.py"
+      - "research/ny_put_matched_control_audit.py"\n      - "research/ny_put_random_match_sensitivity.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -136,7 +136,7 @@ jobs:
         run: python research/ny_put_time_bucket_audit.py --data "$DATA_FILE" --out research/NY_PUT_TIME_BUCKET_AUDIT.md
       - name: Run locked New York PUT matched-control audit
         run: python research/ny_put_matched_control_audit.py --data "$DATA_FILE" --out research/NY_PUT_MATCHED_CONTROL_AUDIT.md
-      - name: Install ML research dependencies
+      - name: Run NY PUT random matched-control sensitivity\n        run: python research/ny_put_random_match_sensitivity.py --data "$DATA_FILE" --out research/NY_PUT_RANDOM_MATCH_SENSITIVITY.md\n      - name: Install ML research dependencies
         run: python -m pip install --upgrade numpy scikit-learn
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
@@ -160,7 +160,7 @@ jobs:
           name: hydra-ny-put-matched-control-audit
           path: research/NY_PUT_MATCHED_CONTROL_AUDIT.md
           if-no-files-found: error
-      - name: Upload locked New York PUT candidate audit
+      - name: Upload NY PUT random matched-control sensitivity\n        uses: actions/upload-artifact@v4\n        with:\n          name: hydra-ny-put-random-match-sensitivity\n          path: research/NY_PUT_RANDOM_MATCH_SENSITIVITY.md\n          if-no-files-found: error\n      - name: Upload locked New York PUT candidate audit
         uses: actions/upload-artifact@v4
         with:
           name: hydra-ny-put-locked-candidate-audit
