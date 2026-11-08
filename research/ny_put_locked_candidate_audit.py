@@ -67,7 +67,7 @@ def main():
         if ts.date()<d2:
             return None if settle_ts.date()>=d2 else "VALIDATION"
         return "TEST"
-    candidate=[]; background=[]; baseline_put=[]; monthly=defaultdict(list); daily=defaultdict(float)
+    candidate=[]; background=[]; baseline_put=[]; monthly=defaultdict(list); daily=defaultdict(list)
     for sid,bars in enumerate(segments):
         ind=indicators(bars)
         for i in range(WARMUP,len(bars)-HORIZON):
