@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from types import SimpleNamespace
 from hydra_time_machine import (
     simulate_probabilities, tod_distance, trailing_vol, classify_vol,
-    candidate_pool, MIN_POOL, score_forecasts,
+    candidate_pool, MIN_POOL, score_forecasts, summary_outcomes,
 )
 
 class TimeMachineTests(unittest.TestCase):
@@ -26,6 +26,12 @@ class TimeMachineTests(unittest.TestCase):
         bars=[SimpleNamespace(open=1,close=1+0.001*i) for i in range(13)]
         self.assertIsNone(trailing_vol(bars,11))
         self.assertIsNotNone(trailing_vol(bars,12))
+
+    def test_portfolio_summary_maps_full_outcome_labels(self):
+        n,w,l,d,wr,net,pf=summary_outcomes(["WIN","LOSS","WIN","DRAW"])
+        self.assertEqual((n,w,l,d),(4,2,1,1))
+        self.assertAlmostEqual(wr,200/3)
+        self.assertGreater(net,0)
 
     def test_probability_scores_exclude_draws(self):
         rows=[
