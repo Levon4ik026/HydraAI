@@ -6,6 +6,7 @@ on:
     branches: [hydra/research-validation]
     paths:
       - "research/long_history_validation.py"
+      - "research/causal_regime_20m_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -34,6 +35,14 @@ jobs:
           echo "DATA_FILE=$DATA_FILE" >> "$GITHUB_ENV"
       - name: Run frozen long-history backtest
         run: python research/long_history_validation.py --data "$DATA_FILE" --out research/LONG_HISTORY_VALIDATION.md
+      - name: Run causal 20-minute regime audit
+        run: python research/causal_regime_20m_audit.py --data "$DATA_FILE" --out research/CAUSAL_REGIME_20M_AUDIT.md
+      - name: Upload causal regime audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-causal-regime-20m-audit
+          path: research/CAUSAL_REGIME_20M_AUDIT.md
+          if-no-files-found: error
       - name: Upload long-history report
         uses: actions/upload-artifact@v4
         with:
