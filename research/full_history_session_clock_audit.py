@@ -81,7 +81,7 @@ def main():
       "- Preserve two hypotheses for a predeclared follow-up: elevated activity around 17:00 London / 12:00 NY, and possible downside asymmetry after NY 09:30.",
       "- Next test should use same-weekday/month controls, day-block uncertainty, fixed 5m/20m binary settlements, actual payout, and prospective Pocket Option DEMO confirmation.",
       "- No Desktop code, strategy parameters, or auto-trading behavior changed.",""]
-    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\\n".join(L),encoding="utf-8")
+    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\n".join(L),encoding="utf-8")
     print(f"Wrote {a.out}; rows={len(d)}; invalid_OHLC={(~valid).sum()}")
 
 if __name__=="__main__": main()
