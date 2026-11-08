@@ -1,0 +1,39 @@
+name: Long-history frozen strategy validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/long_history_validation.py"
+      - ".github/workflows/long-history-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  long-history-backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Download EURUSD M1 BID history from Dukascopy
+        run: npx --yes dukascopy-node@latest -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+      - name: Verify downloaded file
+        run: |
+          ls -lh download/
+          test -s download/eurusd-m1-bid-2024-01-01-2026-11-09.csv
+      - name: Run frozen long-history backtest
+        run: python research/long_history_validation.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_VALIDATION.md
+      - name: Upload long-history report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-long-history-validation
+          path: research/LONG_HISTORY_VALIDATION.md
+          if-no-files-found: error
