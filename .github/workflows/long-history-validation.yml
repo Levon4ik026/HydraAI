@@ -25,7 +25,7 @@ on:
       - "research/ny_put_sensitivity_loss_audit.py"
       - "research/level_dwell_experiment.py"
       - "research/m1_move_occurrence_direction_audit.py"
-      - "research/m1_two_stage_direction_audit.py"
+      - "research/m1_two_stage_direction_audit.py"\n      - "research/m1_two_stage_robustness_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -193,6 +193,15 @@ jobs:
         with:
           name: hydra-m1-two-stage-direction-audit
           path: research/M1_TWO_STAGE_DIRECTION_AUDIT.md
+          if-no-files-found: error
+
+      - name: Run predeclared two-stage robustness audit
+        run: python research/m1_two_stage_robustness_audit.py --data "$DATA_FILE" --out research/M1_TWO_STAGE_ROBUSTNESS_AUDIT.md
+      - name: Upload two-stage robustness audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-m1-two-stage-robustness-audit
+          path: research/M1_TWO_STAGE_ROBUSTNESS_AUDIT.md
           if-no-files-found: error
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
