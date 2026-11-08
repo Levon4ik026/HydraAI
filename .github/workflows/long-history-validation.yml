@@ -9,6 +9,7 @@ on:
       - "research/causal_regime_20m_audit.py"
       - "research/ai_intelligence_engine_audit.py"
       - "research/ai_filter_robustness_audit.py"
+      - "research/nonoverlap_baseline_audit.py"
       - "research/predeclared_interaction_screen.py"
       - ".github/workflows/long-history-validation.yml"
 
@@ -143,6 +144,12 @@ jobs:
         with:
           name: hydra-causal-regime-20m-audit
           path: research/CAUSAL_REGIME_20M_AUDIT.md
+          if-no-files-found: error
+      - name: Upload non-overlapping baseline audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-nonoverlap-baseline-audit
+          path: research/NONOVERLAP_BASELINE_AUDIT.md
           if-no-files-found: error
       - name: Upload long-history report
         uses: actions/upload-artifact@v4
