@@ -8,6 +8,7 @@ on:
       - "research/long_history_validation.py"
       - "research/causal_regime_20m_audit.py"
       - "research/ai_intelligence_engine_audit.py"
+      - "research/ai_filter_robustness_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -87,6 +88,14 @@ jobs:
         run: python -m pip install --upgrade numpy scikit-learn
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
+      - name: Run AI filter robustness diagnostics
+        run: python research/ai_filter_robustness_audit.py --data "$DATA_FILE" --out research/AI_FILTER_ROBUSTNESS.md
+      - name: Upload AI filter robustness diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ai-filter-robustness
+          path: research/AI_FILTER_ROBUSTNESS.md
+          if-no-files-found: error
       - name: Upload AI Intelligence Engine audit
         uses: actions/upload-artifact@v4
         with:
