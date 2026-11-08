@@ -20,7 +20,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from long_history_validation import read_duka, make_events, PAYOUT
+from long_history_validation import read_duka, make_events, PAYOUT, m5_close_time, chronological_period
 from reproduce_m5_bb_williams_adx import indicators, make_m5
 from report_formatting import compose_model_sections
 
@@ -127,7 +127,7 @@ def build_dataset(segments, adx_min):
             outcome = "DRAW" if abs(delta) < 1e-12 else "WIN" if delta > 0 else "LOSS"
             rows.append({"time": bars[i].timestamp, "direction": event["direction"],
                          "features": features, "outcome": outcome,
-                         "settle_time": bars[i + HORIZON_BARS].timestamp})
+                         "settle_time": m5_close_time(bars[i + HORIZON_BARS].timestamp)})
     rows.sort(key=lambda r: r["time"])
     return rows, len(events)
 
@@ -163,18 +163,14 @@ def split_rows(rows):
         raise SystemExit("Insufficient signal days for chronological ML split.")
     d1, d2 = days[int(len(days) * .60)], days[int(len(days) * .80)]
     train, validation, test = [], [], []
-    # Purge any sample whose 20-minute outcome window touches the next split.
-    for i, r in enumerate(rows):
-        day = r["time"].date()
-        if day < d1 and r["settle_time"].date() >= d1:
-            continue
-        if d1 <= day < d2 and r["settle_time"].date() >= d2:
-            continue
-        if day < d1:
+    # Purge outcomes whose actual expiry close reaches the next split boundary.
+    for r in rows:
+        period = chronological_period(r["time"], r["settle_time"], d1, d2)
+        if period == "TRAIN":
             train.append(r)
-        elif day < d2:
+        elif period == "VALIDATION":
             validation.append(r)
-        else:
+        elif period == "TEST":
             test.append(r)
     return train, validation, test, d1, d2
 
