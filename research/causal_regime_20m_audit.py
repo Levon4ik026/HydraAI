@@ -58,57 +58,57 @@ def main():
     days=sorted({e["signal_time"].date() for e in events})
     d1=days[int(len(days)*.60)]; d2=days[int(len(days)*.80)]
     records=[]
-    for e in events:
-        bars=segments[e["segment"]]; i=e["bar_index"]
-        if i+4>=len(bars): continue
-        ind=indicators(bars); x=ind[i]
-        if i<120 or x["adx"] is None: continue
-        closes=[b.close for b in bars]
+    events_by_seg=defaultdict(list)
+    for e in events: events_by_seg[e["segment"]].append(e)
+    for seg_id,bars in enumerate(segments):
+        if not events_by_seg[seg_id]: continue
+        ind=indicators(bars); closes=[b.close for b in bars]
         e20=ema(closes,20); e50=ema(closes,50)
-        # Causal true-range ATR(14), simple rolling mean; no future observations.
-        trs=[]
+        trs=[None]*len(bars)
         for j in range(1,len(bars)):
             b,prev=bars[j],bars[j-1]
-            trs.append(max(b.high-b.low,abs(b.high-prev.close),abs(b.low-prev.close)))
+            trs[j]=max(b.high-b.low,abs(b.high-prev.close),abs(b.low-prev.close))
         atr=[None]*len(bars)
         for j in range(14,len(bars)):
-            atr[j]=sum(trs[j-14:j])/14
-        av=atr[i]
-        if not av or not e20[i] or not e50[i]: continue
-        prior_atr=[atr[k]/bars[k].close for k in range(max(14,i-120),i) if atr[k] and bars[k].close]
-        volrank=percentile_rank(prior_atr,av/bars[i].close)
-        prev12=bars[i-12:i]; prev24=bars[i-24:i]
-        cur=bars[i]; span=max(cur.high-cur.low,1e-12)
-        upper_wick=cur.high-max(cur.open,cur.close); lower_wick=min(cur.open,cur.close)-cur.low
-        bb=x["upper"]-x["lower"]
-        side=e["direction"]
-        signal_day=cur.timestamp.date()
-        period="TRAIN" if signal_day<d1 else "VALIDATION" if signal_day<d2 else "TEST"
-        # Signal candle data and trailing structure only.
-        features={
-          "trend":"UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT",
-          "adx_band":"15-20" if x["adx"]<20 else "20-25" if x["adx"]<25 else "25+",
-          "volatility":"LOW" if volrank is not None and volrank<=.333 else "MID" if volrank is not None and volrank<=.667 else "HIGH",
-          "hour":"ASIA" if cur.timestamp.hour<7 else "LONDON" if cur.timestamp.hour<13 else "NY" if cur.timestamp.hour<21 else "LATE",
-          "weekday":cur.timestamp.strftime("%a"),
-          "body_atr":abs(cur.close-cur.open)/av,
-          "range_atr":span/av,
-          "upper_wick_ratio":upper_wick/span,
-          "lower_wick_ratio":lower_wick/span,
-          "bb_width_atr":bb/av if bb else None,
-          "ema_spread_atr":(e20[i]-e50[i])/av,
-          "di_spread":(x["plus_di"] or 0)-(x["minus_di"] or 0),
-          "prior12_high_dist_atr":(max(b.high for b in prev12)-cur.close)/av,
-          "prior12_low_dist_atr":(cur.close-min(b.low for b in prev12))/av,
-          "prior24_high_dist_atr":(max(b.high for b in prev24)-cur.close)/av,
-          "prior24_low_dist_atr":(cur.close-min(b.low for b in prev24))/av,
-          "momentum3_atr":(cur.close-bars[i-3].close)/av,
-          "momentum6_atr":(cur.close-bars[i-6].close)/av,
-          "willr":x["willr"],
-          "adx":x["adx"],
-        }
-        records.append({"time":cur.timestamp,"direction":side,"period":period,
-                        "outcome":outcome(bars,i,side),"features":features})
+            atr[j]=sum(x for x in trs[j-13:j+1] if x is not None)/14
+        atr_pct=[(atr[j]/bars[j].close if atr[j] and bars[j].close else None) for j in range(len(bars))]
+        for e in events_by_seg[seg_id]:
+            i=e["bar_index"]
+            if i+4>=len(bars) or i<120: continue
+            x=ind[i]; av=atr[i]
+            if x["adx"] is None or not av or not e20[i] or not e50[i]: continue
+            prior_atr=[v for v in atr_pct[max(14,i-120):i] if v is not None]
+            volrank=percentile_rank(prior_atr,atr_pct[i])
+            prev12=bars[i-12:i]; prev24=bars[i-24:i]
+            cur=bars[i]; span=max(cur.high-cur.low,1e-12)
+            upper_wick=cur.high-max(cur.open,cur.close); lower_wick=min(cur.open,cur.close)-cur.low
+            bb=x["upper"]-x["lower"]
+            signal_day=cur.timestamp.date()
+            period="TRAIN" if signal_day<d1 else "VALIDATION" if signal_day<d2 else "TEST"
+            features={
+              "trend":"UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT",
+              "adx_band":"15-20" if x["adx"]<20 else "20-25" if x["adx"]<25 else "25+",
+              "volatility":"LOW" if volrank is not None and volrank<=.333 else "MID" if volrank is not None and volrank<=.667 else "HIGH",
+              "hour":"ASIA" if cur.timestamp.hour<7 else "LONDON" if cur.timestamp.hour<13 else "NY" if cur.timestamp.hour<21 else "LATE",
+              "weekday":cur.timestamp.strftime("%a"),
+              "body_atr":abs(cur.close-cur.open)/av,
+              "range_atr":span/av,
+              "upper_wick_ratio":upper_wick/span,
+              "lower_wick_ratio":lower_wick/span,
+              "bb_width_atr":bb/av if bb else None,
+              "ema_spread_atr":(e20[i]-e50[i])/av,
+              "di_spread":(x["plus_di"] or 0)-(x["minus_di"] or 0),
+              "prior12_high_dist_atr":(max(b.high for b in prev12)-cur.close)/av,
+              "prior12_low_dist_atr":(cur.close-min(b.low for b in prev12))/av,
+              "prior24_high_dist_atr":(max(b.high for b in prev24)-cur.close)/av,
+              "prior24_low_dist_atr":(cur.close-min(b.low for b in prev24))/av,
+              "momentum3_atr":(cur.close-bars[i-3].close)/av,
+              "momentum6_atr":(cur.close-bars[i-6].close)/av,
+              "willr":x["willr"],
+              "adx":x["adx"],
+            }
+            records.append({"time":cur.timestamp,"direction":e["direction"],"period":period,
+                            "outcome":outcome(bars,i,e["direction"]),"features":features})
     # Quantile thresholds learned on TRAIN only and then held fixed.
     numeric=[k for k in records[0]["features"] if isinstance(records[0]["features"][k],(int,float))]
     edges={}
