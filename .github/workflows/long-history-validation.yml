@@ -7,6 +7,8 @@ on:
     paths:
       - "research/long_history_validation.py"
       - "research/standalone_strategy_screen.py"
+      - "research/hydra_time_machine.py"
+      - "research/test_hydra_time_machine.py"
       - "research/causal_regime_20m_audit.py"
       - "research/ai_intelligence_engine_audit.py"
       - "research/ai_filter_robustness_audit.py"
@@ -124,6 +126,17 @@ jobs:
         with:
           name: hydra-standalone-strategy-screen
           path: research/STANDALONE_STRATEGY_SCREEN.md
+          if-no-files-found: error
+      - name: Run HYDRA Time Machine walk-forward research
+        run: |
+          python -m pip install --upgrade numpy
+          python research/hydra_time_machine.py --data "$DATA_FILE" --out research/HYDRA_TIME_MACHINE_REPORT.md
+          python -m unittest discover -s research -p "test_hydra_time_machine.py" -v
+      - name: Upload HYDRA Time Machine report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-time-machine-report
+          path: research/HYDRA_TIME_MACHINE_REPORT.md
           if-no-files-found: error
       - name: Run frozen long-history backtest
         run: python research/long_history_validation.py --data "$DATA_FILE" --out research/LONG_HISTORY_VALIDATION.md
