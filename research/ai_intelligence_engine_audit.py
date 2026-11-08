@@ -22,6 +22,7 @@ from sklearn.preprocessing import StandardScaler
 
 from long_history_validation import read_duka, make_events, PAYOUT
 from reproduce_m5_bb_williams_adx import indicators, make_m5
+from report_formatting import compose_model_sections
 
 HORIZON_BARS = 4
 MIN_VALIDATION_TRADES = 40
@@ -279,20 +280,15 @@ def main():
             pf_txt = "inf" if math.isinf(m["pf"]) else f"{m['pf']:.3f}"
             lines.append(f"| {label} | {side} | {m['n']} | {m['w']}/{m['l']}/{m['d']} | {m['wr']:.2f}% | {ci_txt} | {m['all_wr']:.2f}% | {m['net']:+.2f}u | {m['roi']:+.2f}% | {pf_txt} | {m['dd']:.2f}u | {m['streak']} |")
 
-    lines += ["", "## Model comparison", "",
-      "Each model is fitted only on TRAIN decisive outcomes. Its threshold is selected only on VALIDATION from the fixed grid 0.50–0.75, requiring at least 40 accepted validation trades. The selected threshold is then frozen for TEST. Rejected model signals are WAIT.",
-      "| Model | Threshold | VAL accepted | VAL W/L/D | VAL WR | VAL net | TEST accepted | TEST W/L/D | TEST WR | TEST Wilson 95% CI | TEST net | TEST ROI | TEST PF | TEST maxDD | TEST max loss streak |",
-      "|---|---:|---:|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|",
-      "", "## Direction and WAIT-filter diagnostics", "",
-      "| Model | Split | Direction | Accepted / base signals | WAIT count (%) | W/L/D | Decisive WR | Wilson 95% CI | Wins / all | Net | ROI | PF | Max DD | Max loss streak |",
-      "|---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    model_rows = []
+    direction_rows = []
     for name, factory in model_factories().items():
         model = factory()
         model.fit(X_train, y_train)
         p_val = model.predict_proba(X_val)[:, 1]
         selected = choose_threshold(validation, p_val)
         if selected is None:
-            lines.append(f"| {name} | — | — | no threshold met minimum validation sample | — | — | — | — | — | — | — | — | — | — |")
+            model_rows.append(f"| {name} | — | — | no threshold met minimum validation sample | — | — | — | — | — | — | — | — | — | — |")
             continue
         p_test = model.predict_proba(X_test)[:, 1]
         val_keep = p_val >= selected["threshold"]
@@ -302,7 +298,7 @@ def main():
         tci = wilson(tm["w"], tm["decisive"])
         tci_txt = f"[{tci[0]:.2f}, {tci[1]:.2f}]" if tm["decisive"] else "n/a"
         pf_txt = "inf" if math.isinf(tm["pf"]) else f"{tm['pf']:.3f}"
-        lines.append(f"| {name} | {selected['threshold']:.3f} | {vm['n']}/{len(validation)} | {vm['w']}/{vm['l']}/{vm['d']} | {vm['wr']:.2f}% | {vm['net']:+.2f}u | {tm['n']}/{len(test)} | {tm['w']}/{tm['l']}/{tm['d']} | {tm['wr']:.2f}% | {tci_txt} | {tm['net']:+.2f}u | {tm['roi']:+.2f}% | {pf_txt} | {tm['dd']:.2f}u | {tm['streak']} |")
+        model_rows.append(f"| {name} | {selected['threshold']:.3f} | {vm['n']}/{len(validation)} | {vm['w']}/{vm['l']}/{vm['d']} | {vm['wr']:.2f}% | {vm['net']:+.2f}u | {tm['n']}/{len(test)} | {tm['w']}/{tm['l']}/{tm['d']} | {tm['wr']:.2f}% | {tci_txt} | {tm['net']:+.2f}u | {tm['roi']:+.2f}% | {pf_txt} | {tm['dd']:.2f}u | {tm['streak']} |")
         for split_name, subset_rows, keep in (("VALIDATION", validation, val_keep), ("TEST", test, test_keep)):
             for side in ("ALL", "CALL", "PUT"):
                 indices = [i for i, r in enumerate(subset_rows) if side == "ALL" or r["direction"] == side]
@@ -315,7 +311,8 @@ def main():
                 ci = wilson(sm["w"], sm["decisive"])
                 ci_txt = f"[{ci[0]:.2f}, {ci[1]:.2f}]" if sm["decisive"] else "n/a"
                 pf_side = "inf" if math.isinf(sm["pf"]) else f"{sm['pf']:.3f}"
-                lines.append(f"| {name} | {split_name} | {side} | {sm['n']}/{base_n} | {rejected} ({wait_pct:.2f}%) | {sm['w']}/{sm['l']}/{sm['d']} | {sm['wr']:.2f}% | {ci_txt} | {sm['all_wr']:.2f}% | {sm['net']:+.2f}u | {sm['roi']:+.2f}% | {pf_side} | {sm['dd']:.2f}u | {sm['streak']} |")
+                direction_rows.append(f"| {name} | {split_name} | {side} | {sm['n']}/{base_n} | {rejected} ({wait_pct:.2f}%) | {sm['w']}/{sm['l']}/{sm['d']} | {sm['wr']:.2f}% | {ci_txt} | {sm['all_wr']:.2f}% | {sm['net']:+.2f}u | {sm['roi']:+.2f}% | {pf_side} | {sm['dd']:.2f}u | {sm['streak']} |")
+    lines.extend(compose_model_sections(model_rows, direction_rows))
     lines += ["", "## Interpretation guardrails", "",
       f"- 92% payout break-even decisive WR = {100/(1+PAYOUT):.4f}%. A higher WR alone is insufficient; compare net, ROI, drawdown, coverage, and confidence intervals.",
       "- The raw signal-frequency denominator is all complete M5 bars; raw WAIT includes bars without a trigger. In model tables, WAIT means a triggered event rejected by the model.",
