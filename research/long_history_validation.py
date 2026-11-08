@@ -70,25 +70,33 @@ def fmt_stats(trades):
     return f"{len(trades)} | {w}/{l}/{d} | {wr:.2f}% | {ci_txt} | {net:+.2f}u | {pf:.2f} | {dd:.2f}u | {streak}"
 
 
+def m5_close_time(bar_open_time):
+    """Return the actual settlement timestamp at the close of a UTC M5 bar."""
+    return bar_open_time + timedelta(minutes=5)
+
+
+def chronological_period(signal_time, settle_time, d1, d2):
+    """Assign by signal day, purging any outcome that reaches the next split boundary."""
+    signal_day = signal_time.date()
+    settle_day = settle_time.date()
+    if signal_day < d1:
+        return None if settle_day >= d1 else "TRAIN"
+    if signal_day < d2:
+        return None if settle_day >= d2 else "VALIDATION"
+    return "TEST"
+
+
 def split_records(records, d1, d2):
     """Chronological split with a purge when a trade settles across a boundary."""
     result = {"TRAIN": [], "VALIDATION": [], "TEST": [], "ALL": list(records)}
     purged = {"TRAIN": 0, "VALIDATION": 0}
     for row in records:
-        signal_day = row["signal_time"].date()
-        settle_day = row["settle_time"].date()
-        if signal_day < d1:
-            if settle_day >= d1:
-                purged["TRAIN"] += 1
-                continue
-            result["TRAIN"].append(row)
-        elif signal_day < d2:
-            if settle_day >= d2:
-                purged["VALIDATION"] += 1
-                continue
-            result["VALIDATION"].append(row)
-        else:
-            result["TEST"].append(row)
+        period = chronological_period(row["signal_time"], row["settle_time"], d1, d2)
+        if period is None:
+            split = "TRAIN" if row["signal_time"].date() < d1 else "VALIDATION"
+            purged[split] += 1
+            continue
+        result[period].append(row)
     return result, purged
 
 
@@ -112,7 +120,7 @@ def main():
             seg=segments[e["segment"]]; i=e["bar_index"]
             if i+h>=len(seg): continue
             records.append({**e,"horizon":h,"outcome":outcome(seg,i,e["direction"],h),
-                            "settle_time":seg[i+h].timestamp})
+                            "settle_time":m5_close_time(seg[i+h].timestamp)})
         by_h[h]=records
         by_h_splits[h],purged_by_h[h]=split_records(records,d1,d2)
     total_m5=sum(map(len,segments))
