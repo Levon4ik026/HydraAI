@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse, math, statistics
 from collections import defaultdict
 from pathlib import Path
-from long_history_validation import read_duka, make_events, stats, PAYOUT
+from long_history_validation import read_duka, make_events, stats, PAYOUT, m5_close_time, chronological_period
 from reproduce_m5_bb_williams_adx import make_m5, indicators
 
 def ema(values, period):
@@ -59,6 +59,8 @@ def main():
     d1=days[int(len(days)*.60)]; d2=days[int(len(days)*.80)]
     records=[]
     excluded_short_warmup=0
+    purged_signal={"TRAIN":0,"VALIDATION":0}
+    purged_background={"TRAIN":0,"VALIDATION":0}
     events_by_seg=defaultdict(list)
     for e in events: events_by_seg[e["segment"]].append(e)
     for seg_id,bars in enumerate(segments):
@@ -76,6 +78,11 @@ def main():
         for e in events_by_seg[seg_id]:
             i=e["bar_index"]
             if i+4>=len(bars): continue
+            settlement_time=m5_close_time(bars[i+4].timestamp)
+            period=chronological_period(bars[i].timestamp,settlement_time,d1,d2)
+            if period is None:
+                purged_signal["TRAIN" if bars[i].timestamp.date()<d1 else "VALIDATION"] += 1
+                continue
             if i<50:
                 excluded_short_warmup += 1
                 continue
@@ -87,8 +94,6 @@ def main():
             cur=bars[i]; span=max(cur.high-cur.low,1e-12)
             upper_wick=cur.high-max(cur.open,cur.close); lower_wick=min(cur.open,cur.close)-cur.low
             bb=x["upper"]-x["lower"]
-            signal_day=cur.timestamp.date()
-            period="TRAIN" if signal_day<d1 else "VALIDATION" if signal_day<d2 else "TEST"
             # Causal OHLC path-shape descriptors; all inputs end at signal close.
             diffs6=[bars[j].close-bars[j-1].close for j in range(i-5,i+1)]
             path6=sum(abs(v) for v in diffs6)
@@ -154,7 +159,7 @@ def main():
               "direction_aligned_body":(cur.close-cur.open)/av*(1 if e["direction"]=="CALL" else -1),
               "direction_aligned_close_location":(cur.close-cur.low)/span if e["direction"]=="CALL" else (cur.high-cur.close)/span,
             }
-            records.append({"time":cur.timestamp,"direction":e["direction"],"period":period,
+            records.append({"time":cur.timestamp,"settle_time":settlement_time,"direction":e["direction"],"period":period,
                             "outcome":outcome(bars,i,e["direction"]),"features":features})
     # Build a same-regime, non-signal 20m background. The direction outcome is
     # measured over exactly the same next-open -> fourth-close horizon.
@@ -173,7 +178,13 @@ def main():
             atr[j]=sum(x for x in trs[j-13:j+1] if x is not None)/14
         atr_pct=[(atr[j]/bars[j].close if atr[j] and bars[j].close else None) for j in range(len(bars))]
         for i in range(50,len(bars)-4):
-            cur=bars[i]; x=ind[i]; av=atr[i]
+            cur=bars[i]
+            settlement_time=m5_close_time(bars[i+4].timestamp)
+            period=chronological_period(cur.timestamp,settlement_time,d1,d2)
+            if period is None:
+                purged_background["TRAIN" if cur.timestamp.date()<d1 else "VALIDATION"] += 1
+                continue
+            x=ind[i]; av=atr[i]
             if x["adx"] is None or not av or not e20[i] or not e50[i]: continue
             prior=[v for v in atr_pct[max(14,i-120):i] if v is not None]
             if len(prior)<60 or atr_pct[i] is None: continue
@@ -181,13 +192,11 @@ def main():
             trend="UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT"
             adx_band="15-20" if x["adx"]<20 else "20-25" if x["adx"]<25 else "25+"
             vol="LOW" if volrank<=.333 else "MID" if volrank<=.667 else "HIGH"
-            day=cur.timestamp.date()
-            period="TRAIN" if day<d1 else "VALIDATION" if day<d2 else "TEST"
             entry=bars[i+1].open; exitp=bars[i+4].close
             delta=exitp-entry
             p12h=max(b.high for b in bars[i-12:i]); p12l=min(b.low for b in bars[i-12:i])
             p24h=max(b.high for b in bars[i-24:i]); p24l=min(b.low for b in bars[i-24:i])
-            background.append({"time":cur.timestamp,"period":period,"trend":trend,
+            background.append({"time":cur.timestamp,"settle_time":settlement_time,"period":period,"trend":trend,
                                "adx_band":adx_band,"volatility":vol,
                                "call_aligned12":cur.low<p12l and cur.close>p12l,
                                "put_aligned12":cur.high>p12h and cur.close<p12h,
