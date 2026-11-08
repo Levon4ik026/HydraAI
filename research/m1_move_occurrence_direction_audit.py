@@ -88,27 +88,19 @@ def safe_ratio(a: float, b: float) -> float:
     return a / b if b > 1e-12 else 0.0
 
 
-def features_for(seg: list[Bar], i: int) -> np.ndarray:
-    closes = np.asarray([b.close for b in seg], dtype=float)
-    highs = np.asarray([b.high for b in seg], dtype=float)
-    lows = np.asarray([b.low for b in seg], dtype=float)
-    opens = np.asarray([b.open for b in seg], dtype=float)
-    rets = np.diff(np.log(closes[max(0, i-60):i+1]))
-    absrets = np.abs(rets)
+def features_for(closes, highs, lows, opens, absrets, prefix, i: int) -> np.ndarray:
     def sum_abs(n: int) -> float:
-        return float(absrets[-n:].sum()) if len(absrets) >= n else float("nan")
+        return float(prefix[i] - prefix[i-n]) if i >= n else float("nan")
     def span(n: int) -> float:
-        if i + 1 < n:
-            return float("nan")
-        return float((highs[i-n+1:i+1].max() - lows[i-n+1:i+1].min()) / closes[i])
-    r1 = float(absrets[-1]) if len(absrets) else float("nan")
+        return float((highs[i-n+1:i+1].max() - lows[i-n+1:i+1].min()) / closes[i]) if i + 1 >= n else float("nan")
+    r1 = float(absrets[i-1])
     r5, r15, r30, r60 = (sum_abs(n) for n in (5, 15, 30, 60))
     s5, s15, s30, s60 = (span(n) for n in (5, 15, 30, 60))
-    mom5 = closes[i] / closes[i-5] - 1 if i >= 5 else float("nan")
-    mom15 = closes[i] / closes[i-15] - 1 if i >= 15 else float("nan")
-    mom30 = closes[i] / closes[i-30] - 1 if i >= 30 else float("nan")
-    path15 = float(absrets[-15:].sum()) if len(absrets) >= 15 else float("nan")
-    eff15 = safe_ratio(abs(mom15), path15) if math.isfinite(path15) and math.isfinite(mom15) else float("nan")
+    mom5 = closes[i] / closes[i-5] - 1
+    mom15 = closes[i] / closes[i-15] - 1
+    mom30 = closes[i] / closes[i-30] - 1
+    path15 = sum_abs(15)
+    eff15 = safe_ratio(abs(mom15), path15)
     candle_range = highs[i] - lows[i]
     body_fraction = safe_ratio(abs(closes[i] - opens[i]), candle_range)
     close_location = safe_ratio(closes[i] - lows[i], candle_range)
@@ -123,6 +115,12 @@ def build_samples(segments: list[list[Bar]], threshold_pips: float):
     xs, ys, records = [], [], []
     threshold = threshold_pips * PIP
     for seg_id, seg in enumerate(segments):
+        closes = np.asarray([b.close for b in seg], dtype=float)
+        highs = np.asarray([b.high for b in seg], dtype=float)
+        lows = np.asarray([b.low for b in seg], dtype=float)
+        opens = np.asarray([b.open for b in seg], dtype=float)
+        absrets = np.abs(np.diff(np.log(closes)))
+        prefix = np.concatenate(([0.0], np.cumsum(absrets)))
         # i is the last fully closed candle known at decision time.
         for i in range(60, len(seg) - 15, SAMPLE_STEP):
             entry = seg[i+1].open
@@ -130,7 +128,7 @@ def build_samples(segments: list[list[Bar]], threshold_pips: float):
             up = max(b.high for b in future) - entry
             down = entry - min(b.low for b in future)
             event = int(max(up, down) >= threshold)
-            x = features_for(seg, i)
+            x = features_for(closes, highs, lows, opens, absrets, prefix, i)
             if not np.isfinite(x).all():
                 continue
             # Directional returns settle at the close after 5/10/15 full M1 bars.
@@ -195,8 +193,7 @@ def main():
     t1, t2 = records[i1]["time"], records[i2]["time"]
     train_idx = [i for i, r in enumerate(records[:i1]) if r["time"] + timedelta(minutes=15) < t1]
     val_idx = [i for i, r in enumerate(records[i1:i2], start=i1) if r["time"] + timedelta(minutes=15) < t2]
-    test_idx = list(range(i2))
-    test_idx = [i for i in test_idx if i >= i2]
+    test_idx = list(range(i2, n))
     if len(train_idx) < 1000 or len(val_idx) < 300 or len(test_idx) < 300:
         raise RuntimeError(f"Insufficient split sizes: train={len(train_idx)}, validation={len(val_idx)}, test={len(test_idx)}")
 
