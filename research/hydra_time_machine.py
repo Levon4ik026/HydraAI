@@ -51,7 +51,7 @@ def candidate_pool(segments, signal_time, current_vol, horizon, block=BLOCK):
     candidates=[]
     # Only historical starts with complete blocks strictly before this forecast.
     for sid, bars in enumerate(segments):
-        for j in range(12, len(bars)-block+1):
+        for j in range(13, len(bars)-block+1):
             if bars[j].timestamp >= signal_time or bars[j+block-1].timestamp >= signal_time:
                 continue
             if bars[j].timestamp.date() not in allowed_dates:
@@ -213,14 +213,19 @@ def outcome_from(bars,i,side,h):
     return "DRAW" if abs(signed)<1e-10 else "WIN" if signed>0 else "LOSS"
 
 def score_forecasts(rows):
+    """Score P(WIN) conditional on a decisive outcome; DRAWs are excluded."""
     scored=[]
     for key in ("tm","tod","all"):
-        vals=[r for r in rows if r.get(key) is not None]
-        if not vals: continue
-        brier=sum((r[key]-(1 if r["actual"]=="WIN" else 0))**2 for r in vals)/len(vals)
+        vals=[r for r in rows
+              if r.get(key) is not None and r["actual"] in ("WIN","LOSS")]
+        if not vals:
+            continue
         eps=1e-6
+        brier=sum((r[key]-(1 if r["actual"]=="WIN" else 0))**2
+                  for r in vals)/len(vals)
         ll=-sum((1 if r["actual"]=="WIN" else 0)*math.log(max(eps,r[key]))+
-                (0 if r["actual"]=="WIN" else 1)*math.log(max(eps,1-r[key])) for r in vals)/len(vals)
+                (1 if r["actual"]=="LOSS" else 0)*math.log(max(eps,1-r[key]))
+                for r in vals)/len(vals)
         scored.append((key,len(vals),brier,ll))
     return scored
 
@@ -271,7 +276,7 @@ def main():
       "",
       f"Time Machine forecasts scored: {len(forecasts)} / {len(trades)} portfolio trades; insufficient pool: {insufficient}; coverage {100*len(forecasts)/max(1,len(trades)):.1f}%.",
       "## Probability quality (TEST, exploratory)","",
-      "| Forecast | n | Brier (lower better) | Log loss (lower better) |",
+      "| Forecast | Decisive n (DRAW excluded) | Brier (lower better) | Log loss (lower better) |",
       "|---|---:|---:|---:|"]
     for key,count,brier,ll in score_forecasts(forecasts):
         lines.append(f"| {key} | {count} | {brier:.4f} | {ll:.4f} |")
