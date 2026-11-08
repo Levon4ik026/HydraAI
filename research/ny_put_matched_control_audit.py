@@ -87,7 +87,8 @@ def main():
     ap.add_argument("--out",type=Path,default=Path("research/NY_PUT_MATCHED_CONTROL_AUDIT.md"))
     args=ap.parse_args()
     m1=read_duka(args.data); segments=make_m5(m1); events=make_events(segments,15)
-    event_map={(e["segment"],e["bar_index"]):e for e in events}\n    event_keys=set(event_map)
+    event_map={(e["segment"],e["bar_index"]):e for e in events}
+    event_keys=set(event_map)
     days=sorted({e["signal_time"].date() for e in events})
     d1,d2=days[int(.60*len(days))],days[int(.80*len(days))]
     candidates=[]; controls=[]
