@@ -89,6 +89,31 @@ def main():
             bb=x["upper"]-x["lower"]
             signal_day=cur.timestamp.date()
             period="TRAIN" if signal_day<d1 else "VALIDATION" if signal_day<d2 else "TEST"
+            # Causal OHLC path-shape descriptors; all inputs end at signal close.
+            diffs6=[bars[j].close-bars[j-1].close for j in range(i-5,i+1)]
+            path6=sum(abs(v) for v in diffs6)
+            diffs12=[bars[j].close-bars[j-1].close for j in range(i-11,i+1)]
+            path12=sum(abs(v) for v in diffs12)
+            ranges6=[bars[j].high-bars[j].low for j in range(i-5,i+1)]
+            true_ranges6=[trs[j] for j in range(i-5,i+1) if trs[j] is not None]
+            overlap_parts=[]
+            for left,right in zip(bars[i-2:i+1],bars[i-3:i]):
+                denom=min(left.high-left.low,right.high-right.low)
+                if denom>0:
+                    overlap_parts.append(max(0.0,min(left.high,right.high)-max(left.low,right.low))/denom)
+            prior12_low=min(b.low for b in prev12); prior12_high=max(b.high for b in prev12)
+            prior12_width=prior12_high-prior12_low
+            prior12_ranges=[b.high-b.low for b in prev12]
+            recent3_ranges=[b.high-b.low for b in bars[i-2:i+1]]
+            prior12_mean=sum(prior12_ranges)/len(prior12_ranges)
+            recent3_mean=sum(recent3_ranges)/len(recent3_ranges)
+            run_sign=1 if cur.close>bars[i-1].close else -1 if cur.close<bars[i-1].close else 0
+            same_color_run=0
+            if run_sign:
+                for j in range(i,max(0,i-6),-1):
+                    sj=1 if bars[j].close>bars[j-1].close else -1 if bars[j].close<bars[j-1].close else 0
+                    if sj!=run_sign: break
+                    same_color_run+=1
             features={
               "trend":"UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT",
               "adx_band":"15-20" if x["adx"]<20 else "20-25" if x["adx"]<25 else "25+",
@@ -116,6 +141,18 @@ def main():
               "momentum6_atr":(cur.close-bars[i-6].close)/av,
               "willr":x["willr"],
               "adx":x["adx"],
+              "efficiency_6":abs(sum(diffs6))/path6 if path6>0 else 0.0,
+              "efficiency_12":abs(sum(diffs12))/path12 if path12>0 else 0.0,
+              "path_flips_6":sum(1 for a,b in zip(diffs6,diffs6[1:]) if a*b<0),
+              "range_overlap_3":sum(overlap_parts)/len(overlap_parts) if overlap_parts else None,
+              "range_compression_3v12":recent3_mean/prior12_mean if prior12_mean>0 else None,
+              "close_location":(cur.close-cur.low)/span,
+              "position_in_prior_12_range":(cur.close-prior12_low)/prior12_width if prior12_width>0 else None,
+              "body_direction_agreement_3":sum(1 if bars[j].close>bars[j-1].close else -1 if bars[j].close<bars[j-1].close else 0 for j in range(i-2,i+1))/3.0,
+              "median_range_to_true_range_6":statistics.median(ranges6)/statistics.median(true_ranges6) if true_ranges6 and statistics.median(true_ranges6)>0 else None,
+              "same_color_run":float(same_color_run),
+              "direction_aligned_body":(cur.close-cur.open)/av*(1 if e["direction"]=="CALL" else -1),
+              "direction_aligned_close_location":(cur.close-cur.low)/span if e["direction"]=="CALL" else (cur.high-cur.close)/span,
             }
             records.append({"time":cur.timestamp,"direction":e["direction"],"period":period,
                             "outcome":outcome(bars,i,e["direction"]),"features":features})
