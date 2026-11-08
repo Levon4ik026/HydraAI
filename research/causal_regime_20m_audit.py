@@ -58,6 +58,7 @@ def main():
     days=sorted({e["signal_time"].date() for e in events})
     d1=days[int(len(days)*.60)]; d2=days[int(len(days)*.80)]
     records=[]
+    excluded_short_warmup=0
     events_by_seg=defaultdict(list)
     for e in events: events_by_seg[e["segment"]].append(e)
     for seg_id,bars in enumerate(segments):
@@ -74,11 +75,14 @@ def main():
         atr_pct=[(atr[j]/bars[j].close if atr[j] and bars[j].close else None) for j in range(len(bars))]
         for e in events_by_seg[seg_id]:
             i=e["bar_index"]
-            if i+4>=len(bars) or i<120: continue
+            if i+4>=len(bars): continue
+            if i<50:
+                excluded_short_warmup += 1
+                continue
             x=ind[i]; av=atr[i]
             if x["adx"] is None or not av or not e20[i] or not e50[i]: continue
             prior_atr=[v for v in atr_pct[max(14,i-120):i] if v is not None]
-            volrank=percentile_rank(prior_atr,atr_pct[i])
+            volrank=percentile_rank(prior_atr,atr_pct[i]) if len(prior_atr)>=60 else None
             prev12=bars[i-12:i]; prev24=bars[i-24:i]
             cur=bars[i]; span=max(cur.high-cur.low,1e-12)
             upper_wick=cur.high-max(cur.open,cur.close); lower_wick=min(cur.open,cur.close)-cur.low
@@ -116,7 +120,8 @@ def main():
         edges[key]=quartile_edges([r["features"][key] for r in records if r["period"]=="TRAIN"])
     lines=[
       "# HYDRA — causal 20-minute regime audit","",
-      f"Signals with 120-bar warmup and complete 20m path: {len(records):,}.",
+      f"Signals with 50-bar warmup and complete 20m path: {len(records):,}; excluded for <50 prior continuous M5 bars: {excluded_short_warmup:,}; all eligible trigger events: {len(events):,}.",
+      "Volatility-rank classification is NA where fewer than 60 prior ATR observations are available; other features use their own minimum causal lookbacks.",
       f"Split: TRAIN < {d1}; VALIDATION {d1} to {d2}; TEST >= {d2}.",
       "Frozen trigger: BB(20,2) re-entry + Williams %R(14) cross + ADX(14)>=15. Entry next M5 open; exit fourth M5 close; payout 92%.",
       "All candidate predictors are signal-close or trailing-history values. Numeric quartile cutoffs are learned on TRAIN only and reused unchanged.",
