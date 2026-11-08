@@ -126,9 +126,9 @@ def main():
     # Exclude control bars whose 20m outcomes overlap any candidate signal
     # window. Then match greedily within the same NY date/hour and split.
     all_cand_intervals=defaultdict(list)
-    for r in candidates: all_cand_intervals[r["sid"]].append((r["i"],r["i"]+H))
+    for r in candidates: all_cand_intervals[r["sid"]].append((r["i"]+1,r["i"]+H))
     def overlaps_any(r):
-        return any(not (r["i"]+H < a or r["i"] > b)
+        return any(not (r["i"]+H < a or r["i"]+1 > b)
                    for a,b in all_cand_intervals[r["sid"]])
     ctrl_pool=[r for r in controls if not overlaps_any(r)]
     features=("adx","di_gap","mom")
@@ -148,7 +148,7 @@ def main():
             qid=(q["sid"],q["i"])
             if qid in used or q["i"] < c["i"]-H or q["i"] > c["i"]+H: continue
             # Also prohibit overlapping control expiry windows with previous controls.
-            if any(q["sid"]==p["control"]["sid"] and not (q["i"]+H < p["control"]["i"] or q["i"] > p["control"]["i"]+H) for p in pairs):
+            if any(q["sid"]==p["control"]["sid"] and not (q["i"]+H < p["control"]["i"]+1 or q["i"]+1 > p["control"]["i"]+H) for p in pairs):
                 continue
             dist=sum(((c[k]-q[k])/scales[k])**2 for k in features)
             options.append((dist,q))
