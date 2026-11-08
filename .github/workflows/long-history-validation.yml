@@ -13,7 +13,7 @@ on:
       - "research/predeclared_interaction_screen.py"
       - "research/sweep_morphology_audit.py"
       - "research/post_sweep_path_audit.py"
-      - "research/time_round_level_context_audit.py"
+      - "research/time_round_level_context_audit.py"\n      - "research/ny_session_mechanism_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -124,7 +124,7 @@ jobs:
         run: python research/post_sweep_path_audit.py --data "$DATA_FILE" --out research/POST_SWEEP_PATH_AUDIT.md
       - name: Run time and round-level context audit
         run: python research/time_round_level_context_audit.py --data "$DATA_FILE" --out research/TIME_ROUND_LEVEL_AUDIT.md
-      - name: Install ML research dependencies
+      - name: Run DST-aware New York session mechanism audit\n        run: python research/ny_session_mechanism_audit.py --data "$DATA_FILE" --out research/NY_SESSION_MECHANISM_AUDIT.md\n      - name: Install ML research dependencies
         run: python -m pip install --upgrade numpy scikit-learn
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
@@ -136,7 +136,7 @@ jobs:
           name: hydra-time-round-level-context-audit
           path: research/TIME_ROUND_LEVEL_AUDIT.md
           if-no-files-found: error
-      - name: Upload post-sweep path audit
+      - name: Upload New York session mechanism audit\n        uses: actions/upload-artifact@v4\n        with:\n          name: hydra-ny-session-mechanism-audit\n          path: research/NY_SESSION_MECHANISM_AUDIT.md\n          if-no-files-found: error\n      - name: Upload post-sweep path audit
         uses: actions/upload-artifact@v4
         with:
           name: hydra-post-sweep-path-audit
