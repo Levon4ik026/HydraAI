@@ -95,6 +95,12 @@ def main():
               "volatility":"NA" if volrank is None else "LOW" if volrank<=.333 else "MID" if volrank<=.667 else "HIGH",
               "hour":"ASIA" if cur.timestamp.hour<7 else "LONDON" if cur.timestamp.hour<13 else "NY" if cur.timestamp.hour<21 else "LATE",
               "weekday":cur.timestamp.strftime("%a"),
+              "sweep_high_12":"YES" if cur.high>max(b.high for b in prev12) and cur.close<max(b.high for b in prev12) else "NO",
+              "sweep_low_12":"YES" if cur.low<min(b.low for b in prev12) and cur.close>min(b.low for b in prev12) else "NO",
+              "sweep_high_24":"YES" if cur.high>max(b.high for b in prev24) and cur.close<max(b.high for b in prev24) else "NO",
+              "sweep_low_24":"YES" if cur.low<min(b.low for b in prev24) and cur.close>min(b.low for b in prev24) else "NO",
+              "aligned_sweep_12":"YES" if ((cur.low<min(b.low for b in prev12) and cur.close>min(b.low for b in prev12)) if e["direction"]=="CALL" else (cur.high>max(b.high for b in prev12) and cur.close<max(b.high for b in prev12))) else "NO",
+              "aligned_sweep_24":"YES" if ((cur.low<min(b.low for b in prev24) and cur.close>min(b.low for b in prev24)) if e["direction"]=="CALL" else (cur.high>max(b.high for b in prev24) and cur.close<max(b.high for b in prev24))) else "NO",
               "body_atr":abs(cur.close-cur.open)/av,
               "range_atr":span/av,
               "upper_wick_ratio":upper_wick/span,
@@ -168,7 +174,7 @@ def main():
         sub=[r for r in records if r["period"]==p and r["direction"]==side]
         lines.append(f"| {p} | {side} | {fmt(sub)} |")
     # categorical splits
-    for key in ("trend","adx_band","volatility","hour","weekday"):
+    for key in ("trend","adx_band","volatility","hour","weekday","sweep_high_12","sweep_low_12","sweep_high_24","sweep_low_24","aligned_sweep_12","aligned_sweep_24"):
       lines += ["",f"## Regime split: {key}","",
                 "| Period | Direction | State | n | W/L/D | Decisive WR | Net |",
                 "|---|---|---|---:|---:|---:|---:|"]
