@@ -158,5 +158,18 @@ def main():
     print(f"Report written: {args.out}")
 
 
+    # Run the standalone strategy-family screen on the same verified history.
+    screen_path = args.out.with_name("STANDALONE_STRATEGY_SCREEN.md")
+    subprocess.run(
+        [sys.executable, "research/standalone_strategy_screen.py",
+         "--data", str(args.data), "--out", str(screen_path)],
+        check=True,
+    )
+    with args.out.open("a", encoding="utf-8") as report:
+        report.write("\\n\\n---\\n\\n")
+        report.write(screen_path.read_text(encoding="utf-8"))
+    print(f"Standalone strategy-family screen appended: {screen_path}")
+
+
 if __name__ == "__main__":
     main()
