@@ -267,6 +267,57 @@ def main():
       for side in ("CALL","PUT"):
        sub=[r for r in records if r["time"].strftime("%Y-%m")==month and r["direction"]==side]
        if sub: lines.append(f"| {month} | {side} | {fmt(sub)} |")
+    # Loss anatomy: compare only predictors observable at signal close.
+    # Positive Cohen's d means the feature is higher before LOSS than WIN.
+    lines += ["", "## Loss anatomy — pre-entry feature differences", "",
+      "For each chronological split and direction, compare signal-close features before LOSS versus WIN. Draws are excluded. Cohen's d is descriptive (positive = higher before losses); it is not a causal effect or a filter-selection score. Only groups with at least 20 wins and 20 losses are shown.",
+      "| Period | Direction | Feature | Loss n | Win n | Loss median | Win median | Cohen d |",
+      "|---|---|---|---:|---:|---:|---:|---:|"]
+    loss_effects = {}
+    for p in ("TRAIN", "VALIDATION", "TEST"):
+      for side in ("CALL", "PUT"):
+        group = [r for r in records if r["period"] == p and r["direction"] == side]
+        effects = []
+        for key in numeric:
+          losses = [float(r["features"][key]) for r in group if r["outcome"] == "LOSS" and r["features"][key] is not None]
+          wins = [float(r["features"][key]) for r in group if r["outcome"] == "WIN" and r["features"][key] is not None]
+          if len(losses) < 20 or len(wins) < 20: continue
+          ml, mw = statistics.mean(losses), statistics.mean(wins)
+          vl = statistics.pvariance(losses) if len(losses) > 1 else 0.0
+          vw = statistics.pvariance(wins) if len(wins) > 1 else 0.0
+          pooled = math.sqrt(((len(losses)-1)*vl + (len(wins)-1)*vw) / max(1, len(losses)+len(wins)-2))
+          d = (ml-mw)/pooled if pooled > 1e-12 else 0.0
+          medl, medw = statistics.median(losses), statistics.median(wins)
+          effects.append((abs(d), key, len(losses), len(wins), medl, medw, d))
+        loss_effects[(p, side)] = {x[1]: x[-1] for x in effects}
+        # Print every eligible numeric feature, sorted by absolute effect size.
+        for _, key, nl, nw, medl, medw, d in sorted(effects, reverse=True):
+          lines.append(f"| {p} | {side} | {key} | {nl} | {nw} | {medl:.4g} | {medw:.4g} | {d:+.3f} |")
+    lines += ["", "## Loss-risk quartiles — TRAIN thresholds held fixed", "",
+      "Each numeric feature is divided using quartile cutoffs learned on TRAIN only. Loss rate = LOSS/(LOSS+WIN), excluding draws. This table describes where losses concentrate; it does not authorize a filter.",
+      "| Period | Direction | Feature | Bin | n | Losses | Loss rate | Net |",
+      "|---|---|---|---|---:|---:|---:|---:|"]
+    for p in ("TRAIN", "VALIDATION", "TEST"):
+      for side in ("CALL", "PUT"):
+        for key in numeric:
+          if edges.get(key) is None: continue
+          for q in ("Q1", "Q2", "Q3", "Q4"):
+            sub = [r for r in records if r["period"] == p and r["direction"] == side and bucket(r["features"][key], edges[key]) == q and r["outcome"] != "DRAW"]
+            if len(sub) < 20: continue
+            losses = sum(r["outcome"] == "LOSS" for r in sub)
+            wins = len(sub) - losses
+            net = wins * PAYOUT - losses
+            lines.append(f"| {p} | {side} | {key} | {q} | {len(sub)} | {losses} | {100*losses/len(sub):.1f}% | {net:+.2f}u |")
+    lines += ["", "## Cross-period direction of loss associations", "",
+      "For each numeric feature, report the sign of Cohen's d (loss mean minus win mean) in TRAIN / VALIDATION / TEST. Same sign in all three periods is more interesting than a large isolated effect, but still requires prospective confirmation.",
+      "| Direction | Feature | TRAIN d | VALIDATION d | TEST d | Same sign all periods |",
+      "|---|---|---:|---:|---:|---|"]
+    for side in ("CALL", "PUT"):
+      for key in numeric:
+        vals = [loss_effects.get((p, side), {}).get(key) for p in ("TRAIN", "VALIDATION", "TEST")]
+        if any(v is None for v in vals): continue
+        same = all(v > 0 for v in vals) or all(v < 0 for v in vals)
+        lines.append(f"| {side} | {key} | {vals[0]:+.3f} | {vals[1]:+.3f} | {vals[2]:+.3f} | {'YES' if same else 'NO'} |")
     lines += ["","## Guardrails","",
       "- A subgroup is not a deployable filter merely because its historical WR exceeds 52.08%.",
       "- Compare the same subgroup across TRAIN, VALIDATION and TEST; instability is evidence against it.",
