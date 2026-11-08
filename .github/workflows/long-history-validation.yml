@@ -16,7 +16,7 @@ on:
       - "research/time_round_level_context_audit.py"
       - "research/ny_session_mechanism_audit.py"
       - "research/ny_put_locked_candidate_audit.py"
-      - "research/ny_put_time_bucket_audit.py"
+      - "research/ny_put_time_bucket_audit.py"\n      - "research/ny_put_matched_control_audit.py"
       - ".github/workflows/long-history-validation.yml"
 
 permissions:
@@ -133,7 +133,7 @@ jobs:
         run: python research/ny_put_locked_candidate_audit.py --data "$DATA_FILE" --out research/NY_PUT_LOCKED_CANDIDATE_AUDIT.md
       - name: Run locked New York PUT time-of-day robustness audit
         run: python research/ny_put_time_bucket_audit.py --data "$DATA_FILE" --out research/NY_PUT_TIME_BUCKET_AUDIT.md
-      - name: Install ML research dependencies
+      - name: Run locked New York PUT matched-control audit\n        run: python research/ny_put_matched_control_audit.py --data "$DATA_FILE" --out research/NY_PUT_MATCHED_CONTROL_AUDIT.md\n      - name: Install ML research dependencies
         run: python -m pip install --upgrade numpy scikit-learn
       - name: Run chronological AI Intelligence Engine audit
         run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
