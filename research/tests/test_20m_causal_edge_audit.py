@@ -1,8 +1,10 @@
 import importlib.util
 import unittest
+import sys
 from pathlib import Path
 
 module_path = Path(__file__).resolve().parents[1] / "20m_causal_edge_audit.py"
+sys.path.insert(0, str(module_path.parent))
 spec = importlib.util.spec_from_file_location("causal_20m_edge_audit", module_path)
 audit = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(audit)
