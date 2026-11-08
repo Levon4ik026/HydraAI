@@ -23,7 +23,7 @@ class TimeMachineTests(unittest.TestCase):
         self.assertAlmostEqual(a["p_win"]+a["p_loss"]+a["p_draw"],1.0)
 
     def test_trailing_vol_requires_history(self):
-        bars=[SimpleNamespace(open=1,close=1+0.001*i) for i in range(12)]
+        bars=[SimpleNamespace(open=1,close=1+0.001*i) for i in range(13)]
         self.assertIsNone(trailing_vol(bars,11))
         self.assertIsNotNone(trailing_vol(bars,12))
 
