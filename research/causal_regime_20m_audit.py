@@ -215,6 +215,7 @@ def main():
       f"Signals with 50-bar warmup and complete 20m path: {len(records):,}; excluded for <50 prior continuous M5 bars: {excluded_short_warmup:,}; all eligible trigger events: {len(events):,}.",
       "Volatility-rank classification is NA where fewer than 60 prior ATR observations are available; other features use their own minimum causal lookbacks.",
       f"Split: TRAIN < {d1}; VALIDATION {d1} to {d2}; TEST >= {d2}.",
+      f"Purged outcomes crossing split boundaries: signals TRAIN={purged_signal['TRAIN']}, VALIDATION={purged_signal['VALIDATION']}; background TRAIN={purged_background['TRAIN']}, VALIDATION={purged_background['VALIDATION']}.",
       "Frozen trigger: BB(20,2) re-entry + Williams %R(14) cross + ADX(14)>=15. Entry next M5 open; exit fourth M5 close; payout 92%.",
       "All candidate predictors are signal-close or trailing-history values. Numeric quartile cutoffs are learned on TRAIN only and reused unchanged.",
       "External Dukascopy BID prices; no Pocket Option spread/quote model. Exploratory regime audit, not proof of profitability.","",
