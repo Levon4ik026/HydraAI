@@ -3,7 +3,7 @@
 
 Tests whether the paired advantage depends on selecting the single nearest
 feature-distance control. For each frozen, non-overlapping candidate, repeatedly
-draws a control at random from the same segment/date/hour/split and within +/-4
+draws a control at random from the same segment/date/hour/split and within +/-12
 M5 bars, with no control reuse and no overlapping control outcome windows.
 No thresholds or candidate definitions are changed.
 """
@@ -120,7 +120,7 @@ def main():
     for cidx, c in enumerate(sorted(chosen, key=lambda z: (z["date"], z["hour"], z["sid"], z["i"]))):
         key = (c["sid"], c["date"], c["hour"], c["period"])
         options[cidx] = [q for q in bykey.get(key, [])
-                         if abs(q["i"] - c["i"]) <= H]
+                         if abs(q["i"] - c["i"]) <= 12]
     ordered = sorted(chosen, key=lambda z: (z["date"], z["hour"], z["sid"], z["i"]))
     cand_outcomes = [c["outcome"] for c in ordered]
 
@@ -132,34 +132,34 @@ def main():
     matched_counts = []
     for rep in range(REPS):
         used = set()
-        selected = []
-        for c in ordered:
+        selected_pairs = []
+        for cidx, c in enumerate(ordered):
             opts = []
-            for q in options[len(selected)]:
+            for q in options[cidx]:
                 qid = (q["sid"], q["i"])
                 if qid in used:
                     continue
                 if any(q["sid"] == prev["sid"] and
                        not (q["i"] + H < prev["i"] + 1 or q["i"] + 1 > prev["i"] + H)
-                       for prev in selected):
+                       for _, prev in selected_pairs):
                     continue
                 opts.append(q)
             if not opts:
                 continue
             q = rng.choice(opts)
             used.add((q["sid"], q["i"]))
-            selected.append(q)
-        matched_counts.append(len(selected))
+            selected_pairs.append((c, q))
+        matched_counts.append(len(selected_pairs))
         bysplit = defaultdict(list)
-        for c, q in zip(ordered, selected):
+        for c, q in selected_pairs:
             bysplit[c["period"]].append(pnl(c["outcome"]) - pnl(q["outcome"]))
         for p in ("TRAIN", "VALIDATION", "TEST"):
             vals = bysplit[p]
             if vals:
                 split_samples[p].append(sum(vals) / len(vals))
-        if selected:
+        if selected_pairs:
             all_diff = [pnl(c["outcome"]) - pnl(q["outcome"])
-                        for c, q in zip(ordered, selected)]
+                        for c, q in selected_pairs]
             split_samples["ALL"].append(sum(all_diff) / len(all_diff))
 
     # A deterministic nearest match for comparison, with identical constraints.
@@ -168,7 +168,7 @@ def main():
     nearest = []
     for c in ordered:
         opts = []
-        for q in options[len(nearest)]:
+        for q in options[ordered.index(c)]:
             qid = (q["sid"], q["i"])
             if qid in used:
                 continue
@@ -191,7 +191,7 @@ def main():
         f"Coverage: {m1[0].timestamp.isoformat()} — {m1[-1].timestamp.isoformat()}.",
         f"Split: TRAIN < {d1}; VALIDATION < {d2}; TEST >= {d2}.",
         "Frozen candidate: NY 08:00–12:59, frozen BB/Williams/ADX PUT event, ADX>=25, +DI>-DI, positive 12-bar momentum.",
-        "Candidates use one-position non-overlap schedule. Controls are non-signal bars in the same segment, NY date, hour and split, within +/-4 M5 bars; controls overlapping any candidate outcome are excluded.",
+        "Candidates use one-position non-overlap schedule. Controls are non-signal bars in the same segment, NY date, hour and split, within +/-12 M5 bars; controls overlapping any candidate outcome are excluded.",
         f"Random matching: {REPS} repetitions; one control per candidate where possible; no control reuse; no overlapping control outcomes; selection is outcome-blind.",
         "This is a control-selection sensitivity analysis, not a new independent test. Payout=92%; entry next M5 open; settle fourth following M5 close.",
         "",
