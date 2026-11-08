@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Predeclared robustness audit for the two-stage M1 event/direction model.
+"""Predeclared robustness audit for the two-stage M1 event/direction model.\nRevision: 2026-11-08 workflow trigger.
 
 All model fits use TRAIN only. Event and confidence thresholds are calibrated
 on VALIDATION only. TEST is evaluated once; threshold variants are diagnostics,
