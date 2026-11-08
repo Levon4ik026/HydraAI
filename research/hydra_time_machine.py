@@ -292,7 +292,7 @@ def main():
       "- Monte Carlo standard error quantifies finite simulation noise only; it is not a confidence interval for future market performance.",
       "- Historical strategy selection is validation-only, but the dataset and TEST period have already been explored. Do not treat this as independent proof.",
       "- No production integration, local Windows file changes, or order execution.",""]
-    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\\n".join(lines)+"\\n",encoding="utf-8")
-    print("\\n".join(lines))
+    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\n".join(lines)+"\n",encoding="utf-8")
+    print("\n".join(lines))
 
 if __name__=="__main__": main()
