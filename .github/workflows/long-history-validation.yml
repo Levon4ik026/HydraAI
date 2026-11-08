@@ -110,6 +110,8 @@ jobs:
         run: python research/long_history_validation.py --data "$DATA_FILE" --out research/LONG_HISTORY_VALIDATION.md
       - name: Run causal 20-minute regime audit
         run: python research/causal_regime_20m_audit.py --data "$DATA_FILE" --out research/CAUSAL_REGIME_20M_AUDIT.md
+      - name: Run non-overlapping strategy and simple-baseline audit
+        run: python research/nonoverlap_baseline_audit.py --data "$DATA_FILE" --out research/NONOVERLAP_BASELINE_AUDIT.md
       - name: Run predeclared interaction screen
         run: python research/predeclared_interaction_screen.py --data "$DATA_FILE" --out research/PREDECLARED_INTERACTION_SCREEN.md
       - name: Install ML research dependencies
