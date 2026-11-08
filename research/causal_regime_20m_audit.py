@@ -92,7 +92,7 @@ def main():
             features={
               "trend":"UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT",
               "adx_band":"15-20" if x["adx"]<20 else "20-25" if x["adx"]<25 else "25+",
-              "volatility":"LOW" if volrank is not None and volrank<=.333 else "MID" if volrank is not None and volrank<=.667 else "HIGH",
+              "volatility":"NA" if volrank is None else "LOW" if volrank<=.333 else "MID" if volrank<=.667 else "HIGH",
               "hour":"ASIA" if cur.timestamp.hour<7 else "LONDON" if cur.timestamp.hour<13 else "NY" if cur.timestamp.hour<21 else "LATE",
               "weekday":cur.timestamp.strftime("%a"),
               "body_atr":abs(cur.close-cur.open)/av,
@@ -116,7 +116,7 @@ def main():
     # Build a same-regime, non-signal 20m background. The direction outcome is
     # measured over exactly the same next-open -> fourth-close horizon.
     signal_keys={(r["time"],r["direction"]) for r in records}
-    signal_times={r["time"] for r in records}
+    signal_times={segments[e["segment"]][e["bar_index"]].timestamp for e in events}
     background=[]
     for seg_id,bars in enumerate(segments):
         ind=indicators(bars); closes=[b.close for b in bars]
