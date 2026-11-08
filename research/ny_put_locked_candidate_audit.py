@@ -67,7 +67,7 @@ def main():
         if ts.date()<d2:
             return None if settle_ts.date()>=d2 else "VALIDATION"
         return "TEST"
-    candidate=[]; background=[]; baseline_put=[]; monthly=defaultdict(list); daily=defaultdict(list)
+    candidate=[]; candidate_nonoverlap=[]; background=[]; baseline_put=[]; monthly=defaultdict(list); monthly_period=defaultdict(list); daily=defaultdict(list)
     for sid,bars in enumerate(segments):
         ind=indicators(bars)
         for i in range(WARMUP,len(bars)-HORIZON):
@@ -82,15 +82,25 @@ def main():
             qualifies=x["adx"]>=25 and x["plus_di"]>x["minus_di"] and mom>0
             rowbase={"period":p,"date":ts.date(),"month":ts.strftime("%Y-%m")}
             if qualifies:
-                rbg={**rowbase,"outcome":settle(bars,i,"PUT")}
+                rbg={**rowbase,"segment":sid,"bar_index":i,"outcome":settle(bars,i,"PUT")}
                 background.append(rbg)
             e=ev.get((sid,i))
             if e and e["direction"]=="PUT":
-                r={**rowbase,"outcome":settle(bars,i,"PUT")}
+                r={**rowbase,"segment":sid,"bar_index":i,"outcome":settle(bars,i,"PUT")}
                 baseline_put.append(r)
                 if qualifies:
-                    candidate.append(r); monthly[r["month"]].append(r)
+                    candidate.append(r); monthly[r["month"]].append(r); monthly_period[(p,r["month"])].append(r)
                     daily[(p,ts.date())].append(r)
+    # One-position schedule; a new signal at the expiry candle close is eligible.
+    by_segment=defaultdict(list)
+    for r in candidate: by_segment[r["segment"]].append(r)
+    for sid,rows in by_segment.items():
+        next_allowed=-1
+        for r in sorted(rows,key=lambda x:x["bar_index"]):
+            if r["bar_index"]>=next_allowed:
+                candidate_nonoverlap.append(r)
+                next_allowed=r["bar_index"]+HORIZON
+
     lines=["# HYDRA — locked New York PUT candidate audit","",
       f"Data: Dukascopy EURUSD M1 BID; rows={len(m1):,}; M5 bars={sum(map(len,segments)):,}; segments={len(segments):,}.",
       f"Coverage: {m1[0].timestamp.isoformat()} — {m1[-1].timestamp.isoformat()}.",
@@ -106,6 +116,19 @@ def main():
         b=[r for r in background if p=="ALL" or r["period"]==p]
         lines.append(line(f"{p} candidate",c,.92))
         lines.append(line(f"{p} background",b,.92))
+    lines += ["","## Candidate one-position schedule (overlap suppressed)","",
+      "| Period | n | W/L/D | WR | Net @92% | PF @92% |","|---|---:|---:|---:|---:|---:|"]
+    for p in ("TRAIN","VALIDATION","TEST","ALL"):
+        rows=[r for r in candidate_nonoverlap if p=="ALL" or r["period"]==p]
+        m=metrics(rows,.92)
+        lines.append(f"| {p} | {m['n']} | {m['w']}/{m['l']}/{m['d']} | {m['wr']:.2f}% | {m['net']:+.2f}u | {m['pf']:.2f} |")
+    lines += ["","## Monthly results by chronological split","",
+      "| Period | Month | n | W/L/D | WR | Net @92% |","|---|---|---:|---:|---:|---:|"]
+    for p in ("TRAIN","VALIDATION","TEST"):
+        for (pp,mon),rows in sorted(monthly_period.items()):
+            if pp!=p: continue
+            m=metrics(rows,.92)
+            lines.append(f"| {p} | {mon} | {m['n']} | {m['w']}/{m['l']}/{m['d']} | {m['wr']:.2f}% | {m['net']:+.2f}u |")
     lines += ["","## Candidate versus ordinary New York PUT signals","",
       "| Period | n | W/L/D | WR | Wilson 95% CI | Net @92% | PF @92% |",
       "|---|---:|---:|---:|---:|---:|---:|"]
