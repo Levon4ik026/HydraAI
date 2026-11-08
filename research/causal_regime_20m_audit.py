@@ -113,6 +113,40 @@ def main():
             }
             records.append({"time":cur.timestamp,"direction":e["direction"],"period":period,
                             "outcome":outcome(bars,i,e["direction"]),"features":features})
+    # Build a same-regime, non-signal 20m background. The direction outcome is
+    # measured over exactly the same next-open -> fourth-close horizon.
+    signal_keys={(r["time"],r["direction"]) for r in records}
+    signal_times={r["time"] for r in records}
+    background=[]
+    for seg_id,bars in enumerate(segments):
+        ind=indicators(bars); closes=[b.close for b in bars]
+        e20=ema(closes,20); e50=ema(closes,50)
+        trs=[None]*len(bars)
+        for j in range(1,len(bars)):
+            b,prev=bars[j],bars[j-1]
+            trs[j]=max(b.high-b.low,abs(b.high-prev.close),abs(b.low-prev.close))
+        atr=[None]*len(bars)
+        for j in range(14,len(bars)):
+            atr[j]=sum(x for x in trs[j-13:j+1] if x is not None)/14
+        atr_pct=[(atr[j]/bars[j].close if atr[j] and bars[j].close else None) for j in range(len(bars))]
+        for i in range(50,len(bars)-4):
+            cur=bars[i]; x=ind[i]; av=atr[i]
+            if x["adx"] is None or not av or not e20[i] or not e50[i]: continue
+            prior=[v for v in atr_pct[max(14,i-120):i] if v is not None]
+            if len(prior)<60 or atr_pct[i] is None: continue
+            volrank=percentile_rank(prior,atr_pct[i])
+            trend="UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT"
+            adx_band="15-20" if x["adx"]<20 else "20-25" if x["adx"]<25 else "25+"
+            vol="LOW" if volrank<=.333 else "MID" if volrank<=.667 else "HIGH"
+            day=cur.timestamp.date()
+            period="TRAIN" if day<d1 else "VALIDATION" if day<d2 else "TEST"
+            entry=bars[i+1].open; exitp=bars[i+4].close
+            delta=exitp-entry
+            background.append({"time":cur.timestamp,"period":period,"trend":trend,
+                               "adx_band":adx_band,"volatility":vol,
+                               "call_win":delta>1e-12,"put_win":delta< -1e-12,
+                               "draw":abs(delta)<=1e-12,
+                               "is_signal":cur.timestamp in signal_times})
     # Quantile thresholds learned on TRAIN only and then held fixed.
     numeric=[k for k in records[0]["features"] if isinstance(records[0]["features"][k],(int,float))]
     edges={}
@@ -154,6 +188,26 @@ def main():
         for q in ("Q1","Q2","Q3","Q4"):
          sub=[r for r in records if r["period"]==p and r["direction"]==side and bucket(r["features"][key],edges[key])==q]
          if len(sub)>=20: lines.append(f"| {p} | {side} | {q} | {fmt(sub)} |")
+    # Exact same-state background: trend x ADX band x rolling volatility tertile.
+    lines += ["","## Exact matched 20m market baseline","",
+              "Background uses every non-signal candle with the same next-open to fourth-close horizon and exact causal state: EMA20/50 trend x ADX band x prior-120 ATR/close tertile. All trigger timestamps are excluded. Cells with fewer than 20 background observations are omitted.",
+              "| Period | Direction | State | Signal n | Signal W/L/D | Signal WR | Signal net | Background n | Background WR | Lift |",
+              "|---|---|---|---:|---|---:|---:|---:|---:|---:|"]
+    states=sorted({(b["trend"],b["adx_band"],b["volatility"]) for b in background})
+    for p in ("TRAIN","VALIDATION","TEST"):
+      for side in ("CALL","PUT"):
+       for trend,adxband,vol in states:
+        sig=[r for r in records if r["period"]==p and r["direction"]==side and
+             (r["features"]["trend"],r["features"]["adx_band"],r["features"]["volatility"])==(trend,adxband,vol)]
+        bg=[b for b in background if b["period"]==p and not b["is_signal"] and
+            (b["trend"],b["adx_band"],b["volatility"])==(trend,adxband,vol)]
+        if len(bg)<20 or not sig: continue
+        sw,sl,sd,swr,snet=summarize(sig)
+        bw=sum(b["call_win"] if side=="CALL" else b["put_win"] for b in bg)
+        bd=sum(b["draw"] for b in bg); bl=len(bg)-bw-bd
+        bwr=100*bw/(bw+bl) if bw+bl else float("nan")
+        lift=swr-bwr
+        lines.append(f"| {p} | {side} | {trend}/{adxband}/{vol} | {len(sig)} | {sw}/{sl}/{sd} | {swr:.1f}% | {snet:+.2f}u | {len(bg)} | {bwr:.1f}% | {lift:+.1f} pp |")
     # Month diagnostics: use all periods; useful to locate instability, not a filter.
     lines += ["","## Month-by-month 20m results","",
               "| Month UTC | Direction | n | W/L/D | Decisive WR | Net |",
