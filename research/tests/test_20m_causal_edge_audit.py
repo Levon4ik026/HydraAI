@@ -24,8 +24,12 @@ class TwentyMinuteCausalAuditTests(unittest.TestCase):
             {"outcome": "LOSS", "net": -1.0, "direction": "CALL"},
             {"outcome": "DRAW", "net": 0.0, "direction": "PUT"},
         ]
-        self.assertEqual(audit.stats(rows)[:5], (3, 1, 1, 1, 50.0))\n        self.assertAlmostEqual(audit.stats(rows)[5], -0.08)
-        self.assertEqual(audit.stats(rows, "CALL")[:5], (2, 1, 1, 0, 50.0))\n        self.assertAlmostEqual(audit.stats(rows, "CALL")[5], -0.08)
+        all_stats = audit.stats(rows)
+        call_stats = audit.stats(rows, "CALL")
+        self.assertEqual(all_stats[:5], (3, 1, 1, 1, 50.0))
+        self.assertAlmostEqual(all_stats[5], -0.08)
+        self.assertEqual(call_stats[:5], (2, 1, 1, 0, 50.0))
+        self.assertAlmostEqual(call_stats[5], -0.08)
 
 
 if __name__ == "__main__":
