@@ -26,12 +26,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Download EURUSD M1 BID history in quarterly chunks
+      - name: Download EURUSD M1 BID history in quarterly chunks with monthly fallback
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p download
-          # Smaller requests avoid Dukascopy-node's long-request timeout.
+          download_chunk() {
+            local start="$1" end="$2"
+            local file="download/eurusd-m1-bid-${start}-${end}.csv"
+            local attempt
+            for attempt in 1 2; do
+              rm -f "$file"
+              echo "Downloading $start through $end (attempt $attempt/2)"
+              if npx --yes dukascopy-node@latest -i eurusd -from "$start" -to "$end" -t m1 -f csv -v; then
+                test -s "$file"
+                return 0
+              fi
+              echo "Dukascopy request failed for $start through $end; retrying after a short pause."
+              sleep 5
+            done
+            return 1
+          }
           for year in 2024 2025 2026; do
             for month in 01 04 07 10; do
               start="$year-$month-01"
@@ -43,8 +58,18 @@ jobs:
                 10) end="$year-12-31" ;;
               esac
               if [[ "$end" > "2026-11-08" ]]; then end="2026-11-08"; fi
-              echo "Downloading $start through $end"
-              npx --yes dukascopy-node@latest -i eurusd -from "$start" -to "$end" -t m1 -f csv -v
+              if download_chunk "$start" "$end"; then
+                continue
+              fi
+              echo "Quarterly download timed out; falling back to individual calendar months."
+              rm -f "download/eurusd-m1-bid-${start}-${end}.csv"
+              cursor="$start"
+              while [[ "$cursor" < "$end" || "$cursor" == "$end" ]]; do
+                month_end="$(date -u -d "$cursor +1 month -1 day" +%F)"
+                if [[ "$month_end" > "$end" ]]; then month_end="$end"; fi
+                download_chunk "$cursor" "$month_end"
+                cursor="$(date -u -d "$month_end +1 day" +%F)"
+              done
             done
           done
       - name: Merge and verify downloaded history
