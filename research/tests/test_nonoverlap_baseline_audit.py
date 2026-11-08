@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from reproduce_m5_bb_williams_adx import Bar
 from research.nonoverlap_baseline_audit import (
-    make_momentum_events, schedule_non_overlapping, score_events,
+    make_momentum_events, metrics, schedule_non_overlapping, score_events,
 )
 
 
@@ -46,6 +46,18 @@ class NonOverlapBaselineAuditTests(unittest.TestCase):
         fade_at_three = next(x for x in fade if x["bar_index"] == 3)
         self.assertEqual(at_three["direction"], "CALL")
         self.assertEqual(fade_at_three["direction"], "PUT")
+
+    def test_combined_frequency_and_wait_include_both_directions(self):
+        rows = [
+            {"outcome": "WIN", "signal_time": datetime(2026, 1, 5, 10, tzinfo=timezone.utc)},
+            {"outcome": "LOSS", "signal_time": datetime(2026, 1, 5, 10, 5, tzinfo=timezone.utc)},
+            {"outcome": "DRAW", "signal_time": datetime(2026, 1, 5, 10, 10, tzinfo=timezone.utc)},
+        ]
+        result = metrics(rows, bar_count=10)
+        self.assertEqual(result["n"], 3)
+        self.assertAlmostEqual(result["frequency"], 30.0)
+        self.assertAlmostEqual(result["wait"], 70.0)
+        self.assertAlmostEqual(result["net"], -0.08)
 
     def test_entry_is_next_open_and_settlement_is_horizon_close(self):
         segment = bars([1.100, 1.101, 1.102, 1.103, 1.102, 1.101, 1.100, 1.099])
