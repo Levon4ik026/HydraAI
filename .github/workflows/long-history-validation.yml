@@ -6,6 +6,7 @@ on:
     branches: [hydra/research-validation]
     paths:
       - "research/long_history_validation.py"
+      - "research/standalone_strategy_screen.py"
       - "research/causal_regime_20m_audit.py"
       - "research/ai_intelligence_engine_audit.py"
       - "research/ai_filter_robustness_audit.py"
@@ -116,6 +117,14 @@ jobs:
           DATA_FILE="download/eurusd-m1-bid-2024-01-01-merged.csv"
           test -s "$DATA_FILE"
           echo "DATA_FILE=$DATA_FILE" >> "$GITHUB_ENV"
+      - name: Run standalone strategy-family screen
+        run: python research/standalone_strategy_screen.py --data "$DATA_FILE" --out research/STANDALONE_STRATEGY_SCREEN.md
+      - name: Upload standalone strategy-family screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-standalone-strategy-screen
+          path: research/STANDALONE_STRATEGY_SCREEN.md
+          if-no-files-found: error
       - name: Run frozen long-history backtest
         run: python research/long_history_validation.py --data "$DATA_FILE" --out research/LONG_HISTORY_VALIDATION.md
       - name: Run causal 20-minute regime audit
