@@ -49,7 +49,7 @@ class NonOverlapBaselineAuditTests(unittest.TestCase):
 
     def test_entry_is_next_open_and_settlement_is_horizon_close(self):
         segment = bars([1.100, 1.101, 1.102, 1.103, 1.102, 1.101, 1.100, 1.099])
-        scored = score_events([self.event(1)], [segment], horizon_bars=2)
+        scored = score_events([self.event(1, direction="PUT")], [segment], horizon_bars=2)
         self.assertEqual(scored[0]["entry_time"], segment[2].timestamp)
         self.assertEqual(scored[0]["settle_time"], segment[3].timestamp + timedelta(minutes=5))
         self.assertEqual(scored[0]["outcome"], "LOSS")
