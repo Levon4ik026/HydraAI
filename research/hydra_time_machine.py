@@ -212,6 +212,11 @@ def outcome_from(bars,i,side,h):
     signed=delta if side=="CALL" else -delta
     return "DRAW" if abs(signed)<1e-10 else "WIN" if signed>0 else "LOSS"
 
+def summary_outcomes(outcomes):
+    """Adapt portfolio labels to the shared W/L/D summarizer contract."""
+    mapping={"WIN":"W","LOSS":"L","DRAW":"D"}
+    return summarize([mapping[x] for x in outcomes])
+
 def score_forecasts(rows):
     """Score P(WIN) conditional on a decisive outcome; DRAWs are excluded."""
     scored=[]
@@ -254,8 +259,9 @@ def main():
                           "regime":regime,"tm":sim["p_win"],"tod":tod_p,"all":all_p,
                           "ev":sim["ev"],"mc_se":sim["mc_se"]})
     outcomes=[t["outcome"] for t in trades]
-    n,w,l,d,wr,net,pf=summarize(outcomes)
-    days=len({t["signal_time"].date() for t in trades})
+    n,w,l,d,wr,net,pf=summary_outcomes(outcomes)
+    # Normalize over every observed TEST trading date, including no-signal dates.
+    days=len({b.timestamp.date() for seg in segments for b in seg if b.timestamp.date()>=d2})
     freq=20*n/max(1,days)
     lines=[
       "# HYDRA Time Machine — walk-forward research report","",
