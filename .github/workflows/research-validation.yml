@@ -74,6 +74,14 @@ jobs:
           name: hydra-20m-causal-edge-audit
           path: research/20M_CAUSAL_EDGE_AUDIT.md
           if-no-files-found: error
+      - name: Run causal swing-sweep and rejection audit
+        run: python research/swing_sweep_rejection_audit.py --data eurusd_history_extended.csv --out research/SWING_SWEEP_REJECTION_AUDIT.md
+      - name: Upload swing-sweep rejection audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-swing-sweep-rejection-audit
+          path: research/SWING_SWEEP_REJECTION_AUDIT.md
+          if-no-files-found: error
       - name: Upload market-regime audit
         uses: actions/upload-artifact@v4
         with:
