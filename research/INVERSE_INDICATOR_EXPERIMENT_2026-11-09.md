@@ -49,6 +49,17 @@ The 5-minute inverse looks marginally positive in the holdout, but the estimated
 | Bollinger fade | 3m | 52.98% | 47.02% |
 | Bollinger fade | 5m | 52.79% | 47.21% |
 
+## Additional check: non-overlapping inverse RSI trades
+
+I also applied a greedy cooldown: after taking an inverse RSI-extreme signal, ignore new signals until its expiry. This reduces the holdout to 5,317 trades at 3m and 3,969 at 5m.
+
+| Expiry | Holdout trades | Inverse wins | Win rate | 95% Wilson interval | One-sided test vs 52.08% |
+|---:|---:|---:|---:|---:|---:|
+| 3m | 5,317 | 2,785 | 52.38% | 51.04–53.72% | p = 0.338 |
+| 5m | 3,969 | 2,088 | 52.61% | 51.05–54.16% | p = 0.259 |
+
+Both intervals include the 52.08% break-even hurdle, and neither result is statistically distinguishable from that hurdle in this simple binomial test. This is materially weaker evidence than the raw win-rate headline suggests.
+
 ## Interpretation
 1. The idea is real: reversing a rule with a sub-50% hit rate raises the hit rate to its complement, provided ties are excluded symmetrically.
 2. But inversion does not automatically create an edge. EMA and momentum inversions remain below the 52.08% break-even rate required at 92% payout.
