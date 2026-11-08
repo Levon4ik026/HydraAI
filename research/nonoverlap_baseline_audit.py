@@ -181,8 +181,8 @@ def main():
         f"Chronological signal-day boundaries: TRAIN before {d1}; VALIDATION {d1} through {d2-timedelta(days=1)}; TEST from {d2}. Trades settling at or beyond the next split boundary are purged from TRAIN/VALIDATION.",
         "The historical TEST has been inspected in earlier research and is not an untouched independent holdout. Dukascopy BID is not Pocket Option's exact quote stream; spread, payout variation and platform execution are not modeled.", "",
         "## Results: one-position non-overlapping schedule", "",
-        "Frequency is scored trades divided by complete M5 bars in that signal-date split; WAIT is the complement. Candidate signals rejected by overlap and trades purged at split boundaries are shown separately.",
-        "| Expiry | Strategy | Split | Side | Candidates | Overlap rejected | Boundary purged | Scored n | W/L/D | Decisive WR | Wilson 95% CI | Wins/all | Net u | ROI | PF | Max DD u | Max loss streak | Frequency | WAIT |",
+        "ALL rows show total accepted frequency and the true WAIT complement. CALL/PUT rows show side-specific frequency; WAIT is shown only on ALL rows. Candidate signals rejected by overlap and trades purged at split boundaries are shown separately.",
+        "| Expiry | Strategy | Split | Side | Candidates | Overlap rejected | Boundary purged | Scored n | W/L/D | Decisive WR | Wilson 95% CI | Wins/all | Net u | ROI | PF | Max DD u | Max loss streak | Side/total frequency | Global WAIT |",
         "|---:|---|---|---|---:|---:|---:|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
 
@@ -206,20 +206,27 @@ def main():
                 else:
                     period_candidates = [x for x in candidates if split_name(x["signal_time"], d1, d2) == period]
                     period_scheduled = [x for x in scheduled if split_name(x["signal_time"], d1, d2) == period]
-                for side in ("CALL", "PUT"):
-                    side_candidates = [x for x in period_candidates if x["direction"] == side]
-                    side_scheduled = [x for x in period_scheduled if x["direction"] == side]
-                    side_purged = [x for x in purged_rows.get(period, []) if x["direction"] == side] if period != "ALL" else []
-                    side_rows = [x for x in split_rows[period] if x["direction"] == side]
+                for side in ("ALL", "CALL", "PUT"):
+                    if side == "ALL":
+                        side_candidates = period_candidates
+                        side_scheduled = period_scheduled
+                        side_purged = purged_rows.get(period, []) if period != "ALL" else []
+                        side_rows = split_rows[period]
+                    else:
+                        side_candidates = [x for x in period_candidates if x["direction"] == side]
+                        side_scheduled = [x for x in period_scheduled if x["direction"] == side]
+                        side_purged = [x for x in purged_rows.get(period, []) if x["direction"] == side] if period != "ALL" else []
+                        side_rows = [x for x in split_rows[period] if x["direction"] == side]
                     m = metrics(side_rows, bar_counts[period])
                     ci_txt = f"[{m['ci'][0]:.1f}, {m['ci'][1]:.1f}]" if m["ci"] else "n/a"
                     pf_txt = "inf" if math.isinf(m["pf"]) else f"{m['pf']:.3f}"
+                    wait_txt = f"{m['wait']:.3f}%" if side == "ALL" else "—"
                     lines.append(
                         f"| {horizon*5}m | {strategy_name} | {period} | {side} | "
                         f"{len(side_candidates)} | {len(side_candidates)-len(side_scheduled)} | {len(side_purged)} | "
                         f"{m['n']} | {m['wins']}/{m['losses']}/{m['draws']} | {fmt(m['wr'])}% | {ci_txt} | "
                         f"{fmt(m['wins_all'])}% | {m['net']:+.2f} | {fmt(m['roi'])}% | {pf_txt} | "
-                        f"{m['dd']:.2f} | {m['streak']} | {m['frequency']:.3f}% | {m['wait']:.3f}% |"
+                        f"{m['dd']:.2f} | {m['streak']} | {m['frequency']:.3f}% | {wait_txt} |"
                     )
 
     lines += [
