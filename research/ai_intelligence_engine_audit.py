@@ -21,7 +21,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from long_history_validation import read_duka, make_events, PAYOUT
-from reproduce_m5_bb_williams_adx import indicators
+from reproduce_m5_bb_williams_adx import indicators, make_m5
 
 HORIZON_BARS = 4
 MIN_VALIDATION_TRADES = 40
@@ -234,7 +234,7 @@ def main():
     args = ap.parse_args()
 
     m1 = read_duka(args.data)
-    segments = __import__("reproduce_m5_bb_williams_adx").make_m5(m1)
+    segments = make_m5(m1)
     rows, trigger_count = build_dataset(segments, args.adx_min)
     train, validation, test, d1, d2 = split_rows(rows)
     if min(len(train), len(validation), len(test)) < 80:
