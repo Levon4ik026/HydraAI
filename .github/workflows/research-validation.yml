@@ -66,6 +66,14 @@ jobs:
           name: hydra-intratrade-path-audit
           path: research/INTRATRADE_PATH_AUDIT.md
           if-no-files-found: error
+      - name: Run 20-minute causal edge audit
+        run: python research/20m_causal_edge_audit.py --data eurusd_history_extended.csv --out research/20M_CAUSAL_EDGE_AUDIT.md
+      - name: Upload 20-minute causal edge audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-20m-causal-edge-audit
+          path: research/20M_CAUSAL_EDGE_AUDIT.md
+          if-no-files-found: error
       - name: Upload market-regime audit
         uses: actions/upload-artifact@v4
         with:
