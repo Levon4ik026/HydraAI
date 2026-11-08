@@ -303,10 +303,10 @@ def main():
         tci_txt = f"[{tci[0]:.2f}, {tci[1]:.2f}]" if tm["decisive"] else "n/a"
         pf_txt = "inf" if math.isinf(tm["pf"]) else f"{tm['pf']:.3f}"
         lines.append(f"| {name} | {selected['threshold']:.3f} | {vm['n']}/{len(validation)} | {vm['w']}/{vm['l']}/{vm['d']} | {vm['wr']:.2f}% | {vm['net']:+.2f}u | {tm['n']}/{len(test)} | {tm['w']}/{tm['l']}/{tm['d']} | {tm['wr']:.2f}% | {tci_txt} | {tm['net']:+.2f}u | {tm['roi']:+.2f}% | {pf_txt} | {tm['dd']:.2f}u | {tm['streak']} |")
-        for split_name, split_rows, keep in (("VALIDATION", validation, val_keep), ("TEST", test, test_keep)):
+        for split_name, subset_rows, keep in (("VALIDATION", validation, val_keep), ("TEST", test, test_keep)):
             for side in ("ALL", "CALL", "PUT"):
-                indices = [i for i, r in enumerate(split_rows) if side == "ALL" or r["direction"] == side]
-                side_rows = [split_rows[i] for i in indices]
+                indices = [i for i, r in enumerate(subset_rows) if side == "ALL" or r["direction"] == side]
+                side_rows = [subset_rows[i] for i in indices]
                 side_keep = [bool(keep[i]) for i in indices]
                 sm = metrics(side_rows, side_keep)
                 base_n = len(side_rows)
