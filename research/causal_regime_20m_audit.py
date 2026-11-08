@@ -148,8 +148,14 @@ def main():
             period="TRAIN" if day<d1 else "VALIDATION" if day<d2 else "TEST"
             entry=bars[i+1].open; exitp=bars[i+4].close
             delta=exitp-entry
+            p12h=max(b.high for b in bars[i-12:i]); p12l=min(b.low for b in bars[i-12:i])
+            p24h=max(b.high for b in bars[i-24:i]); p24l=min(b.low for b in bars[i-24:i])
             background.append({"time":cur.timestamp,"period":period,"trend":trend,
                                "adx_band":adx_band,"volatility":vol,
+                               "call_aligned12":cur.low<p12l and cur.close>p12l,
+                               "put_aligned12":cur.high>p12h and cur.close<p12h,
+                               "call_aligned24":cur.low<p24l and cur.close>p24l,
+                               "put_aligned24":cur.high>p24h and cur.close<p24h,
                                "call_win":delta>1e-12,"put_win":delta< -1e-12,
                                "draw":abs(delta)<=1e-12,
                                "is_signal":cur.timestamp in signal_times})
@@ -214,6 +220,45 @@ def main():
         bwr=100*bw/(bw+bl) if bw+bl else float("nan")
         lift=swr-bwr
         lines.append(f"| {p} | {side} | {trend}/{adxband}/{vol} | {len(sig)} | {sw}/{sl}/{sd} | {swr:.1f}% | {snet:+.2f}u | {len(bg)} | {bwr:.1f}% | {lift:+.1f} pp |")
+    # Structural sweep interaction against an exact matched market baseline.
+    # Unlike the earlier unconditional background, this conditions the baseline
+    # on the same causal sweep state as the signal, direction, trend, ADX band,
+    # and volatility tertile. Descriptive only; no rule is selected here.
+    lines += ["","## Sweep-conditioned exact matched baseline","",
+      "Each signal is compared with non-signal candles in the same period, direction, EMA trend, ADX band, prior-120 ATR/close tertile, and aligned-sweep YES/NO state. Background windows use the identical next-open to fourth-close horizon. Cells below 20 background observations are omitted.",
+      "| Period | Direction | Trend | ADX | Vol | Sweep | Signal n | W/L/D | Signal WR | Net | Background n | Background WR | Lift |",
+      "|---|---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|"]
+    for p in ("TRAIN","VALIDATION","TEST"):
+      for side in ("CALL","PUT"):
+       for trend in ("UP","DOWN","FLAT"):
+        for adxband in ("15-20","20-25","25+"):
+         for vol in ("LOW","MID","HIGH"):
+          for sweep in ("YES","NO"):
+           key=f"{side.lower()}_aligned12"
+           sig=[r for r in records if r["period"]==p and r["direction"]==side and
+                r["features"]["trend"]==trend and r["features"]["adx_band"]==adxband and
+                r["features"]["volatility"]==vol and r["features"]["aligned_sweep_12"]==sweep]
+           bg=[b for b in background if b["period"]==p and not b["is_signal"] and
+               b["trend"]==trend and b["adx_band"]==adxband and b["volatility"]==vol and
+               ("YES" if b[key] else "NO")==sweep]
+           if len(bg)<20 or not sig: continue
+           sw,sl,sd,swr,snet=summarize(sig)
+           bw=sum(b["call_win"] if side=="CALL" else b["put_win"] for b in bg)
+           bd=sum(b["draw"] for b in bg); bl=len(bg)-bw-bd
+           bwr=100*bw/(bw+bl) if bw+bl else float("nan")
+           lines.append(f"| {p} | {side} | {trend} | {adxband} | {vol} | {sweep} | {len(sig)} | {sw}/{sl}/{sd} | {swr:.1f}% | {snet:+.2f}u | {len(bg)} | {bwr:.1f}% | {swr-bwr:+.1f} pp |")
+    # Also compare 12- and 24-bar structural sweeps at the signal level.
+    lines += ["","## 12 vs 24-bar aligned sweep consistency","",
+      "| Period | Direction | Sweep 12 | Sweep 24 | n | W/L/D | WR | Net |",
+      "|---|---|---|---|---:|---|---:|---:|"]
+    for p in ("TRAIN","VALIDATION","TEST"):
+      for side in ("CALL","PUT"):
+       for s12,s24 in (("YES","YES"),("YES","NO"),("NO","YES"),("NO","NO")):
+        sub=[r for r in records if r["period"]==p and r["direction"]==side and
+             r["features"]["aligned_sweep_12"]==s12 and r["features"]["aligned_sweep_24"]==s24]
+        if len(sub)>=10:
+         w,l,d,wr,net=summarize(sub)
+         lines.append(f"| {p} | {side} | {s12} | {s24} | {len(sub)} | {w}/{l}/{d} | {wr:.1f}% | {net:+.2f}u |")
     # Month diagnostics: use all periods; useful to locate instability, not a filter.
     lines += ["","## Month-by-month 20m results","",
               "| Month UTC | Direction | n | W/L/D | Decisive WR | Net |",
