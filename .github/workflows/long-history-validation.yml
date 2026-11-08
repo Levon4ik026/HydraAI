@@ -24,13 +24,58 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Download EURUSD M1 BID history from Dukascopy
-        run: npx --yes dukascopy-node@latest -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
-      - name: Verify downloaded file
+      - name: Download EURUSD M1 BID history in quarterly chunks
+        shell: bash
         run: |
-          ls -lh download/
-          DATA_FILE=$(find download -maxdepth 1 -name 'eurusd-m1-bid-2024-01-01-*.csv' -print -quit)
-          test -n "$DATA_FILE"
+          set -euo pipefail
+          mkdir -p download
+          # Smaller requests avoid Dukascopy-node's long-request timeout.
+          for year in 2024 2025 2026; do
+            for month in 01 04 07 10; do
+              start="$year-$month-01"
+              if [[ "$year-$month" > "2026-10" ]]; then continue; fi
+              case "$month" in
+                01) end="$year-03-31" ;;
+                04) end="$year-06-30" ;;
+                07) end="$year-09-30" ;;
+                10) end="$year-12-31" ;;
+              esac
+              if [[ "$end" > "2026-11-08" ]]; then end="2026-11-08"; fi
+              echo "Downloading $start through $end"
+              npx --yes dukascopy-node@latest -i eurusd -from "$start" -to "$end" -t m1 -f csv -v
+            done
+          done
+      - name: Merge and verify downloaded history
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv
+          files = sorted(Path("download").glob("eurusd-m1-bid-*.csv"))
+          if not files:
+              raise SystemExit("No Dukascopy CSV chunks found")
+          target = Path("download/eurusd-m1-bid-2024-01-01-merged.csv")
+          rows = 0
+          with target.open("w", newline="", encoding="utf-8") as out:
+              writer = None
+              for path in files:
+                  with path.open(newline="", encoding="utf-8") as src:
+                      reader = csv.reader(src)
+                      header = next(reader, None)
+                      if not header:
+                          continue
+                      if writer is None:
+                          writer = csv.writer(out)
+                          writer.writerow(header)
+                      for row in reader:
+                          if row:
+                              writer.writerow(row)
+                              rows += 1
+          if rows < 100000:
+              raise SystemExit(f"Unexpectedly few rows after merge: {rows}")
+          print(f"Merged {len(files)} chunks, {rows} data rows into {target}")
+          print(f"Chunks: {[p.name for p in files]}")
+          PY
+          DATA_FILE="download/eurusd-m1-bid-2024-01-01-merged.csv"
           test -s "$DATA_FILE"
           echo "DATA_FILE=$DATA_FILE" >> "$GITHUB_ENV"
       - name: Run frozen long-history backtest
