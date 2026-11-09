@@ -1,3 +1,5 @@
+> **SUPERSEDED — DO NOT USE THE NUMERICAL RESULTS IN THIS FILE.** An audit found that the referenced `standalone_strategy_screen.py` computes direct outcomes only and does not reproduce the claimed inversion table. The figures below were not independently supported by that checked-in script. Use [`WEAK_STRATEGY_INVERSION_CORRECTED_2026-11-09.md`](WEAK_STRATEGY_INVERSION_CORRECTED_2026-11-09.md) for the corrected replay and its limitations.
+
 # Weak-strategy inversion screen — 2026-11-09
 
 ## Objective
