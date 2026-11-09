@@ -58,6 +58,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mean-reversion-frozen-forward-holdout
-          path: research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md
+          path: |
+            research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md
+            research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT_TRADES.csv
           if-no-files-found: error
           retention-days: 90
