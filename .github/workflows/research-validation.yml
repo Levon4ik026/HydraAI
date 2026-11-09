@@ -118,3 +118,9 @@ jobs:
           name: call-put-train-only-interaction-screen
           path: research/INTERACTION_SCREEN.md
           if-no-files-found: error
+      - name: Upload standalone strategy-family screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-standalone-strategy-family-screen
+          path: research/STANDALONE_STRATEGY_SCREEN.md
+          if-no-files-found: error
