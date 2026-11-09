@@ -1,0 +1,58 @@
+name: Frozen MEAN_REV_20_Z1.5 forward holdout
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 0 * * 1-6"
+  push:
+    branches:
+      - hydra/research-validation
+    paths:
+      - "research/mean_reversion_frozen_holdout.py"
+      - "research/tests/test_mean_reversion_frozen_holdout.py"
+      - ".github/workflows/mean-reversion-forward-holdout.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  frozen-mean-reversion-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set exclusive download end date
+        run: |
+          END=$(date -u -d tomorrow +%F)
+          echo "END_DATE=$END" >> "$GITHUB_ENV"
+
+      - name: Download EURUSD M1 BID from Dukascopy
+        run: |
+          npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
+
+      - name: Capture completed-bar snapshot
+        run: |
+          SNAPSHOT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          echo "SNAPSHOT_UTC=$SNAPSHOT" >> "$GITHUB_ENV"
+
+      - name: Run frozen candidate, matched controls and data-integrity audit
+        run: |
+          python research/mean_reversion_frozen_holdout.py \
+            --data "download/eurusd-m1-bid-2024-01-01-$END_DATE.csv" \
+            --snapshot-utc "$SNAPSHOT_UTC" \
+            --out research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md
+
+      - name: Upload frozen holdout report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mean-reversion-frozen-forward-holdout
+          path: research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md
+          if-no-files-found: error
+          retention-days: 90
