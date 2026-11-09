@@ -372,12 +372,13 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
         candidate_periods, candidate_purged = events_by_period(candidate_raw, d1, d2, snapshot_utc)
         regime_periods, regime_purged = events_by_period(regime_raw, d1, d2, snapshot_utc)
         lines.append(f"- Excluded boundary-crossing events for {side}: candidate={candidate_purged}; same-z-regime baseline={regime_purged}.")
+        side_cohort_label = "Frozen candidate" if side == "CALL" else "Mirror diagnostic (not frozen candidate)"
         for period in PERIODS:
             raw_candidate = candidate_periods[period]
             candidate_events = nonoverlap(raw_candidate)
             candidate_stats = summarize(candidate_events, side, len(raw_candidate), slots[period])
             lines.append(
-                f"| {side} | Frozen candidate | {period} | {candidate_stats['n']} | "
+                f"| {side} | {side_cohort_label} | {period} | {candidate_stats['n']} | "
                 f"{candidate_stats['w']}/{candidate_stats['l']}/{candidate_stats['d']} | "
                 f"{fmt_pct(candidate_stats['wr'])} {fmt_ci(candidate_stats['wilson'])} | "
                 f"{fmt_pct(candidate_stats['win_all'])} | {candidate_stats['net']:+.2f} | "
@@ -419,7 +420,7 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
                 RANDOM_SEED + (0 if side == "CALL" else 1) + PERIODS.index(period) * 17
             )
             lines.append(
-                f"| {side} | 50/50 random direction on candidate timestamps | {period} | "
+                f"| {side} | 50/50 random direction on observed-rule timestamps | {period} | "
                 f"{random_stats['n']} | n/a | n/a | n/a | "
                 f"median {random_stats['median_net']:+.2f} "
                 f"[{random_stats['lo']:+.2f}, {random_stats['hi']:+.2f}] | n/a | n/a | "
@@ -427,7 +428,7 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
                 f"{candidate_stats['frequency']:.3f}% | {candidate_stats['wait']:.3f}% |"
             )
             lines.append(
-                f"| {side} | Random P(net >= candidate) | {period} | "
+                f"| {side} | Random P(net >= observed rule) | {period} | "
                 f"{random_stats['n']} | n/a | n/a | n/a | "
                 f"{random_stats['p_ge_candidate']:.1f}% | n/a | n/a | n/a | n/a | "
                 f"{len(raw_candidate)} | n/a | n/a |"
@@ -445,7 +446,7 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
     else:
         holdout_status = (
             f"Preliminary fresh forward sample only: {fresh_bars:,} complete M5 bars and "
-            f"{fresh_trades:,} accepted candidate trades across CALL and mirror PUT. "
+            f"{fresh_trades:,} accepted CALL-candidate and mirror-PUT trades. "
             "This is not a confirmatory sample; wait for more independent trading days."
         )
 
@@ -456,8 +457,9 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
         "delta", "outcome_call", "outcome_put", "accepted_nonoverlap",
     ]
     for side in ("CALL", "PUT"):
+        primary_cohort = "frozen_candidate" if side == "CALL" else "mirror_diagnostic"
         for cohort, raw_events in (
-            ("frozen_candidate", event_stream(segments, side, regime_only=False)),
+            (primary_cohort, event_stream(segments, side, regime_only=False)),
             ("same_z_regime", event_stream(segments, side, regime_only=True)),
         ):
             grouped, _ = events_by_period(raw_events, d1, d2, snapshot_utc)
@@ -500,7 +502,7 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
         "- The candidate was selected from a broad screen of 20 direction-specific families × 6 expiries (120 variants); multiple-comparison and selection bias remain.",
         "- The original short sample's positive CALL result was contradicted by the broader multi-year screen: the long-history CALL 5m result was negative in TRAIN, VALIDATION and the already-inspected TEST. The fresh window must be judged separately.",
         "- Same-z-regime baseline removes the current-candle confirmation but keeps the same extreme prior-close regime and identical entry/settlement mechanics.",
-        "- Matched opposite-direction and random-direction controls use the exact candidate timestamps, entry opens and settlement closes.",
+        "- Matched opposite-direction and random-direction controls use the exact observed-rule timestamps, entry opens and settlement closes. The random-direction tail share is descriptive, not a formal p-value.",
         "- Wilson intervals are descriptive and assume independent decisive trades; serial dependence, volatility clustering and repeated market regimes can make them too narrow. The fresh sample is especially small until many days accrue.",
         "- Dukascopy BID is not Pocket Option's executable quote stream. Spread, platform quote differences, variable payout, latency and execution are not modeled.",
         "- No parameter was tuned on the fresh holdout. No live integration, automatic trading or orders are used.",
