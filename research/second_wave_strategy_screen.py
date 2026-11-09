@@ -89,16 +89,17 @@ def main():
                     start=bars[i].timestamp.date(); settle=bars[i+h].timestamp.date()
                     period="TRAIN" if start<d1 else "VALIDATION" if start<d2 else "TEST"
                     if (period=="TRAIN" and settle>=d1) or (period=="VALIDATION" and settle>=d2): continue
-                    raw[(name,h,period,sid)].append((i,side,outcome(bars,i,side,h)))
+                    inverse_side = "PUT" if side == "CALL" else "CALL"
+                    raw[(name,h,period,sid)].append((i,side,outcome(bars,i,side,h),outcome(bars,i,inverse_side,h)))
     accepted=defaultdict(list); raw_counts=defaultdict(int)
     for (name,h,period,sid),rows in raw.items():
         raw_counts[(name,h,period)]+=len(rows)
         nxt=-1
-        for i,side,result in sorted(rows):
+        for i,side,result,inverse_result in sorted(rows):
             if i>=nxt:
                 accepted[(name,h,period,"ORIGINAL")].append((i,side,result))
                 inverse_side = "PUT" if side == "CALL" else "CALL"
-                accepted[(name,h,period,"INVERTED")].append((i,inverse_side,outcome(bars,i,inverse_side,h)))
+                accepted[(name,h,period,"INVERTED")].append((i,inverse_side,inverse_result))
                 nxt=i+h
     lines=[
       "# Second-wave EURUSD M5 strategy discovery","",
