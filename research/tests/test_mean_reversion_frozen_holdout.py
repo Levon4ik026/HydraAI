@@ -53,6 +53,15 @@ class FrozenMeanReversionTests(unittest.TestCase):
         self.assertEqual(outcome(events[0]["delta"], "CALL"), "W")
         self.assertEqual(outcome(events[0]["delta"], "PUT"), "L")
 
+    def test_entry_is_next_m5_open_and_settlement_is_entry_candle_close(self):
+        closes = [100.0] * 19 + [99.0]
+        bars = self.make_bars(closes, 99.02, 99.10, 99.08, 99.14)
+        event = event_stream([bars], "CALL")[0]
+        self.assertEqual(event["entry_time"], bars[42].timestamp)
+        self.assertEqual(event["settle_time"], bars[42].timestamp + timedelta(minutes=5))
+        self.assertAlmostEqual(event["entry_open"], 99.08)
+        self.assertAlmostEqual(event["settle_close"], 99.14)
+
     def test_mirror_put_is_separate_and_directional(self):
         closes = [100.0] * 19 + [101.0]
         bars = self.make_bars(closes, 100.98, 100.90, 100.92, 100.84)
