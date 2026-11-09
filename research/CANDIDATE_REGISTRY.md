@@ -76,3 +76,23 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - Инверсия не гарантирует прибыльность: учитываются выплата, ничьи, просадка, выборка и отличие исторических котировок от исполнения Pocket Option.
 
 Это правило применяется и к новым исследованиям, и к повторной проверке уже зарегистрированных кандидатов.
+
+
+## HYD-CAND-003 — Donchian50 breakout fade, PUT, 20m (inverse-direction lead)
+
+- **Status:** Preliminary inverse hypothesis; not confirmed and not yet promoted to a robust candidate.
+- **Origin:** Inversion of the exact event set for DONCHIAN50_BREAK_CALL from the second-wave discovery screen. The original trigger is a closed M5 bullish candle whose close exceeds the highest high of the preceding 50 completed M5 candles.
+- **Inverse rule:** Keep every original trigger timestamp, entry timing, expiry, and non-overlap decision unchanged; replace CALL with PUT. Entry is at the next M5 open; expiry is the close of the fourth subsequent M5 candle (20 minutes).
+- **Data:** Same Dukascopy EUR/USD M1 BID history and chronological split as second-wave screen; assumed payout 92%; win +0.92u, loss -1u, draw 0u.
+- **Preliminary inverse results:** These figures are derived exactly by swapping W and L in the original report's identical event cohort; draws remain unchanged. A corrected rerun is in progress to independently produce full inverse outcome sequences and drawdown metrics.
+
+| Split | Trades | Inverse W / L / D | Decisive WR | Net (u) |
+|---|---:|---:|---:|---:|
+| TRAIN | 1,887 | 967 / 910 / 10 | 51.52% | -20.36 |
+| VALIDATION | 606 | 345 / 253 / 8 | 57.69% | +64.40 |
+| TEST | 547 | 289 / 254 / 4 | 53.22% | +11.88 |
+
+- **Interpretation:** Validation clears the 57% discovery threshold with a substantial sample, and TEST is above the 52.08% assumed-payout break-even rate with positive net. TRAIN is below break-even and the TEST result is materially weaker than VALIDATION. This is therefore a lead worth retaining, not evidence of stable performance.
+- **Uncertainty:** Original report's Wilson interval for the inverse validation cohort can be recomputed after corrected rerun; no block-bootstrap or matched-control test yet. Multiple-testing bias remains.
+- **Important:** Do not infer max drawdown from aggregate W/L/D counts. Await corrected report with the ordered inverse outcomes before recording drawdown or ranking this as a strong candidate.
+- **Code / report:** research/second_wave_strategy_screen.py; corrected inverse calculation workflow run 42724247482 is pending.
