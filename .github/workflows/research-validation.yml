@@ -52,7 +52,7 @@ jobs:
           if-no-files-found: error
       - name: Run long-horizon M5 expiry audit
         run: python research/long_horizon_audit.py --data eurusd_history_extended.csv --out research/LONG_HORIZON_AUDIT.md
-      - name: Upload long-horizon M5 expiry audit
+      - name: Upload long-horizon audit
         uses: actions/upload-artifact@v4
         with:
           name: hydra-long-horizon-audit
@@ -131,4 +131,12 @@ jobs:
         with:
           name: hydra-exact-reversal-audit
           path: research/REVERSAL_STRATEGY_AUDIT.md
+          if-no-files-found: error
+      - name: Run causal regime and day diagnostic for frozen reversals
+        run: python research/reversal_regime_diagnostic.py --data eurusd_history_extended.csv --out research/REVERSAL_REGIME_DIAGNOSTIC.md
+      - name: Upload reversal regime diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-reversal-regime-diagnostic
+          path: research/REVERSAL_REGIME_DIAGNOSTIC.md
           if-no-files-found: error
