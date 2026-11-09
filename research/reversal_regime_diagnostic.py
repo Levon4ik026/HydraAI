@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Post-hoc causal regime/day diagnostics for the frozen exact-reversal cohort.
 
-This does not select or tune strategies. It reuses the four candidates frozen
+This does not select or tune strategies. It reuses the TRAIN-only candidates frozen
 by reversal_strategy_audit.py on TRAIN only and partitions their already-fixed
 signals by a simple prior-12-bar efficiency-ratio regime.
 """
