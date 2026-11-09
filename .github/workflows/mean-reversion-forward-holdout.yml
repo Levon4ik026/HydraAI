@@ -36,6 +36,12 @@ jobs:
         run: |
           npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
 
+      - name: Resolve Dukascopy output filename
+        run: |
+          FILE=$(find download -maxdepth 1 -type f -name 'eurusd-m1-bid-2024-01-01-*.csv' -printf '%f\n' | sort | tail -n 1)
+          test -n "$FILE"
+          echo "DATA_FILE=download/$FILE" >> "$GITHUB_ENV"
+
       - name: Capture completed-bar snapshot
         run: |
           SNAPSHOT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -44,7 +50,7 @@ jobs:
       - name: Run frozen candidate, matched controls and data-integrity audit
         run: |
           python research/mean_reversion_frozen_holdout.py \
-            --data "download/eurusd-m1-bid-2024-01-01-$END_DATE.csv" \
+            --data "$DATA_FILE" \
             --snapshot-utc "$SNAPSHOT_UTC" \
             --out research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md
 
