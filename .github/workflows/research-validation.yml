@@ -185,6 +185,8 @@ jobs:
         run: python research/reversal_robustness_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
       - name: Run day-cluster bootstrap on frozen reversals
         run: python research/reversal_day_cluster_bootstrap.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
+      - name: Run TRAIN-frozen multi-feature context screen for reversals
+        run: python research/multifeature_reversal_context.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
       - name: Upload multi-year reversal research
         uses: actions/upload-artifact@v4
         with:
@@ -195,4 +197,5 @@ jobs:
             research/LONG_HISTORY_REVERSAL_REGIME.md
             research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
             research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
+            research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
           if-no-files-found: error
