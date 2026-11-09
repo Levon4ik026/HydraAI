@@ -1,5 +1,7 @@
 # HydraAI Research — validation workspace
 
+> **Главный ориентир лаборатории:** [RESEARCH_LAB_CHARTER.md](../docs/RESEARCH_LAB_CHARTER.md). Перед новым экспериментом сверяй его с целью каталога «рыночная ситуация → подходящая стратегия» и обязательным порядком исследований.
+
 This branch is based on `hydra/stabilization` and keeps all experiments isolated from the Desktop application and production math core.
 
 ## Frozen PUT forward experiment
