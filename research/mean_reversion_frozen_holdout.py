@@ -22,6 +22,8 @@ from reproduce_m5_bb_williams_adx import Bar, make_m5
 
 PAYOUT = 0.92
 WINDOW = 20
+SCAN_START = 41
+TAIL_GUARD = 13  # preserve the original standalone screen's candidate eligibility
 Z_THRESHOLD = 1.5
 HOLDOUT_START = datetime(2026, 11, 9, tzinfo=timezone.utc)
 RANDOM_REPLICATES = 10_000
@@ -158,7 +160,7 @@ def event_stream(segments, side: str, regime_only: bool = False):
     """Generate candidate or same-z-regime events using completed bars only."""
     events = []
     for segment_id, bars in enumerate(segments):
-        for i in range(WINDOW, len(bars) - 1):
+        for i in range(SCAN_START, len(bars) - TAIL_GUARD):
             z = prior_close_zscore(bars, i)
             if z is None:
                 continue
@@ -184,16 +186,19 @@ def event_stream(segments, side: str, regime_only: bool = False):
     return events
 
 
-def eligible_slots(segments, d1, d2, snapshot_utc):
-    """Executable signal slots after warm-up and split-boundary purges."""
+def period_bar_counts(segments, d1, d2):
+    """Use all complete M5 bars as the frequency denominator, as in the original screen."""
     counts = {period: 0 for period in PERIODS}
     for segment in segments:
-        for i in range(WINDOW, len(segment) - 1):
-            signal_time = segment[i].timestamp
-            settle_time = segment[i + 1].timestamp + timedelta(minutes=5)
-            period = classify_period(signal_time, settle_time, d1, d2, snapshot_utc)
-            if period:
-                counts[period] += 1
+        for bar in segment:
+            if bar.timestamp >= HOLDOUT_START:
+                counts["FRESH HOLDOUT"] += 1
+            elif bar.timestamp.date() < d1:
+                counts["TRAIN"] += 1
+            elif bar.timestamp.date() < d2:
+                counts["VALIDATION"] += 1
+            else:
+                counts["PRIOR-INSPECTED TEST"] += 1
     return counts
 
 
@@ -314,7 +319,7 @@ def fmt_num(value):
 def build_report(path: Path, snapshot_utc: datetime, out: Path):
     _m1, segments, meta = load_dukascope_m1(path, snapshot_utc)
     d1, d2 = chronological_boundaries(segments)
-    slots = eligible_slots(segments, d1, d2, snapshot_utc)
+    slots = period_bar_counts(segments, d1, d2)
 
     lines = [
         "# Frozen MEAN_REV_20_Z1.5 forward holdout audit", "",
@@ -325,6 +330,7 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path):
         "- Entry at the next M5 open; settlement at the close of that entry candle (5 minutes after entry).",
         "- Mirror PUT (z >= +1.5, bearish current candle, current close < previous close) is reported separately as a symmetry diagnostic, not as a tuned replacement.",
         "- One active trade per rule, no overlap; M5 continuity segments prevent crossing data gaps; split-boundary crossings are purged.",
+        "- To reproduce the original family screen's candidate eligibility, the scan retains its common index guard (i >= 41 and 13 trailing M5 bars); the frozen signal itself still uses only the prior 20 closes.",
         "- Fixed payout: WIN +0.92u, LOSS -1u, DRAW 0u. No look-ahead; all signal features are known by the signal candle close.",
         "",
         "## Source and exact data audit",
@@ -361,8 +367,9 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path):
     for side in ("CALL", "PUT"):
         candidate_raw = event_stream(segments, side, regime_only=False)
         regime_raw = event_stream(segments, side, regime_only=True)
-        candidate_periods, _candidate_purged = events_by_period(candidate_raw, d1, d2, snapshot_utc)
-        regime_periods, _regime_purged = events_by_period(regime_raw, d1, d2, snapshot_utc)
+        candidate_periods, candidate_purged = events_by_period(candidate_raw, d1, d2, snapshot_utc)
+        regime_periods, regime_purged = events_by_period(regime_raw, d1, d2, snapshot_utc)
+        lines.append(f"- Excluded boundary-crossing events for {side}: candidate={candidate_purged}; same-z-regime baseline={regime_purged}.")
         for period in PERIODS:
             raw_candidate = candidate_periods[period]
             candidate_events = nonoverlap(raw_candidate)
