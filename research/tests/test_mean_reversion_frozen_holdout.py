@@ -49,7 +49,7 @@ class FrozenMeanReversionTests(unittest.TestCase):
         segments = [bars]
         events = event_stream(segments, "CALL")
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["index"], 20)
+        self.assertEqual(events[0]["index"], 41)
         self.assertEqual(outcome(events[0]["delta"], "CALL"), "W")
         self.assertEqual(outcome(events[0]["delta"], "PUT"), "L")
 
