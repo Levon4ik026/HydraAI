@@ -167,10 +167,7 @@ def main():
          "--data", str(args.data), "--out", str(screen_path)],
         check=True,
     )
-    with args.out.open("a", encoding="utf-8") as report:
-        report.write("\\n\\n---\\n\\n")
-        report.write(screen_path.read_text(encoding="utf-8"))
-    print(f"Standalone strategy-family screen appended: {screen_path}")
+    print(f"Standalone strategy-family screen written separately: {screen_path}")
 
 
 if __name__ == "__main__":
