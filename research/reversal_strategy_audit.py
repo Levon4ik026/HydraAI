@@ -2,7 +2,7 @@
 """Exact opposite-direction audit of deliberately weak standalone signals.
 
 Selection is TRAIN-only: at least 100 accepted non-overlapping trades and
-decisive WR <= 40.00%, with negative TRAIN net. The inverse uses the exact
+decisive WR below the 92%-payout inverse break-even threshold (47.9167%), with negative TRAIN net. The inverse uses the exact
 same signal events, entry prices, expiry bars and trade schedule; only CALL
 and PUT direction is flipped. No parameter tuning or holdout-based selection.
 """
@@ -25,7 +25,7 @@ from standalone_strategy_screen import (
 )
 
 MIN_TRAIN_TRADES = 100
-MAX_TRAIN_WR = 40.0
+MAX_TRAIN_WR = 47.9167
 
 
 def invert_outcome(value: str) -> str:
