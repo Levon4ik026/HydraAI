@@ -358,7 +358,7 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path):
         "- Historical TRAIN/VALIDATION/TEST data have already been screened, including this candidate. Only the FRESH HOLDOUT period is new to this candidate audit.",
         "",
         "## Results — candidate, same-regime and matched directional controls",
-        "Trade frequency = accepted non-overlapping trades / eligible M5 signal slots after warm-up and boundary purges. WAIT is its complement.",
+        "Trade frequency = accepted non-overlapping trades / all complete M5 bars in that split, matching the original screen's denominator. WAIT is its complement.",
         "",
         "| Side | Cohort | Split | n | W/L/D | Decisive WR [95% Wilson] | Wins/all | Net u | ROI | PF | Max DD u | Max loss streak | Raw signals | Frequency | WAIT |",
         "|---|---|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
