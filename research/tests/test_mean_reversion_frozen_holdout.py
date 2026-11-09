@@ -69,7 +69,7 @@ class FrozenMeanReversionTests(unittest.TestCase):
     def test_split_boundary_crossing_is_purged(self):
         d1 = datetime(2026, 11, 10).date()
         d2 = datetime(2026, 11, 11).date()
-        signal = datetime(2026, 11, 9, 23, 55, tzinfo=timezone.utc)
+        signal = datetime(2026, 11, 8, 23, 55, tzinfo=timezone.utc)
         settle = datetime(2026, 11, 10, 0, 5, tzinfo=timezone.utc)
         self.assertIsNone(classify_period(signal, settle, d1, d2,
                                           datetime(2026, 11, 12, tzinfo=timezone.utc)))
