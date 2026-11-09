@@ -17,6 +17,9 @@ from mean_reversion_frozen_holdout import (
 class FrozenMeanReversionTests(unittest.TestCase):
     def make_bars(self, closes, current_open, current_close, entry_open, entry_close):
         start = datetime(2026, 11, 9, 0, 0, tzinfo=timezone.utc)
+        closes = list(closes)
+        if len(closes) < 41:
+            closes = [100.0] * (41 - len(closes)) + closes
         bars = []
         for i, close in enumerate(closes):
             bars.append(Bar(start + timedelta(minutes=5 * i), close, close, close, close))
@@ -27,6 +30,9 @@ class FrozenMeanReversionTests(unittest.TestCase):
         bars.append(Bar(start + timedelta(minutes=5 * (idx + 1)),
                         entry_open, max(entry_open, entry_close),
                         min(entry_open, entry_close), entry_close))
+        for j in range(12):
+            ts = start + timedelta(minutes=5 * (idx + 2 + j))
+            bars.append(Bar(ts, entry_close, entry_close, entry_close, entry_close))
         return bars
 
     def test_prior_zscore_uses_exact_previous_20_closes_and_population_std(self):
