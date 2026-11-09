@@ -140,3 +140,53 @@ jobs:
           name: hydra-reversal-regime-diagnostic
           path: research/REVERSAL_REGIME_DIAGNOSTIC.md
           if-no-files-found: error
+
+  long-history-reversal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Download multi-year EURUSD M1 BID history from Dukascopy
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+      - name: Verify long-history dataset
+        run: |
+          python - <<'PY'
+          import csv
+          from datetime import datetime, timezone
+          from pathlib import Path
+          path = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          if not path.exists():
+              raise SystemExit(f"Missing downloaded dataset: {path}")
+          with path.open(newline="", encoding="utf-8-sig") as f:
+              reader = csv.DictReader(f)
+              rows = list(reader)
+              fields = reader.fieldnames or []
+          required = {"timestamp", "open", "high", "low", "close"}
+          if not required.issubset(fields) or not rows:
+              raise SystemExit(f"Unexpected CSV format: {fields}")
+          stamps = [datetime.fromtimestamp(int(r["timestamp"]) / 1000, tz=timezone.utc) for r in rows]
+          print(f"ROWS={len(rows)} FIRST_UTC={min(stamps).isoformat()} LAST_UTC={max(stamps).isoformat()}")
+          if len(rows) < 100_000:
+              raise SystemExit("Insufficient downloaded history; refusing to run a purported long-history test")
+          PY
+      - name: Run standalone strategy screen on multi-year history
+        run: python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_STANDALONE_SCREEN.md
+      - name: Run exact inverse audit on multi-year history
+        run: python research/reversal_strategy_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_AUDIT.md
+      - name: Run prior-only regime and daily diagnostic
+        run: python research/reversal_regime_diagnostic.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_REGIME.md
+      - name: Upload multi-year reversal research
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-multi-year-reversal-research
+          path: |
+            research/LONG_HISTORY_STANDALONE_SCREEN.md
+            research/LONG_HISTORY_REVERSAL_AUDIT.md
+            research/LONG_HISTORY_REVERSAL_REGIME.md
+          if-no-files-found: error
