@@ -108,11 +108,49 @@ def split_dates(segments):
     dates=sorted({b.timestamp.date() for s in segments for b in s})
     return dates[int(.60*len(dates))], dates[int(.80*len(dates))]
 
-def summarize(rows):
-    w=sum(x=="W" for x in rows); l=sum(x=="L" for x in rows); d=sum(x=="D" for x in rows)
-    dec=w+l; wr=100*w/dec if dec else float("nan")
-    net=w*PAYOUT-l; pf=w*PAYOUT/l if l else (float("inf") if w else 0)
-    return len(rows),w,l,d,wr,net,pf
+def wilson_interval(wins, decisive, z=1.959963984540054):
+    if decisive <= 0:
+        return None
+    p = wins / decisive
+    den = 1.0 + z * z / decisive
+    center = (p + z * z / (2.0 * decisive)) / den
+    half = z * math.sqrt(
+        p * (1.0 - p) / decisive + z * z / (4.0 * decisive * decisive)
+    ) / den
+    return 100.0 * (center - half), 100.0 * (center + half)
+
+
+def summarize(outcomes):
+    wins = sum(x == "W" for x in outcomes)
+    losses = sum(x == "L" for x in outcomes)
+    draws = sum(x == "D" for x in outcomes)
+    total = len(outcomes)
+    decisive = wins + losses
+    wr = 100.0 * wins / decisive if decisive else None
+    win_all = 100.0 * wins / total if total else None
+    net = wins * PAYOUT - losses
+    roi = 100.0 * net / total if total else None
+    pf = wins * PAYOUT / losses if losses else (float("inf") if wins else 0.0)
+
+    equity = peak = max_dd = 0.0
+    current_streak = max_streak = 0
+    for outcome in outcomes:
+        if outcome == "W":
+            equity += PAYOUT
+            current_streak = 0
+        elif outcome == "L":
+            equity -= 1.0
+            current_streak += 1
+            max_streak = max(max_streak, current_streak)
+        peak = max(peak, equity)
+        max_dd = max(max_dd, peak - equity)
+
+    return {
+        "n": total, "w": wins, "l": losses, "d": draws,
+        "wr": wr, "wilson": wilson_interval(wins, decisive),
+        "win_all": win_all, "net": net, "roi": roi, "pf": pf,
+        "max_dd": max_dd, "max_losing_streak": max_streak,
+    }
 
 def main():
     ap=argparse.ArgumentParser()
@@ -141,11 +179,21 @@ def main():
     nonoverlap=defaultdict(list)
     raw_by=defaultdict(list)
     for r in records: raw_by[(r[0],r[1],r[5],r[2])].append(r)
-    for (name,h,period,sid),rows in raw_by.items():
-        next_i=-1
-        for r in sorted(rows,key=lambda x:x[3]):
-            if r[3]>=next_i:
-                nonoverlap[(name,h,period)].append(r[6]); next_i=r[3]+h
+    for (name,h,period,sid),segment_rows in raw_by.items():
+        next_i = -1
+        for r in sorted(segment_rows, key=lambda x: x[3]):
+            if r[3] >= next_i:
+                nonoverlap[(name,h,period)].append(r)
+                next_i = r[3] + h
+
+    period_dates = {"TRAIN": set(), "VALIDATION": set(), "TEST": set()}
+    period_bars = {"TRAIN": 0, "VALIDATION": 0, "TEST": 0}
+    for segment in segments:
+        for bar in segment:
+            day = bar.timestamp.date()
+            period = "TRAIN" if day < d1 else "VALIDATION" if day < d2 else "TEST"
+            period_dates[period].add(day)
+            period_bars[period] += 1
     rows=["# Standalone EURUSD strategy-family screen","",
       f"Source: Dukascopy EURUSD M1 BID; {len(m1):,} M1 rows; {sum(map(len,segments)):,} complete M5 bars; {len(segments):,} gap-separated segments.",
       f"Coverage: {m1[0].timestamp.isoformat()} to {m1[-1].timestamp.isoformat()}.",
@@ -157,29 +205,40 @@ def main():
       "No transaction cost or Pocket Option quote simulation: Dukascopy BID is not the platform's exact price stream.",
       "Exploratory screen with many tested combinations; top rows are not confirmatory evidence. Do not promote from TEST ranking; select on validation and verify prospectively.","",
       "## Results — non-overlapping schedule","",
-      "| Family | Expiry | Period | Trades | W/L/D | Decisive WR | Net u | PF | Signals/20 trading days* |",
-      "|---|---:|---|---:|---|---:|---:|---:|---:|"]
-    # use 20 trading days as frequency normalization; count unique observed weekdays is not perfect, but weekdays approx
-    all_days=max(1,len({b.timestamp.date() for s in segments for b in s if b.timestamp.date()>=d1}))
-    for name,h,period in sorted(nonoverlap):
-        vals=nonoverlap[(name,h,period)]; n,w,l,d,wr,net,pf=summarize(vals)
-        period_days=len({r[3] for r in grouped[(name,h,period)]})
-        # calculate signal rate from number of rows / period calendar trading weekdays
-        date_lo=d1 if period=="VALIDATION" else d2 if period=="TEST" else min(b.timestamp.date() for s in segments for b in s)
-        date_hi=d2 if period=="VALIDATION" else max(b.timestamp.date() for s in segments for b in s)
-        weekdays=max(1,sum(1 for x in {b.timestamp.date() for s in segments for b in s} if date_lo<=x<date_hi and x.weekday()<5))
-        freq=20*n/weekdays
-        rows.append(f"| {name} | {h*5}m | {period} | {n} | {w}/{l}/{d} | {wr:.2f}% | {net:+.2f} | {pf:.2f} | {freq:.2f} |")
+      "| Family | Expiry | Period | Trades | W/L/D | Decisive WR [95% Wilson] | Wins / all | Net u | ROI | PF | Max DD u | Max loss streak | Raw signals | Trade freq / M5 bars | WAIT |",
+      "|---|---:|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    for name, h, period in sorted(nonoverlap):
+        trade_rows = sorted(nonoverlap[(name, h, period)], key=lambda r: (r[2], r[3]))
+        summary = summarize([r[6] for r in trade_rows])
+        raw_count = len(grouped[(name, h, period)])
+        bars_in_period = max(1, period_bars[period])
+        trade_freq = 100.0 * summary["n"] / bars_in_period
+        wait_share = 100.0 - trade_freq
+        ci = summary["wilson"]
+        wr_text = "n/a" if summary["wr"] is None else f'{summary["wr"]:.2f}%'
+        ci_text = "n/a" if ci is None else f'[{ci[0]:.2f}, {ci[1]:.2f}]%'
+        all_text = "n/a" if summary["win_all"] is None else f'{summary["win_all"]:.2f}%'
+        roi_text = "n/a" if summary["roi"] is None else f'{summary["roi"]:.2f}%'
+        pf_text = "inf" if summary["pf"] == float("inf") else f'{summary["pf"]:.2f}'
+        rows.append(
+            f'| {name} | {h*5}m | {period} | {summary["n"]} | '
+            f'{summary["w"]}/{summary["l"]}/{summary["d"]} | {wr_text} {ci_text} | '
+            f'{all_text} | {summary["net"]:+.2f} | {roi_text} | {pf_text} | '
+            f'{summary["max_dd"]:.2f} | {summary["max_losing_streak"]} | '
+            f'{raw_count} | {trade_freq:.3f}% | {wait_share:.3f}% |'
+        )
     rows += ["","## Raw event counts by family and expiry","",
       "| Family | Expiry | TRAIN | VALIDATION | TEST |","|---|---:|---:|---:|---:|"]
     for name,h in sorted({(r[0],r[1]) for r in records}):
         vals=[len(grouped[(name,h,p)]) for p in ("TRAIN","VALIDATION","TEST")]
         rows.append(f"| {name} | {h*5}m | {vals[0]} | {vals[1]} | {vals[2]} |")
-    rows += ["","*Frequency is normalized to 20 observed weekday trading dates in each period; it is a historical average, not a daily guarantee. Different strategies can fire simultaneously; portfolio totals require de-duplication across families.",
+    rows += ["",
+      "*Trade frequency is accepted non-overlapping trades divided by complete M5 bars in that split; WAIT is its complement. Raw signals are shown separately. WAIT is per strategy, not a portfolio-level share; families can signal simultaneously.",
       "## Interpretation","",
-      "- Compare validation and test together; high WR with tiny n is not actionable.",
-      "- All variants reuse the same price history and are subject to multiple-testing bias.",
-      "- Results are not independent of prior exploratory use of this historical dataset.",
+      "- The Wilson interval is descriptive and treats decisive outcomes as independent; clustered and overlapping market regimes make it optimistic.",
+      "- Compare TRAIN, VALIDATION and TEST separately. No row is selected by TEST performance.",
+      "- All variants reuse the same short historical sample and are subject to multiple-testing and prior-exploration bias.",
+      "- Dukascopy BID candles are not Pocket Option executable quotes; no platform payout variation, spread or latency is modeled.",
       "- No model was deployed and no trade was executed.",""]
     a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\n".join(rows),encoding="utf-8")
     print(f"Wrote {a.out}; raw events={len(records):,}; M5 bars={sum(map(len,segments)):,}; splits={d1}/{d2}")
