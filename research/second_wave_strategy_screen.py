@@ -96,7 +96,9 @@ def main():
         nxt=-1
         for i,side,result in sorted(rows):
             if i>=nxt:
-                accepted[(name,h,period)].append((i,side,result))
+                accepted[(name,h,period,"ORIGINAL")].append((i,side,result))
+                inverse_side = "PUT" if side == "CALL" else "CALL"
+                accepted[(name,h,period,"INVERTED")].append((i,inverse_side,outcome(bars,i,inverse_side,h)))
                 nxt=i+h
     lines=[
       "# Second-wave EURUSD M5 strategy discovery","",
@@ -108,16 +110,18 @@ def main():
       "Expiries 5/10/15/20/30/60m. Payout assumed 92%: WIN +0.92u, LOSS -1u, DRAW 0u; break-even decisive WR 52.0833%.",
       "No parameter tuning in VALIDATION/TEST. Dukascopy BID differs from Pocket Option executable quotes; no platform spread/latency or variable payout modeled.",
       "This is an exploratory second-wave screen. Multiple-testing bias applies; no row is confirmed by this report.","",
-      "| Strategy | Expiry | Split | Trades | W/L/D | Decisive WR | Wilson 95% CI | Net u | Max DD u | Max loss streak | Raw signals |",
-      "|---|---:|---|---:|---|---:|---|---:|---:|---:|---:|"
+      "| Strategy | Variant | Expiry | Split | Trades | W/L/D | Decisive WR | Wilson 95% CI | Net u | Max DD u | Max loss streak | Raw signals |",
+      "|---|---|---:|---|---:|---|---:|---|---:|---:|---:|---:|"
     ]
     for key in sorted(accepted):
-        name,h,period=key; rs=accepted[key]; s=stats([r[2] for r in rs]); ci=s[5]
+        name,h,period,variant=key; rs=accepted[key]; s=stats([r[2] for r in rs]); ci=s[5]
         wr="n/a" if s[4] is None else f"{s[4]:.2f}%"
         ci_txt="n/a" if ci is None else f"[{ci[0]:.2f},{ci[1]:.2f}]%"
-        lines.append(f"| {name} | {h*5}m | {period} | {s[0]} | {s[1]}/{s[2]}/{s[3]} | {wr} | {ci_txt} | {s[6]:+.2f} | {s[7]:.2f} | {s[8]} | {raw_counts[key]} |")
+        lines.append(f"| {name} | {variant} | {h*5}m | {period} | {s[0]} | {s[1]}/{s[2]}/{s[3]} | {wr} | {ci_txt} | {s[6]:+.2f} | {s[7]:.2f} | {s[8]} | {raw_counts[(name,h,period)]} |")
     lines += ["","## Screening notes","",
       "- Discovery priority: validation decisive WR around 57% or higher, sufficient sample, positive assumed-payout net, and no catastrophic split instability.",
+      "- Every original event is evaluated twice on identical timestamps: ORIGINAL uses its defined CALL/PUT side; INVERTED flips only CALL ↔ PUT. Signal conditions, entry time, expiry, and non-overlap event set remain identical.",
+      "- The inverted variant is a separate discovery candidate, not proof of edge. Do not tune on TEST; independent validation and subsequent confirmation are required.",
       "- TEST is reported for chronological context only; it is not used to tune rules.",
       "- Wilson intervals assume independent outcomes and may understate uncertainty under serial dependence.",
       "- Candidate rows require later situation profiling, matched controls, analog tests, and prospective quote validation.",""]
