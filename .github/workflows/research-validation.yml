@@ -124,3 +124,11 @@ jobs:
           name: hydra-standalone-strategy-family-screen
           path: research/STANDALONE_STRATEGY_SCREEN.md
           if-no-files-found: error
+      - name: Run train-only exact reversal audit
+        run: python research/reversal_strategy_audit.py --data eurusd_history_extended.csv --out research/REVERSAL_STRATEGY_AUDIT.md
+      - name: Upload exact reversal audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-exact-reversal-audit
+          path: research/REVERSAL_STRATEGY_AUDIT.md
+          if-no-files-found: error
