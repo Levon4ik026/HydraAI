@@ -180,6 +180,8 @@ def event_stream(segments, side: str, regime_only: bool = False):
                     "signal_time": current.timestamp,
                     "entry_time": entry.timestamp,
                     "settle_time": entry.timestamp + timedelta(minutes=5),
+                    "entry_open": entry.open,
+                    "settle_close": entry.close,
                     "delta": entry.close - entry.open,
                     "z": z,
                 })
@@ -316,7 +318,7 @@ def fmt_num(value):
     return "inf" if value == float("inf") else f"{value:.2f}"
 
 
-def build_report(path: Path, snapshot_utc: datetime, out: Path):
+def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path):
     _m1, segments, meta = load_dukascope_m1(path, snapshot_utc)
     d1, d2 = chronological_boundaries(segments)
     slots = period_bar_counts(segments, d1, d2)
@@ -447,7 +449,49 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path):
             "This is not a confirmatory sample; wait for more independent trading days."
         )
 
+    ledger_rows = []
+    ledger_fields = [
+        "split", "side", "cohort", "signal_time_utc", "entry_time_utc",
+        "settlement_time_utc", "zscore", "entry_open", "settlement_close",
+        "delta", "outcome_call", "outcome_put", "accepted_nonoverlap",
+    ]
+    for side in ("CALL", "PUT"):
+        for cohort, raw_events in (
+            ("frozen_candidate", event_stream(segments, side, regime_only=False)),
+            ("same_z_regime", event_stream(segments, side, regime_only=True)),
+        ):
+            grouped, _ = events_by_period(raw_events, d1, d2, snapshot_utc)
+            for period in PERIODS:
+                accepted = nonoverlap(grouped[period])
+                accepted_keys = {(event["segment"], event["index"]) for event in accepted}
+                for event in grouped[period]:
+                    ledger_rows.append({
+                        "split": period,
+                        "side": side,
+                        "cohort": cohort,
+                        "signal_time_utc": event["signal_time"].isoformat(),
+                        "entry_time_utc": event["entry_time"].isoformat(),
+                        "settlement_time_utc": event["settle_time"].isoformat(),
+                        "zscore": f"{event['z']:.8f}",
+                        "entry_open": f"{event['entry_open']:.8f}",
+                        "settlement_close": f"{event['settle_close']:.8f}",
+                        "delta": f"{event['delta']:.8f}",
+                        "outcome_call": outcome(event["delta"], "CALL"),
+                        "outcome_put": outcome(event["delta"], "PUT"),
+                        "accepted_nonoverlap": int((event["segment"], event["index"]) in accepted_keys),
+                    })
+    ledger_out.parent.mkdir(parents=True, exist_ok=True)
+    with ledger_out.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=ledger_fields)
+        writer.writeheader()
+        writer.writerows(ledger_rows)
+    ledger_sha = hashlib.sha256(ledger_out.read_bytes()).hexdigest()
+
     lines += [
+        "",
+        "## Trade ledger",
+        f"- Exact candidate and same-z-regime event timestamps, entry/settlement prices, CALL/PUT outcomes and non-overlap acceptance: {ledger_out.name} ({len(ledger_rows):,} rows).",
+        f"- Trade-ledger SHA-256: {ledger_sha}.",
         "",
         "## Holdout status",
         holdout_status,
@@ -480,11 +524,13 @@ def main():
                         help="UTC snapshot taken after download; incomplete latest M1 candles are excluded")
     parser.add_argument("--out", type=Path,
                         default=Path("research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md"))
+    parser.add_argument("--ledger-out", type=Path, default=None)
     args = parser.parse_args()
     snapshot = parse_utc(args.snapshot_utc)
     if snapshot < HOLDOUT_START:
         raise SystemExit("Snapshot predates the frozen holdout start")
-    build_report(args.data, snapshot, args.out)
+    ledger_out = args.ledger_out or args.out.with_name(args.out.stem + "_TRADES.csv")
+    build_report(args.data, snapshot, args.out, ledger_out)
 
 
 if __name__ == "__main__":
