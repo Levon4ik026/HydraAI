@@ -1,12 +1,10 @@
-name: Long-history reversal research
+name: Clean-slate strategy discovery screen
 
 on:
   workflow_dispatch:
   push:
     branches: [hydra/research-validation]
     paths:
-      - "research/reversal_strategy_audit.py"
-      - "research/reversal_regime_diagnostic.py"
       - "research/standalone_strategy_screen.py"
       - ".github/workflows/reversal-long-history.yml"
 
@@ -14,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  long-history-reversal:
+  strategy-discovery:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -25,10 +23,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Download EURUSD M1 BID from Dukascopy
+      - name: Download fresh EURUSD M1 BID history from Dukascopy
         run: |
           npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
-      - name: Verify downloaded coverage and format
+      - name: Verify raw history
         run: |
           python - <<'PY'
           import csv
@@ -36,36 +34,28 @@ jobs:
           from pathlib import Path
           files = sorted(Path("download").glob("eurusd-m1-bid-2024-01-01-2026-11-09.csv"))
           if not files:
-              raise SystemExit("Dukascopy CLI did not produce the expected CSV")
+              raise SystemExit("Dukascopy download missing")
           path = files[0]
           with path.open(newline="", encoding="utf-8-sig") as f:
               reader = csv.DictReader(f)
               rows = list(reader)
-          if not rows or not {"timestamp", "open", "high", "low", "close"}.issubset(rows[0]):
-              raise SystemExit(f"Unexpected CSV format: {reader.fieldnames}")
+          required = {"timestamp", "open", "high", "low", "close"}
+          if not rows or not required.issubset(reader.fieldnames or []):
+              raise SystemExit("Unexpected or empty raw CSV")
           stamps = [datetime.fromtimestamp(int(r["timestamp"]) / 1000, tz=timezone.utc) for r in rows]
-          print(f"FILE={path}")
-          print(f"ROWS={len(rows)}")
+          print(f"RAW_FILE={path}")
+          print(f"RAW_ROWS={len(rows)}")
           print(f"FIRST_UTC={min(stamps).isoformat()}")
           print(f"LAST_UTC={max(stamps).isoformat()}")
           if len(rows) < 100_000:
-              raise SystemExit("Downloaded sample unexpectedly short; refusing to report it as long-history validation")
+              raise SystemExit("History unexpectedly short")
           PY
-      - name: Run standalone strategy-family screen on long history
+      - name: Run clean-slate strategy-family discovery
         run: |
-          python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_STANDALONE_SCREEN.md
-      - name: Run exact inverse audit on long history
-        run: |
-          python research/reversal_strategy_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_AUDIT.md
-      - name: Run prior-only regime and daily diagnostic
-        run: |
-          python research/reversal_regime_diagnostic.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_REGIME.md
-      - name: Upload long-history research reports
+          python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/CLEAN_SLATE_STRATEGY_DISCOVERY.md
+      - name: Upload discovery report
         uses: actions/upload-artifact@v4
         with:
-          name: hydra-long-history-reversal-research
-          path: |
-            research/LONG_HISTORY_STANDALONE_SCREEN.md
-            research/LONG_HISTORY_REVERSAL_AUDIT.md
-            research/LONG_HISTORY_REVERSAL_REGIME.md
+          name: hydra-clean-slate-strategy-discovery
+          path: research/CLEAN_SLATE_STRATEGY_DISCOVERY.md
           if-no-files-found: error
