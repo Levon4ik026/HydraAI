@@ -1,0 +1,71 @@
+name: Long-history reversal research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/reversal_strategy_audit.py"
+      - "research/reversal_regime_diagnostic.py"
+      - "research/standalone_strategy_screen.py"
+      - ".github/workflows/reversal-long-history.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  long-history-reversal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Download EURUSD M1 BID from Dukascopy
+        run: |
+          npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+      - name: Verify downloaded coverage and format
+        run: |
+          python - <<'PY'
+          import csv
+          from datetime import datetime, timezone
+          from pathlib import Path
+          files = sorted(Path("download").glob("eurusd-m1-bid-2024-01-01-2026-11-09.csv"))
+          if not files:
+              raise SystemExit("Dukascopy CLI did not produce the expected CSV")
+          path = files[0]
+          with path.open(newline="", encoding="utf-8-sig") as f:
+              reader = csv.DictReader(f)
+              rows = list(reader)
+          if not rows or not {"timestamp", "open", "high", "low", "close"}.issubset(rows[0]):
+              raise SystemExit(f"Unexpected CSV format: {reader.fieldnames}")
+          stamps = [datetime.fromtimestamp(int(r["timestamp"]) / 1000, tz=timezone.utc) for r in rows]
+          print(f"FILE={path}")
+          print(f"ROWS={len(rows)}")
+          print(f"FIRST_UTC={min(stamps).isoformat()}")
+          print(f"LAST_UTC={max(stamps).isoformat()}")
+          if len(rows) < 100_000:
+              raise SystemExit("Downloaded sample unexpectedly short; refusing to report it as long-history validation")
+          PY
+      - name: Run standalone strategy-family screen on long history
+        run: |
+          python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_STANDALONE_SCREEN.md
+      - name: Run exact inverse audit on long history
+        run: |
+          python research/reversal_strategy_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_AUDIT.md
+      - name: Run prior-only regime and daily diagnostic
+        run: |
+          python research/reversal_regime_diagnostic.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_REGIME.md
+      - name: Upload long-history research reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-long-history-reversal-research
+          path: |
+            research/LONG_HISTORY_STANDALONE_SCREEN.md
+            research/LONG_HISTORY_REVERSAL_AUDIT.md
+            research/LONG_HISTORY_REVERSAL_REGIME.md
+          if-no-files-found: error
