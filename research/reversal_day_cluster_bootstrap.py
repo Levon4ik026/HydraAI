@@ -20,6 +20,12 @@ def quantile(xs, q):
     lo=int(pos); hi=min(lo+1,len(ys)-1)
     return ys[lo]+(ys[hi]-ys[lo])*(pos-lo)
 
+def write_report(path: Path, lines: list[str]) -> None:
+    """Write a Markdown report with real line breaks."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--data",type=Path,required=True)
@@ -66,6 +72,6 @@ def main():
       "- The bootstrap is not a substitute for a genuinely untouched forward period; candidate selection was performed on TRAIN and 360 combinations were screened.",
       "- The BID feed, platform quote differences, payout variation, latency, and execution costs are not modeled.",
       "- No live strategy is approved and no trades are executed.",""]
-    args.out.parent.mkdir(parents=True,exist_ok=True); args.out.write_text("\\n".join(lines),encoding="utf-8")
+    write_report(args.out, lines)
     print(f"Wrote {args.out}; frozen_candidates={len(frozen)}; bootstrap={B}")
 if __name__=="__main__": main()
