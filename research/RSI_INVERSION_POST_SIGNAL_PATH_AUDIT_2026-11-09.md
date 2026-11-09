@@ -62,10 +62,10 @@ There is no convincing immediate directional response. The first minute is aroun
 
 | Month | Events | Mean MFE (pips) | Mean MAE (pips) | MFE > MAE |
 |---|---:|---:|---:|---:|
-| 2026-08 | 361 | 3.07 | 2.91 | 55.68% |
-| 2026-09 | 499 | 2.84 | 2.84 | 53.91% |
-| 2026-10 | 548 | 2.73 | 2.78 | 51.46% |
-| 2026-11 partial | 101 | 2.95 | 2.85 | 51.49% |
+| 2026-08 | 360 | 2.53 | 1.97 | 59.72% |
+| 2026-09 | 499 | 2.56 | 2.56 | 51.70% |
+| 2026-10 | 549 | 3.11 | 3.52 | 50.46% |
+| 2026-11 partial | 101 | 4.03 | 3.74 | 52.48% |
 
 This is consistent with the earlier observation that August's path behavior was more favorable, while October was weaker. It does not establish a causal regime explanation.
 
