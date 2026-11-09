@@ -108,16 +108,17 @@ def main():
     print(f"rows={len(f)} segments={f.segment.nunique()} shared_scheduled_signals={len(ledger)}")
     print("All signals share one lockout; candidate filters are applied AFTER scheduling.")
     for label, q in (("RSI_ALL", ledger), ("CANDIDATE_A", ledger[ledger.is_candidate_a])):
-        print(f"\\n{label}")
-        for split in ("TRAIN", "VALIDATION", "TEST"):
-            z = q[q.split == split]
-            w = int((z.inverse_outcome == "WIN").sum())
-            l = int((z.inverse_outcome == "LOSS").sum())
-            dr = int((z.inverse_outcome == "DRAW").sum())
-            n = w + l
-            wr = 100.0 * w / n if n else float("nan")
-            print(f"{split}: trades={len(z)} W={w} L={l} D={dr} "
-                  f"decisive_WR={wr:.4f}% net92={0.92*w-l:.2f}u")
+        for side, col in (("ORIGINAL", "original_outcome"), ("INVERSE", "inverse_outcome")):
+            print(f"\\n{label} — {side}")
+            for split in ("TRAIN", "VALIDATION", "TEST"):
+                z = q[q.split == split]
+                w = int((z[col] == "WIN").sum())
+                l = int((z[col] == "LOSS").sum())
+                dr = int((z[col] == "DRAW").sum())
+                n = w + l
+                wr = 100.0 * w / n if n else float("nan")
+                print(f"{split}: trades={len(z)} W={w} L={l} D={dr} "
+                      f"decisive_WR={wr:.4f}% net92={0.92*w-l:.2f}u")
     print(f"ledger={args.out}")
 
 if __name__ == "__main__":
