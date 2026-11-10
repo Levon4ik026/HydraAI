@@ -23,6 +23,14 @@ This register separates what a source actually specifies/reports, our operationa
 | LIT-001 | Price/EMA crossover, four EMA lengths — Kolková (2017) | EUR/USD, M5, MT4 broker data, 65,000 rate observations, 2015-06-03 to 2016-04-19; digital/binary option | Paper reports profitable-signal ratios 77.21% (EMA 9), 77.68% (EMA 10), 78.28% (EMA 12), 79.01% (EMA 26), using a stated 85.01% payout | **BLOCKED_SPEC** — exact expiry and EMA period units are ambiguous; no downloadable trade ledger/data. High-priority forensic reproduction, not a validated edge. |
 | LIT-002 | Technical-rule pool + Bayesian forecasting — Hassanniakalager, Sermpinis & Stasinakis (2021) | EUR/USD, GBP/USD, USD/JPY; daily data. Four rolling 3-year IS / 1-year OOS exercises. | Peer-reviewed paper reports small technical-rule margins; Bayesian model portfolios improve risk-adjusted/return performance. EUR/USD BNN(10): 5.8% average annualized return, Sharpe 0.53 across 2013–2016, after costs. Not a binary-option WR. | **RULE UNIVERSE VERIFIED; TOP RULE IDS NOT PUBLISHED IN REPO** — authors' MATLAB code and EURUSD.csv are public. Rule families/parameter grids extracted. Individual rule-level OOS leaderboard still needs source output or independent reproduction. |
 
+
+
+| LIT-003 | High-volatility EUR/USD intraday mean-reversion / paired long-short take-profit — Wiśniewska (2016; issue 2015) | EUR/USD M1 bid+ask, Bank of America, calendar year 2005, 252 trading days | Reports 95% of daily maximum-return observations positive for each leg under the paper's construction; paired strategy table reports positive outcomes in selected scenarios. Not a fixed-expiry signal or a 95% binary-option WR. | **SOURCE RULE EXTRACTED; BINARY ADAPTATION BLOCKED** — original is a daily-start paired position with intraday take-profit, no reusable event-by-event signal ledger; paper itself flags one-year sample and robustness questions. |
+| LIT-004 | Regime-conditioned Z-score mean reversion with higher-timeframe momentum filter — Bhatti (2026, SSRN preprint) | Intraday FX framework; exact pair/timeframe/sample need full-text verification | Abstract describes volatility-normalized Z-score entries, higher-timeframe momentum regime filter and ATR/volatility-normalized sizing; explicitly methodological, not a guaranteed-profit claim. No verified performance metric. | **PREPRINT / SPECIFICATION AUDIT REQUIRED** — no performance evidence accepted yet; inspect formula, code, data and out-of-sample design before implementing. |
+| LIT-005 | Prior-session extremes + VWAP deviation + ADX rollover — Bhatti (2026, SSRN preprint) | FX intraday; exact pair/timeframe/sample require verification | Abstract describes short near prior-session high / positive VWAP deviation with turning-over ADX; long symmetrically near prior-session low / negative VWAP deviation. The abstract explicitly says formal backtesting and performance attribution are future work. | **IDEA ONLY; NO BACKTEST EVIDENCE** — candidate can be reconstructed as a hypothesis only after full-text parameter and data audit; do not describe as proven strategy. |
+| LIT-006 | Large-scale intraday technical-rule universe — Frömmel & Lampaert (2016) | RUB/USD tick transactions, 2000–2011; resampled 10/15/30/60-minute bars; >8,000 rules | Authors report technical profits appear more at higher frequency, but realistic observed, time-varying transaction costs erase most profitability; some exception during managed exchange-rate policy. Not EUR/USD and not binary options. | **NEGATIVE CONTROL / METHODOLOGY** — useful warning about costs and frequency; not a direct HydraAI candidate. |
+| LIT-007 | Intraday FX technical rules selected by genetic programming and optimized linear forecasting — Neely & Weller (2003) | Intraday FX data; paper studies rules selected in-sample then evaluated out-of-sample | No excess returns after realistic transaction costs and trading hours, although some patterns were stable. | **NEGATIVE CONTROL / RESEARCH METHOD** — exact candidate rules are not yet extracted; use as guardrail against overfitting, not as a high-WR candidate. |
+
 ## LIT-001 — Kolková (2017): exact source extraction
 
 **Publication:** Andrea Kolková, “Testing EMA Indicator for the Currency Pair EUR / USD”, *International Journal of Entrepreneurial Knowledge*, 5(1), 2017, pp. 35–40. DOI: 10.1515/ijek-2017-0003 (the journal page also lists DOI 10.37335/ijek.v5i1.51).
@@ -105,4 +113,45 @@ Each needs its own primary citation, full rule definition, timeframe, data perio
 
 ## Change log
 
-- 2026-11-10: created literature intake register; added LIT-001 and LIT-002 with source-level details and unresolved-specification flags. Deep-inspected LIT-002 Step1_MainRunner.m, rulegenerator.m, filter_inputs.m, DS_Test.m and EURUSD.csv. Recorded daily frequency, rolling splits, filter + k-FWE selection, exact rule families/parameter grids, OOS costs, and the missing per-rule leaderboard. No candidate promoted and no TEST-driven tuning performed.
+- 2026-11-10: created literature intake register; added LIT-001 and LIT-002 with source-level details and unresolved-specification flags. Deep-inspected LIT-002 author code and daily EURUSD.csv. Recorded daily frequency, rolling splits, Romano–Wolf selection, exact rule families/parameter grids, OOS costs, and missing per-rule leaderboard. No candidate promoted and no TEST-driven tuning performed.
+- 2026-11-10: added LIT-003 after full-PDF extraction of Wiśniewska's EUR/USD M1 study; clarified that its 95% statement is not binary WR and that its method is paired spot long/short with take-profit, not a fixed-expiry directional signal. Added two 2026 SSRN preprint hypotheses (LIT-004/005) with no performance claims, plus two intraday negative controls (LIT-006/007).
+
+
+## LIT-003 — Wiśniewska (2016): EUR/USD M1 volatility and mean reversion
+
+**Publication:** Marta Anastazja Wiśniewska, “EUR/USD Intraday Volatility vs Trading Results and Market Efficiency”, *Argumenta Oeconomica Cracoviensia*, No. 13 (2015), pp. 33–42; journal record published 2016-02-01. DOI: 10.15678/AOC.2015.1302.
+
+**Primary source:** https://ceeer.uek.krakow.pl/index.php/aoc/article/download/881/693/1521
+
+**What the paper actually tests**
+- One-minute EUR/USD bid and ask quotes from Bank of America, year 2005, 252 trading days. Each minute's last quoted transaction rate is used.
+- It examines two conventional spot legs: short (sell at bid, later buy back at ask) and long (buy at ask, later sell at bid).
+- The start time is either minute 1 of the day or minute 360 (06:00); for each start it examines all later minutes up to minute 1,440 as possible exit observations.
+- The paper's later “high volatility + mean reversion” implementation opens both long and short positions simultaneously at minute 360 and uses separate take-profit targets: 0.00086 for the short leg and 0.0005 for the long leg.
+- On days when targets are not reached (reported as 5% of sample), the paper evaluates six alternative mark/return conventions, including average return, average ± standard deviation, zero, minimum and maximum. This sensitivity is important: the result depends on how unresolved positions are scored.
+- Reported annualized return for the combined strategy under the average-return convention is 7.9131% before any stated leverage; the paper discusses 1:25 leverage separately. It is not a win rate.
+- The abstract's “95% probability” refers to the paper's distribution of daily maximum returns / target reachability construction, not to 95% profitable independent trades or 95% binary-option accuracy.
+
+**HydraAI assessment**
+- This is the most directly relevant new source so far because it uses EUR/USD M1 and both bid/ask sides.
+- It is not a ready-made CALL/PUT signal: it opens paired opposing spot positions at a fixed time and closes on price targets, whereas HydraAI needs directional fixed-expiry outcomes. A binary-option conversion would be a new hypothesis.
+- The source sample is only one calendar year (2005), the paper itself identifies robustness across start time and sample period as open questions, and its unresolved-position scoring scenarios need careful replication.
+- Register as LIT-003 source reproduction / forensic study, not as a high-WR candidate. If adapted, freeze explicit M1 rules, entry, expiry and direction before TRAIN/VALIDATION evaluation; include both directions and paired inversion only on identical timestamps. Do not carry over the paper's 95% phrase as WR.
+
+## LIT-004 — Bhatti (2026): regime-conditioned Z-score mean reversion (preprint)
+
+**Source:** https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6087107
+
+The accessible SSRN abstract describes volatility-normalized price deviations (Z-scores) as signal inputs, a higher-timeframe momentum state to avoid persistent trends, and volatility-adjusted sizing. It provides an implementation-oriented MT5/MQL5 prototype. The abstract calls this a methodological contribution and does not claim guaranteed profitability. The page lists no references and no citations. Full-text equations, market/pair, sample, costs, and any test results remain to be verified. Treat as an unvalidated hypothesis, not an evidence-backed performance candidate.
+
+## LIT-005 — Bhatti (2026): ADX-conditioned VWAP reversion (preprint)
+
+**Source:** https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6454659
+
+The accessible abstract describes a mean-reversion setup combining prior-session highs/lows, VWAP deviation, and a turning-over ADX. It explicitly states that formal backtesting and performance attribution are left for future work. This is therefore an idea with a plausible rule outline, not a demonstrated profitable strategy. Before any HydraAI implementation, verify the complete formulas, session/VWAP construction, thresholds, instrument, and timing from the full text. Do not assign it a win rate.
+
+## LIT-006 / LIT-007 — intraday technical-analysis cautionary controls
+
+- Frömmel & Lampaert (2016), “Does frequency matter for intraday technical trading?”, *Finance Research Letters* 18, 177–183, DOI 10.1016/j.frl.2016.04.014. More than 8,000 rules on RUB/USD tick transactions (2000–2011), resampled to 10/15/30/60 minutes. Real observed, time-varying costs wipe away most profits; profitability is reported mainly in a period of managed exchange rates. This is not an EUR/USD candidate, but directly supports realistic cost sensitivity.
+- Neely & Weller (2003), “Intraday technical trading in the foreign exchange market”, *Journal of International Money and Finance* 22(2), 223–237, DOI 10.1016/S0261-5606(02)00101-8. Genetic-program and optimized-linear rules are selected in-sample and assessed out-of-sample; the authors find no excess returns after realistic transaction costs and trading hours, while some patterns are stable. Use as an anti-overfitting control.
+
