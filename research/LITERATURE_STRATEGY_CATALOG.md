@@ -405,3 +405,73 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Do not optimize the detector by selecting whichever one yields the best TEST WR. No standalone trading edge is claimed by this paper.
 
 - 2026-11-11: added LIT-016 (FX fixing reversals), LIT-017 (abnormal daily move continuation/next-day reversal), and LIT-018 (jump-detector robustness). Key distinction recorded: fixing pattern is statistically strong but client returns are negative after costs; jump labels vary by method/frequency. No candidate promoted.
+
+
+## LIT-019 — Kebe & Uhl (2024): high-frequency novel-news sentiment on EUR/USD
+
+**Source**
+- Miha Kebe & Matthias Uhl, “High-Frequency Effects of Novel News on the EURUSD Exchange Rate”, *Journal of Behavioral Finance* 25(2), 2024, pp.194–207. DOI: 10.1080/15427560.2022.2100386.
+- Open full text: https://www.tandfonline.com/doi/pdf/10.1080/15427560.2022.2100386
+
+**What was tested**
+- EUR/USD 1-minute best-bid data, 2003–2018, over 6.6 million minute observations; news database contains over 100 million articles with millisecond timestamps.
+- Filters novel Euro-specific news alerts and sentiment; constructs a rolling one-hour sentiment measure.
+- Predictive relationship is found at a one-hour horizon and beyond, not contemporaneously. Positive/negative sentiment tends to precede positive/negative EUR/USD returns.
+- Authors build and backtest a news-sentiment strategy; identified inefficiencies disappear after transaction costs.
+
+**HydraAI interpretation**
+- Not a ready M1 binary candidate: the measured predictor is hourly aggregated sentiment and the reported useful horizon starts at one hour, not 1–5 minutes.
+- Potential research direction only if a timestamped news feed and sentiment data become available. Do not substitute price-only candles for missing news data.
+- Treat transaction-cost result as an important warning; no WR or binary-option profitability claim.
+- Status: `DATA_BLOCKED / LOW_PRIORITY`.
+
+## LIT-020 — Lee & Wang (2025): post-FOMC reversal in currency markets
+
+**Source**
+- Suzanne S. Lee & Minho Wang, “Jumps and Post-FOMC Announcement Returns in Currency Markets”, *The Review of Asset Pricing Studies* 15(3–4), 2025, pp.247–287. DOI: 10.1093/rapstu/raaf003.
+- Publisher abstract: https://academic.oup.com/raps/article-abstract/15/3-4/247/8159983
+
+**Finding**
+- High-frequency currency data show positive pre-FOMC announcement drift followed by weaker post-announcement returns, cancelling approximately 65% of the pre-announcement drift.
+- Most of the post-announcement reversal materializes 12–24 hours after the FOMC announcement and is related to negative jump volatility / uncertainty resolution.
+
+**HydraAI interpretation**
+- This is not a short-expiry M1/M5 entry rule: the main reversal horizon is 12–24 hours.
+- Potential use: FOMC-event regime label or a longer-horizon research hypothesis, not a CALL/PUT signal for current binary expiry.
+- Full pair-level EUR/USD metrics, exact event construction, and transaction-cost details still require full-text audit.
+- Status: `REGIME_ONLY / LOW_PRIORITY`.
+
+## LIT-021 — Fanta (2026): ECB inter-meeting communication, EUR/USD M1
+
+**Source**
+- Nicolas Fanta, “ECB Monetary Policy Communication: An Event Study on Intraday Returns and Volatility in the EUR/USD FX Market”, *Czech Journal of Economics and Finance* 76(2), 2026, pp.191–228. DOI: 10.32065/CJEF.2026.02.03.
+- Publisher full text: https://journal.fsv.cuni.cz/article/ecb-monetary-policy-communication-an-event-study-on-intraday-returns-and-volatility-in-the-eur-usd-fx-market/
+
+**What was tested**
+- EUR/USD one-minute data, 2008–2016, around 1,868 ECB inter-meeting statements classified as dovish, neutral, or hawkish.
+- Uses exclusion windows for macro/central-bank news, time-of-day-matched controls, and Monte Carlo resampling.
+- Finds no systematic intraday EUR/USD drift; cumulative abnormal returns remain within a few basis points. Realized variance shows modest, temporary compression after statements.
+
+**HydraAI interpretation**
+- Negative control against assuming every central-bank statement creates a directional edge.
+- Could motivate a volatility-compression filter, but no directional CALL/PUT strategy is established.
+- Regime is specific to unconventional/low-rate 2008–2016 and should not be generalized without validation.
+- Status: `NEGATIVE_CONTROL / FILTER_HYPOTHESIS`.
+
+## LIT-022 — Andersen, Bollerslev, Diebold & Vega (2003): macro-announcement surprises and FX jumps
+
+**Source**
+- Torben G. Andersen, Tim Bollerslev, Francis X. Diebold & Clara Vega, “Micro Effects of Macro Announcements: Real-Time Price Discovery in Foreign Exchange”, *American Economic Review* 93(1), 2003, pp.38–62. NBER Working Paper 8959 (2002).
+- NBER record: https://www.nber.org/papers/w8959
+
+**Finding**
+- Uses real-time exchange-rate quotations, expectations, and announcement outcomes across major dollar pairs including EUR.
+- Announcement surprises produce conditional mean jumps; reaction depends on announcement timing and sign, with asymmetric responses to good vs bad news.
+
+**HydraAI interpretation**
+- Event-driven hypothesis: classify scheduled releases by surprise sign and test direction only after the release, with fixed non-overlapping windows and strict exclusion of overlapping announcements.
+- Not directly executable from our candle CSV alone: consensus expectations and actual release timestamps/values are required. Do not infer “surprise” from the candle's price move.
+- No binary-option WR or exact expiry rule established by the paper.
+- Status: `DATA_BLOCKED / EVENT_HYPOTHESIS`.
+
+- 2026-11-11: added LIT-019–022. Two event/news directions are data-blocked or longer-horizon only; LIT-021 is a negative control. No candidate promoted.
