@@ -66,17 +66,20 @@ This register separates what a source actually specifies/reports, our operationa
 - Authors' replication code: https://github.com/hkalager/FX_MHT_DMA
 
 **Verified facts**
+- The authors' rule-generator explicitly checks that the input file is available for a **daily period**; its sample EURUSD.csv contains daily date rows (first displayed observation: 2007-09-18). Therefore this is not an M1/M5 source strategy set.
 - The paper studies EUR/USD, GBP/USD and USD/JPY and generates 7,846 technical rules.
+- Direct inspection of the authors' rulegenerator.m confirms these rule families: Filter rules; Simple Moving Average (SMA) crossovers; support/resistance rules; channel breakouts; and On-Balance Volume (OBV) moving-average rules. The code does not simply provide a ready-made EMA+RSI or Bollinger+RSI strategy.
+- The SMA crossover parameter grid uses periods {2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 125, 150, 200, 250}, including fast/slow combinations. Filter rules use threshold grids from 0.5% through 50%, plus lookback/holding variants. Channel-breakout code uses lookbacks {5, 10, 15, 20, 25, 50, 100, 150, 200, 250}, breakout thresholds {0.5%, 1%, 2%, 3%, 5%, 7.5%, 10%, 15%}, and fixed holding periods {5, 10, 25, 50}. OBV crossover rules use the same listed moving-average periods.
 - It applies a data-snooping procedure (Romano et al. test with Romano–Wolf balancing) to identify promising rules.
 - Selected rules are combined with Naïve Bayes, Relevance Vector Machine, Dynamic Model Averaging, Dynamic Model Selection and Bayesian regularized neural network.
 - The abstract reports small margins from technical analysis and an increase in profitability up to 5x with Bayesian methods. This is not a 5x win rate and not a binary-options WR.
 - The public author repository includes EURUSD.csv, rulegenerator.m, Step1_MainRunner.m, model code and README. The README describes OHLCV data from an anonymous FX brokerage and warns results may not reproduce exactly because random seeds are used.
 
 **Next forensic tasks**
-1. Inspect the EURUSD.csv date cadence and identify the actual study frequency.
-2. Map the exact rule families, parameter grid and forecast target from rulegenerator.m and the manuscript.
-3. Identify top screened EUR/USD rules from the paper/reproduction outputs, if available.
-4. Only then select a small number of exact rule definitions for HydraAI. If the original frequency is daily, an M1/M5 version is a new adaptation, not replication.
+1. Frequency check is complete: the public generator and EURUSD.csv are daily. Do not represent this as an intraday study.
+2. Rule families and several parameter grids have been extracted from rulegenerator.m (see verified facts above).
+3. Next inspect the remainder of the code and paper's screened results to identify exact top-performing EUR/USD rule IDs and their out-of-sample periods.
+4. Select only a small number of exact daily rules for source-faithful reproduction. Any M1/M5 conversion is a separately named adaptation and must be revalidated from scratch.
 
 ## Deferred hypotheses (not yet literature-verified)
 
@@ -93,4 +96,4 @@ Each needs its own primary citation, full rule definition, timeframe, data perio
 
 ## Change log
 
-- 2026-11-10: created literature intake register; added LIT-001 and LIT-002 with source-level details and unresolved-specification flags. No candidate promoted and no TEST-driven tuning performed.
+- 2026-11-10: created literature intake register; added LIT-001 and LIT-002 with source-level details and unresolved-specification flags. Inspected the LIT-002 authors' rule-generator and confirmed its daily frequency plus Filter, SMA Cross, S&R, Channel Breakout and OBV families. No candidate promoted and no TEST-driven tuning performed.
