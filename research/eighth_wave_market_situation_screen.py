@@ -63,7 +63,7 @@ def main():
     days=sorted({b.timestamp.date() for s in segments for b in s})
     if len(days)<30: raise SystemExit("Insufficient history")
     d1=days[int(.60*len(days))]; d2=days[int(.80*len(days))]
-    raw=defaultdict(list); accepted=defaultdict(list); families=set(); purged=0
+    raw=defaultdict(int); accepted=defaultdict(list); families=set(); purged=0
     for sid,bars in enumerate(segments):
         ev=events_for_segment(bars); families.update(ev)
         for name,items in ev.items():
