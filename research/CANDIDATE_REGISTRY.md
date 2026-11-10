@@ -84,15 +84,15 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Origin:** Inversion of the exact event set for DONCHIAN50_BREAK_CALL from the second-wave discovery screen. The original trigger is a closed M5 bullish candle whose close exceeds the highest high of the preceding 50 completed M5 candles.
 - **Inverse rule:** Keep every original trigger timestamp, entry timing, expiry, and non-overlap decision unchanged; replace CALL with PUT. Entry is at the next M5 open; expiry is the close of the fourth subsequent M5 candle (20 minutes).
 - **Data:** Same Dukascopy EUR/USD M1 BID history and chronological split as second-wave screen; assumed payout 92%; win +0.92u, loss -1u, draw 0u.
-- **Preliminary inverse results:** These figures are derived exactly by swapping W and L in the original report's identical event cohort; draws remain unchanged. A corrected rerun is in progress to independently produce full inverse outcome sequences and drawdown metrics.
+- **Corrected inverse results:** Calculated from the exact original signal events within their own continuous source segments; the first inverse patch had a stale-segment defect and its run is explicitly excluded. Corrected workflow run 42724247482 succeeded on commit 47271bd4008ad4c77a606b1f0f1d02c88cb8e14.
 
-| Split | Trades | Inverse W / L / D | Decisive WR | Net (u) |
-|---|---:|---:|---:|---:|
-| TRAIN | 1,887 | 967 / 910 / 10 | 51.52% | -20.36 |
-| VALIDATION | 606 | 345 / 253 / 8 | 57.69% | +64.40 |
-| TEST | 547 | 289 / 254 / 4 | 53.22% | +11.88 |
+| Split | Trades | Inverse W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 1,887 | 967 / 910 / 10 | 51.52% | [49.26, 53.77]% | -20.36 | 48.32 | 11 |
+| VALIDATION | 606 | 345 / 253 / 8 | 57.69% | [53.70, 61.59]% | +64.40 | 11.96 | 6 |
+| TEST | 549 | 289 / 255 / 5 | 53.12% | [48.92, 57.28]% | +10.88 | 21.96 | 8 |
 
-- **Interpretation:** Validation clears the 57% discovery threshold with a substantial sample, and TEST is above the 52.08% assumed-payout break-even rate with positive net. TRAIN is below break-even and the TEST result is materially weaker than VALIDATION. This is therefore a lead worth retaining, not evidence of stable performance.
-- **Uncertainty:** Original report's Wilson interval for the inverse validation cohort can be recomputed after corrected rerun; no block-bootstrap or matched-control test yet. Multiple-testing bias remains.
-- **Important:** Do not infer max drawdown from aggregate W/L/D counts. Await corrected report with the ordered inverse outcomes before recording drawdown or ranking this as a strong candidate.
-- **Code / report:** research/second_wave_strategy_screen.py; corrected inverse calculation workflow run 42724247482 is pending.
+- **Interpretation:** Validation clears the 57% discovery threshold with a substantial sample. TEST remains above the assumed-payout break-even rate and positive in net, but falls to 53.12%; TRAIN is also below break-even at 51.52%. The validation-to-test decline means this is a research lead, not a stable/confirmed strategy. The corrected TEST cohort contains 549 trades (not the earlier provisional 547).
+- **Uncertainty:** Wilson intervals are shown above but assume independent outcomes and do not account for serial dependence. No block-bootstrap or matched-control test yet. Multiple-testing bias remains.
+- **Important:** The result is Dukascopy BID, not executable Pocket Option quotes; payout is assumed 92%, with no spread/latency model.
+- **Code / report:** research/second_wave_strategy_screen.py; corrected report artifact from workflow run 42724247482.
