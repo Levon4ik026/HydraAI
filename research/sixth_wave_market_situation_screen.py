@@ -72,15 +72,16 @@ def discover_events(bars, day_levels, week_levels):
         # 4. Round-number rejection: touch/cross grid and close back away.
         # Grid sizes 25 and 50 pips; use only nearest level crossed by candle.
         for step,label in ((0.0025,"25PIP"),(0.0050,"50PIP")):
-            lo_level=math.floor(b.low/step)*step
-            hi_level=math.ceil(b.high/step)*step
-            if b.low<=lo_level<=b.high and b.close>lo_level and b.close>b.open:
+            first=math.ceil(b.low/step-1e-10)
+            last=math.floor(b.high/step+1e-10)
+            touched=[k*step for k in range(first,last+1)]
+            if touched and b.close>b.open and any(b.low<=level and b.close>level and b.open>=level for level in touched):
                 add_event(ev,f"ROUND_{label}_SUPPORT_REJECT_CALL",i,"CALL",bars,sess)
-            if b.low<=hi_level<=b.high and b.close<hi_level and b.close<b.open:
+            if touched and b.close<b.open and any(b.high>=level and b.close<level and b.open<=level for level in touched):
                 add_event(ev,f"ROUND_{label}_RESISTANCE_REJECT_PUT",i,"PUT",bars,sess)
         # 5/6. Three-bar impulse normalized by ATR known at signal close.
         if atr[i] and atr[i]>0:
-            move=b.close-bars[i-3].open
+            move=b.close-bars[i-2].open
             # Threshold fixed ex ante: net three-bar displacement >=1.5 ATR.
             if move>=1.5*atr[i] and b.close>b.open and (b.high-b.close)<=0.25*max(1e-12,b.high-b.low):
                 add_event(ev,"THREE_BAR_IMPULSE_CONTINUATION_CALL",i,"CALL",bars,sess)
