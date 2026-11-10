@@ -20,7 +20,7 @@
 | HYD-CAND-002 | MIXED efficiency regime | Market filter/classifier based on price-movement efficiency over the previous 15 candles; exact entry logic not recovered | Unknown | 10m | 64.77% (57W/31L/1D, n=89) | Candidate — archival, incomplete |
 | HYD-CAND-006 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 10m | VALIDATION 58.37% (n=258), TEST 49.62% (n=267) | Archived exploratory — unstable |
 | HYD-CAND-007 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 30m | VALIDATION 58.85% (n=193), TEST 48.17% (n=192) | Archived exploratory — unstable |
-| HYD-CAND-008 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 30m | TRAIN 57.27%; TEST 61.84% (n=76); VALIDATION 55.56% (n=45) | Exploratory inverse lead — borderline validation |
+| HYD-CAND-008 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 30m | TRAIN 57.27%; TEST 61.84% (n=76); VALIDATION 55.56% (n=45) | Candidate — priority for further research |
 | HYD-CAND-009 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 60m | TEST 62.90% (n=63); VALIDATION 56.76% (n=37) | Exploratory inverse lead — low sample / borderline validation |
 
 ---
@@ -177,7 +177,7 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 
 ## HYD-CAND-008 — Previous-week low sweep/reclaim, inverse PUT, 30m
 
-- **Status:** Exploratory inverse lead; not confirmed; validation is below the 57% target.
+- **Status:** Candidate — priority for further research; not confirmed. VALIDATION is currently 55.56%, below the 57% discovery target, but the candidate is retained because TRAIN is 57.27% and the untouched TEST is 61.84%. The small validation sample (n=45) makes the estimate uncertain. Any improvement work must be developed on TRAIN or a newly designated development cohort; do not repeatedly tune against this same VALIDATION or use TEST for selection.
 - **Source event:** On a closed M5 bullish candle, price trades below the previous completed UTC week's low and closes back above it. Original direction is CALL; inverse direction is PUT on the exact same event timestamps.
 - **Execution:** Entry next M5 open; expiry at close of the sixth subsequent M5 candle (30m); original/inverse share identical events and non-overlap schedule.
 - **Data / accounting:** Dukascopy EUR/USD M1 BID, 2024-01-01 through 2026-11-08; assumed payout 92% (+0.92u/-1u/0u).
