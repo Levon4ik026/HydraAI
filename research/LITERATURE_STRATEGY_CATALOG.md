@@ -736,3 +736,23 @@ No result from this audit promotes a candidate. These priorities reflect reprodu
    - No strategy promoted on a single split or a high point estimate alone; require prospective forward collection with quote-level Pocket Option comparisons before any operational claim.
 
 **Current status:** research specification prepared; no code implementation or backtest has been run in this audit. No candidate promoted.
+
+
+## LIT-014 technical correction and detector implementation — 2026-11-11
+
+A full-text line-by-line recheck of Fičura (2019), pp.5–6 and 10, clarified the exact parameter meaning and corrected the implementation plan:
+
+- The paper's (k) is the rolling local-volatility lookback in bars, not the separate frequency-specific Lee–Mykland recommended window. The paper explicitly grid-searches (k={4,8,16,32,64,128,256}), confidence (p={0.90,0.95,0.99,0.999}), and holding horizon (h={1,2,4,8,16}) on the first half of the sample.
+- Local variance is (BV_i=(1/(k-2))\sum_{j=i-k+2}^{i-1}|r_j||r_{j-1}|); local sigma is its square root; (L_i=r_i/\sigma_{BV,i}).
+- For sample length (n), (C_n=\sqrt{2\log n}/c-[\log\pi+\log\log n]/[2c\sqrt{2\log n}]), (S_n=1/[c\sqrt{2\log n}]), (c=\sqrt{2/\pi}). A jump is flagged when ((|L_i|-C_n)/S_n>-\log[-\log(p)]), equivalently (|L_i|>C_n+S_n[-\log(-\log p)]).
+- The paper's exact optimized EUR/USD rows are: M30 (k=32,p=.95,h=16), 682 OOS trades, profit 30,999, max DD -11,741, DD ratio .3268; M15 (k=64,p=.90,h=16), 1,022 trades, profit 34,545, DD -9,916, ratio .4312; M5 (k=128,p=.999,h=16), 1,229 trades, profit 12,856, DD -14,457, ratio .1101; M1 (k=64,p=.999,h=1), 3,503 trades, loss -50,517, DD -51,192, ratio -.1221.
+- Critical source execution caveat: Fičura describes entering at the close of the same period in which the jump is identified. Since the full bar return is only known at that close, this is not an executable causal fill if detection depends on the completed bar. HydraAI primary causal adaptation must enter at the next observable quote/bar open. The paper's close-fill may be reproduced only as a labelled source-convention benchmark, not the primary tradable result.
+- The paper notes weekend gaps and futures rollovers were cleaned to avoid false jumps. HydraAI must additionally segment at missing M1/M5 bars and never calculate returns across gaps.
+
+**Implementation**
+- Added `research/lee_mykland_jump.py`: pure-Python detector implementing the paper's rolling bipower estimator and Gumbel maximum threshold. It uses only returns strictly before the tested return to estimate local volatility. The sample length used in the deterministic threshold can be supplied explicitly as `threshold_n`.
+- Added `research/tests/test_lee_mykland_jump.py`: threshold monotonicity, positive/negative synthetic shock detection, invalid-price rejection and no-future-return-in-volatility checks.
+- Added `.github/workflows/lee-mykland-jump-tests.yml`: isolated CI test workflow on the research branch and manual dispatch.
+- Unit logic was locally smoke-checked against synthetic data; the GitHub Actions run is the authoritative CI result and must be checked before relying on the implementation.
+
+**Still not run:** no historical EUR/USD backtest has been executed. No candidate is promoted. The next task is to obtain the exact historical CSV path/schema available to the research workflow, validate M1 continuity/coverage and source-data provenance, then run the frozen source-parameter reproduction and separately labelled causal binary adaptations.
