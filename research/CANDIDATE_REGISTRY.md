@@ -22,6 +22,8 @@
 | HYD-CAND-007 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 30m | VALIDATION 58.85% (n=193), TEST 48.17% (n=192) | Archived exploratory — unstable |
 | HYD-CAND-008 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 30m | TRAIN 57.27%; TEST 61.84% (n=76); VALIDATION 55.56% (n=45) | Candidate — priority for further research |
 | HYD-CAND-009 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 60m | TEST 62.90% (n=63); VALIDATION 56.76% (n=37) | Exploratory inverse lead — low sample / borderline validation |
+| HYD-CAND-010 | Previous-day low close breakout, inverse CALL, 60m | Previous observed completed UTC day low close breakout | CALL (inverse) | 60m | VALIDATION 57.71% (n=202); TEST 54.59% (n=198) | Exploratory candidate lead — consistency not yet established |
+| HYD-CAND-011 | Up-shock second-bar reversal | Prior >=2x median-TR upward shock; second bar reverses | PUT | 15m | VALIDATION 56.52% (n=490); TEST 52.04% (n=594) | Exploratory lead — split instability |
 
 ---
 
@@ -232,3 +234,32 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Limitations:** Sixth-wave screen tested 14 event families × 6 expiries × 2 directions; substantial multiple-testing exposure and serial dependence remain. Wilson intervals do not correct either. Dukascopy BID is not Pocket Option executable pricing; fixed 92% payout, spread and latency assumptions are not verified.
 - **Report / workflow:** [Sixth-wave discovery run 42810760458](https://github.com/Levon4ik026/HydraAI/actions/runs/42810760458), artifact `hydra-sixth-wave-market-situation-discovery`.
 - **Code:** research/sixth_wave_market_situation_screen.py.
+
+
+## HYD-CAND-011 — Up-shock second-bar reversal, PUT, 15m
+
+- **Status:** Exploratory candidate lead only; not confirmed. Retained because VALIDATION is materially positive (56.52%, n=490, +41.16u), but TRAIN is approximately break-even (50.03%) and TEST falls to 52.04% with -0.48u. It does not meet the 57% target on VALIDATION and has not demonstrated split stability.
+- **Signal family:** A completed upward M5 shock candle has true range at least 2× the median true range of the preceding 20 completed M5 candles; the following second bar shows reversal, producing a PUT signal. Signals are based only on closed bars.
+- **Execution:** Entry at next M5 open; expiry after 15 minutes (three M5 bars); one active position per family/expiry/continuous segment/split. Original and inverse variants use identical event timestamps and schedule; only CALL/PUT direction changes.
+- **Data / accounting:** Dukascopy EUR/USD M1 BID aggregated to M5; 1,061,815 M1 rows; coverage 2024-01-01T22:00Z through 2026-11-08T23:58Z; assumed payout 92% (+0.92u/-1u/0u). This is not Pocket Option executable pricing.
+- **Chronological splits:** TRAIN before 2025-09-17; VALIDATION 2025-09-17 through 2026-04-14; TEST from 2026-04-14. Boundary-crossing outcomes purged.
+- **Original PUT results:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) |
+|---|---:|---:|---:|---:|---:|---:|
+| TRAIN | 1,573 | 782 / 781 / 10 | 50.03% | [47.56, 52.51]% | -61.56 | 71.60 |
+| VALIDATION | 490 | 273 / 210 / 7 | 56.52% | [52.07, 60.87]% | +41.16 | 18.16 |
+| TEST | 594 | 306 / 282 / 6 | 52.04% | [48.00, 56.05]% | -0.48 | 32.84 |
+
+- **Exact-schedule inverse CALL audit:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) |
+|---|---:|---:|---:|---:|---:|---:|
+| TRAIN | 1,573 | 781 / 782 / 10 | 49.97% | [47.49, 52.44]% | -63.48 | 82.44 |
+| VALIDATION | 490 | 210 / 273 / 7 | 43.48% | [39.13, 47.93]% | -79.80 | 81.64 |
+| TEST | 594 | 282 / 306 / 6 | 47.96% | [43.95, 52.00]% | -46.56 | 53.36 |
+
+- **Interpretation:** The inverse is materially worse, so retain the original PUT direction as the only exploratory lead. However, its validation advantage does not carry into TEST. This is a useful candidate for later market-context investigation, not evidence of a stable strategy. Do not tune against this TEST.
+- **Limitations:** 8 event families × 6 expiries × 2 directions screened; substantial multiple-testing exposure. Wilson intervals do not account for serial dependence. No block bootstrap, matched controls, or platform quote/spread/latency validation. TEST has prior exploratory exposure.
+- **Report / workflow:** [Eighth-wave discovery run 42814659845](https://github.com/Levon4ik026/HydraAI/actions/runs/42814659845), artifact `hydra-eighth-wave-market-situation-discovery`.
+- **Code:** `research/eighth_wave_market_situation_screen.py`; discovery commit `db311cef57b4ff441361b8b00bd88b58c8fb4704`.
