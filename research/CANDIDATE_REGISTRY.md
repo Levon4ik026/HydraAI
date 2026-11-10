@@ -18,6 +18,10 @@
 |---|---|---|---|---:|---|---|
 | HYD-CAND-001 | RSI14-70 bearish reversal | M5 RSI(14) >= 70 and bearish signal candle | PUT | 5m | TEST 57.14% (n=218); VALIDATION 57.89% (n=192) | Candidate — priority |
 | HYD-CAND-002 | MIXED efficiency regime | Market filter/classifier based on price-movement efficiency over the previous 15 candles; exact entry logic not recovered | Unknown | 10m | 64.77% (57W/31L/1D, n=89) | Candidate — archival, incomplete |
+| HYD-CAND-006 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 10m | VALIDATION 58.37% (n=258), TEST 49.62% (n=267) | Archived exploratory — unstable |
+| HYD-CAND-007 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 30m | VALIDATION 58.85% (n=193), TEST 48.17% (n=192) | Archived exploratory — unstable |
+| HYD-CAND-008 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 30m | TRAIN 57.27%; TEST 61.84% (n=76); VALIDATION 55.56% (n=45) | Exploratory inverse lead — borderline validation |
+| HYD-CAND-009 | Previous-week low sweep/reclaim inverse | Previous completed UTC week low swept, M5 bullish candle closes back above | PUT (inverse) | 60m | TEST 62.90% (n=63); VALIDATION 56.76% (n=37) | Exploratory inverse lead — low sample / borderline validation |
 
 ---
 
@@ -131,3 +135,80 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 
 - **Interpretation:** Validation reaches 57.50% with a substantial sample and positive net; TEST remains positive at 53.73%, but TRAIN is near break-even and the max loss streak in TEST is 11. Interesting inverse lead, but not robust enough for confirmation.
 - **Limitations:** same discovery-wide multiple-testing, serial dependence, assumed payout and BID-vs-platform limitations. Requires independent replication and matched control.
+
+
+## HYD-CAND-006 — Previous-day high sweep/reclaim, inverse CALL, 10m
+
+- **Status:** Archived exploratory inverse lead; not promoted and not confirmed.
+- **Source event:** On a closed M5 bearish candle, price trades above the previous observed UTC trading day's completed high and closes back below it. Original direction is PUT; inverse direction is CALL on the exact same event timestamps.
+- **Execution:** Entry at next M5 open; expiry at close of the second subsequent M5 candle (10m). Original/inverse share the same events and non-overlap schedule.
+- **Data / accounting:** Dukascopy EUR/USD M1 BID, 2024-01-01 through 2026-11-08; assumed payout 92% (+0.92u/-1u/0u).
+- **Results:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 764 | 381 / 380 / 3 | 50.07% | [46.52, 53.61]% | -29.48 | 55.40 | 9 |
+| VALIDATION | 258 | 150 / 107 / 1 | 58.37% | [52.26, 64.23]% | +31.00 | 11.48 | 7 |
+| TEST | 267 | 131 / 133 / 3 | 49.62% | [43.64, 55.61]% | -12.48 | 17.16 | 5 |
+
+- **Interpretation:** Validation exceeds the discovery threshold with a positive assumed-payout net, but TRAIN is near 50% and TEST falls below break-even with negative net. Clear instability; retain only as a historical inverse lead.
+- **Limitations:** Discovery-wide multiple testing, serial dependence, no matched control or dependence-aware interval; BID feed differs from Pocket Option executable quotes; payout fixed at 92%.
+- **Report / workflow:** [Fourth-wave discovery report artifact](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511), run 42798893511.
+- **Code:** research/fourth_wave_sweep_reclaim_screen.py.
+
+## HYD-CAND-007 — Previous-day high sweep/reclaim, inverse CALL, 30m
+
+- **Status:** Archived exploratory inverse lead; not promoted and not confirmed.
+- **Source event:** Same previous-observed-UTC-day high sweep/reclaim bearish M5 event as HYD-CAND-006. Original direction PUT; inverse CALL.
+- **Execution:** Entry next M5 open; expiry at close of the sixth subsequent M5 candle (30m); identical event timestamps and non-overlap schedule for both directions.
+- **Data / accounting:** Same Dukascopy EUR/USD M1 BID history and 92% assumed payout as HYD-CAND-006.
+- **Results:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 565 | 286 / 275 / 4 | 50.98% | [46.85, 55.10]% | -11.88 | 32.96 | 8 |
+| VALIDATION | 193 | 113 / 79 / 1 | 58.85% | [51.79, 65.57]% | +24.96 | 7.52 | 4 |
+| TEST | 192 | 92 / 99 / 1 | 48.17% | [41.19, 55.22]% | -14.36 | 18.96 | 7 |
+
+- **Interpretation:** Strong-looking validation is contradicted by both TRAIN and TEST; TEST net is negative. Do not promote.
+- **Limitations / provenance:** Same as HYD-CAND-006; exact same event family with a different predeclared expiry, not independent evidence.
+- **Report / workflow:** [Fourth-wave discovery report artifact](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511), run 42798893511.
+- **Code:** research/fourth_wave_sweep_reclaim_screen.py.
+
+## HYD-CAND-008 — Previous-week low sweep/reclaim, inverse PUT, 30m
+
+- **Status:** Exploratory inverse lead; not confirmed; validation is below the 57% target.
+- **Source event:** On a closed M5 bullish candle, price trades below the previous completed UTC week's low and closes back above it. Original direction is CALL; inverse direction is PUT on the exact same event timestamps.
+- **Execution:** Entry next M5 open; expiry at close of the sixth subsequent M5 candle (30m); original/inverse share identical events and non-overlap schedule.
+- **Data / accounting:** Dukascopy EUR/USD M1 BID, 2024-01-01 through 2026-11-08; assumed payout 92% (+0.92u/-1u/0u).
+- **Results:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 227 | 130 / 97 / 0 | 57.27% | [50.77, 63.53]% | +22.60 | 8.80 | 5 |
+| VALIDATION | 45 | 25 / 20 / 0 | 55.56% | [41.18, 69.06]% | +3.00 | 3.56 | 3 |
+| TEST | 76 | 47 / 29 / 0 | 61.84% | [50.60, 71.94]% | +14.24 | 5.00 | 5 |
+
+- **Interpretation:** TRAIN and TEST are encouraging, but VALIDATION is below threshold and small (45 trades). TEST must not be used to promote or tune this candidate. Retain for later independent analog-period study only.
+- **Limitations:** Weekly-level family is sparse; confidence intervals are wide; serial dependence and multiple-testing effects unmodeled; BID feed and fixed payout do not reproduce Pocket Option execution.
+- **Report / workflow:** [Fourth-wave discovery report artifact](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511), run 42798893511.
+- **Code:** research/fourth_wave_sweep_reclaim_screen.py.
+
+## HYD-CAND-009 — Previous-week low sweep/reclaim, inverse PUT, 60m
+
+- **Status:** Exploratory inverse lead; not confirmed; validation is borderline and sample is very small.
+- **Source event:** Same previous-completed-UTC-week low sweep/reclaim bullish M5 event as HYD-CAND-008. Original direction CALL; inverse PUT.
+- **Execution:** Entry next M5 open; expiry at close of the twelfth subsequent M5 candle (60m); identical event timestamps and non-overlap schedule for both directions.
+- **Data / accounting:** Same Dukascopy EUR/USD M1 BID history and 92% assumed payout as HYD-CAND-008.
+- **Results:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 175 | 89 / 85 / 1 | 51.15% | [43.78, 58.47]% | -3.12 | 8.28 | 4 |
+| VALIDATION | 37 | 21 / 16 / 0 | 56.76% | [40.91, 71.33]% | +3.32 | 3.32 | 2 |
+| TEST | 63 | 39 / 23 / 1 | 62.90% | [50.46, 73.84]% | +12.88 | 3.08 | 3 |
+
+- **Interpretation:** TEST is high but cannot be used for selection; VALIDATION is just below threshold with only 37 trades and a wide interval, while TRAIN is close to break-even. Keep as a low-sample exploratory lead only.
+- **Limitations:** Weekly-level family is sparse; confidence intervals are wide; serial dependence and multiple-testing effects unmodeled; BID feed and fixed payout do not reproduce Pocket Option execution.
+- **Report / workflow:** [Fourth-wave discovery report artifact](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511), run 42798893511.
+- **Code:** research/fourth_wave_sweep_reclaim_screen.py.
