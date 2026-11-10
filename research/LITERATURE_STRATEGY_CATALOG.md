@@ -605,3 +605,24 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Status: `METHODOLOGY_CONTROL / DATA_QUALITY_FEATURE`.
 
 - 2026-11-11: added LIT-027–029. Catalog now contains 29 literature records. These include strategy leads, filters, cross-market hypotheses and methodological controls; the total is not a count of proven binary strategies. No candidate promoted.
+
+
+## LIT-030 — Novotný, Petrov & Urga (2015): trading clustered FX price jumps
+
+**Source**
+- Jan Novotný, Dmitri Petrov & Giovanni Urga, “Trading price jump clusters in foreign exchange markets”, *Journal of Financial Markets* 24 (2015), pp.66–92. DOI: 10.1016/j.finmar.2015.03.002.
+- Publisher record: https://www.sciencedirect.com/science/article/pii/S1386418115000270
+
+**What was tested**
+- High-frequency spot FX data for eight USD currency pairs, sampled at five-minute frequency from 2013-03-01 to 2013-06-06.
+- Identifies jumps and clusters of jumps, then evaluates whether clustered jump events contain tradable information.
+- Authors report that jumps carry a tradable signal across the currencies studied; high bid–ask spreads remove excess profits for emerging-market currencies. The euro/yen combination is reported as comparatively robust to holding period and U.S.-related risk.
+- This is a short sample window and the trading exercise is spot entry/exit, not fixed-expiry binary options.
+
+**HydraAI interpretation**
+- High-priority reproducible hypothesis family alongside LIT-014: detect a first statistically significant EUR/USD jump, then test predeclared continuation and reversal responses after subsequent clustered jumps.
+- Do not assume the sign of the edge from the abstract; recover the exact paper rule and pair-level results from full text before implementation. Run the exact inverse on identical event timestamps, entry, expiry and non-overlap schedule.
+- Because jump events cluster, observations are dependent; use event/day block resampling and avoid counting every candle as an independent trade.
+- Status: `PROMISING_EVENT_STRATEGY / FULL_TEXT_AUDIT_REQUIRED`.
+
+- 2026-11-11: added LIT-030. Catalog now contains 30 literature records, reaching the agreed upper target. No candidate promoted; source-level evidence is not a HydraAI binary-options result.
