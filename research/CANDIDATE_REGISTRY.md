@@ -96,3 +96,38 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Uncertainty:** Wilson intervals are shown above but assume independent outcomes and do not account for serial dependence. No block-bootstrap or matched-control test yet. Multiple-testing bias remains.
 - **Important:** The result is Dukascopy BID, not executable Pocket Option quotes; payout is assumed 92%, with no spread/latency model.
 - **Code / report:** research/second_wave_strategy_screen.py; corrected report artifact from workflow run 42724247482.
+
+
+## HYD-CAND-004 — ATR expansion fade, CALL, 20m (inverse-direction lead)
+
+- **Status:** Candidate lead for further validation; not confirmed.
+- **Origin signal:** ATR(14) expands above 1.25 × its prior value and the closed M5 candle is bearish with body size at least 0.5 × ATR. Original event direction is PUT.
+- **Inverse rule:** CALL on the exact same bearish ATR-expansion events; no changes to signal timestamp, entry, expiry, split or non-overlap. Entry next M5 open; expiry at close of the fourth subsequent M5 candle (20m).
+- **Data / accounting:** Dukascopy EUR/USD M1 BID, 2024-01-01 to 2026-11-08; 92% assumed payout (+0.92u/-1u/0u). Not Pocket Option executable pricing.
+- **Exact-event inversion audit:** workflow run 42726660593; artifact `hydra-first-wave-inversion-audit`; code `research/first_wave_inversion_screen.py`.
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 342 | 184 / 155 / 3 | 54.28% | [48.96, 59.50]% | +14.28 | 19.28 | 8 |
+| VALIDATION | 92 | 51 / 40 / 1 | 56.04% | [45.81, 65.79]% | +6.92 | 7.24 | 5 |
+| TEST | 109 | 62 / 46 / 1 | 57.41% | [47.99, 66.32]% | +11.04 | 7.56 | 4 |
+
+- **Interpretation:** positive payout-adjusted net in all three chronological splits; WR increases from 54.28% TRAIN to 56.04% VALIDATION and 57.41% TEST. This is the most directionally consistent inverse lead in this first-wave audit, but validation/test samples are modest and Wilson intervals are wide. The 57.41% TEST result is descriptive, not a parameter-selection target. Requires new independent period / forward validation and dependence-aware uncertainty.
+- **Limitations:** broad multi-family/multi-expiry discovery creates multiple-testing bias; no matched control or block bootstrap yet; assumed payout and BID-vs-platform mismatch remain. Keep separate from the original ATR_EXPANSION_PUT strategy.
+
+## HYD-CAND-005 — Inside-bar breakout fade, CALL, 30m (inverse-direction lead)
+
+- **Status:** Candidate lead; not confirmed.
+- **Origin signal:** On closed M5 bars, the prior candle is inside its mother candle (`high[i-1] < high[i-2]` and `low[i-1] > low[i-2]`); current candle closes below the mother candle low and is bearish. Original event direction is PUT.
+- **Inverse rule:** CALL on the exact same downside-break events. Entry next M5 open; expiry at close of the sixth subsequent M5 candle (30m). All event timestamps and non-overlap choices are shared by original/inverse variants.
+- **Data / accounting:** same Dukascopy EUR/USD M1 BID history and 92% assumed payout as HYD-CAND-004.
+- **Exact-event inversion audit:** workflow run 42726660593; artifact `hydra-first-wave-inversion-audit`.
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 1,500 | 774 / 715 / 11 | 51.98% | [49.44, 54.51]% | -2.92 | 49.64 | 13 |
+| VALIDATION | 483 | 276 / 204 / 3 | 57.50% | [53.04, 61.85]% | +49.92 | 9.72 | 6 |
+| TEST | 489 | 259 / 223 / 7 | 53.73% | [49.27, 58.14]% | +15.28 | 13.88 | 11 |
+
+- **Interpretation:** Validation reaches 57.50% with a substantial sample and positive net; TEST remains positive at 53.73%, but TRAIN is near break-even and the max loss streak in TEST is 11. Interesting inverse lead, but not robust enough for confirmation.
+- **Limitations:** same discovery-wide multiple-testing, serial dependence, assumed payout and BID-vs-platform limitations. Requires independent replication and matched control.
