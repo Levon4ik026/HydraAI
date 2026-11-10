@@ -337,3 +337,71 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Not a ready fixed-expiry binary strategy. Exact full-paper trade definitions and parameter table should be extracted only if this control becomes necessary.
 
 - 2026-11-11: added LIT-013 (Manahov et al. adaptive STGP on M1 FX), LIT-014 (Fičura after-jump strategy with full parameter/OOS table), and LIT-015 (Mastný indicator-frequency comparison). LIT-014 is flagged as the strongest concrete EUR/USD M15/M30 research lead, with an explicit warning that spot-horizon results do not establish binary-option WR. No candidate promoted.
+
+
+| LIT-016 | FX benchmark-fixing intraday reversal — Krohn, Mueller & Whelan (2024) | G9 currencies including EUR/USD; high-frequency quotes 1999–2019 | Strong statistically significant W-shaped dollar return pattern around Tokyo, ECB and London fixes; EUR row: −1.80 bps pre-Tokyo, +2.34 post-Tokyo, −3.53 pre-ECB, +0.63 ECB-to-London, +2.73 post-London. Crucially, authors find client trading returns become significantly negative after transaction costs. | **MARKET MICROSTRUCTURE / FILTER HYPOTHESIS ONLY** — do not treat raw reversal pattern as directly tradable. Fix windows and DST/session calendar could be used as regime labels; executable binary edge unproven. |
+| LIT-017 | Dynamic-trigger abnormal daily moves and intraday continuation/reversal — Caporale & Plastun (2020) | EUR/USD and four other FX pairs; daily and hourly data, 2008–2018 | Abnormal daily moves are followed by intraday movement in the same direction during that day, then movement in the opposite direction on the following day; authors report abnormal-profit strategies. | **TWO-HORIZON HYPOTHESIS** — same-day continuation vs next-day reversal. Not M1/M5; dynamic trigger threshold and trading simulation details must be reproduced from full text before adapting. |
+| LIT-018 | Reliability of FX jump-detection procedures — (2022) | 11 FX pairs including EUR/USD; 1m, 5m, 15m, 30m, 60m; 2010–2016 | BNS and Ait-Sahalia–Jacod methods detect materially different jump counts across frequencies; for EUR/USD BNS counts 1,433 (1m), 1,216 (5m), 1,258 (15m), 1,433 (30m), 1,336 (60m), while AJ counts 1,242, 1,332, 1,301, 1,242, 1,279 respectively. | **METHODOLOGY CONTROL FOR LIT-014** — jump labels are detector- and frequency-dependent; require robustness across at least two detectors and frozen thresholds. Not a trading strategy. |
+
+## LIT-016 — Krohn, Mueller & Whelan (2024): FX fixing return reversals
+
+**Publication:** Ingomar Krohn, Philippe Mueller & Paul Whelan, “Foreign Exchange Fixings and Returns around the Clock”, *The Journal of Finance*, 79(1), 2024, pp. 541–578. DOI: 10.1111/jofi.13306. First published online 18 December 2023.
+
+**Primary source (open access):** https://onlinelibrary.wiley.com/doi/full/10.1111/jofi.13306
+
+**Verified source details**
+- High-frequency indicative bid/ask quotes from Refinitiv Tick History for G9 currencies including EUR/USD, January 1999–December 2019; tick-by-tick data.
+- The paper identifies systematic dollar appreciation before and depreciation after Tokyo, ECB/Frankfurt and London fixes.
+- Fixing times used in the paper: Tokyo 09:55 local; ECB 14:15 Frankfurt local; London 16:00 London local. Its main tables use Eastern Time windows, so any Hydra session calendar must convert dates with daylight-saving transitions rather than hard-code one UTC offset.
+- EUR row of Table I reports average returns (bps): pre-Tokyo −1.80 (t=−8.84); post-Tokyo +2.34 (t=9.29); pre-ECB −3.53 (t=−7.25); ECB-to-London +0.63 (t=1.36, not significant at conventional levels); post-London +2.73 (t=6.78).
+- The pattern is tied to the publication/existence of reference fixes; natural experiments using Japanese holidays and pre-fix eras support this interpretation.
+- The authors link the pattern to inventory risk and unconditional client demand for USD around fixes; reversals are larger in high-volatility/high-order-imbalance states.
+- Critical tradability caveat: the paper explicitly finds that the unconditional pattern cannot easily be arbitraged in the client market; transaction-cost-adjusted client returns are significantly negative, while liquidity-provision returns are positive.
+
+**HydraAI interpretation**
+- This is a strong EUR/USD intraday market-structure result, but not a simple directional strategy for a retail binary-options account.
+- Do not convert the table's average bps into binary WR. It is an average return pattern over broad windows, not per-entry fixed-expiry outcomes.
+- Potential use: add fix-window/session labels as explanatory features or as a pre-registered market-regime filter for other candidates, then test whether candidate performance changes around the fixes. Do not trade the fixing reversal blindly.
+- Any test must use correct historical local-time/DST conversion, exclude/flag holidays when the relevant fix is not published, and include realistic Pocket Option payout/quote limitations. No candidate promotion from this paper alone.
+
+## LIT-017 — Caporale & Plastun (2020): abnormal daily FX moves
+
+**Publication:** Guglielmo Maria Caporale & Alex Plastun, “Daily abnormal price changes and trading strategies in the FOREX”, *Journal of Economic Studies*, 48(1), 2021, pp. 211–222. DOI: 10.1108/JES-11-2019-0503. Published online/accepted 2020.
+
+**Primary full-text PDF:** https://bura.brunel.ac.uk/bitstream/2438/20567/5/FullText.pdf  
+**Repository record:** https://dspace.brunel.ac.uk/handle/2438/20567
+
+**Verified method/results**
+- EUR/USD, USD/JPY, USD/CAD, AUD/USD and EUR/JPY; daily and hourly MetaQuotes data, 2008-01-01 to 2018-12-31.
+- Abnormal daily moves are detected with a dynamic trigger: average return plus/minus a threshold expressed in standard deviations. Returns are computed from daily open to close to reduce gap distortions.
+- For EUR/USD, the paper reports statistically significant differences between hourly intraday dynamics on abnormal-move days and normal days. Positive abnormal days show significant effects in most European and US sessions and half of the Asian session; negative abnormal moves show strongest volatility in the US session.
+- Cumulative abnormal returns rise in the direction of the abnormal move during the same day; the average time at which the abnormal move becomes detectable is 19:00 for positive moves and 17:00 for negative moves (paper's time convention).
+- The abstract/conclusion report same-day continuation and opposite-direction movement on the following day; authors report trading simulations with abnormal profits.
+
+**HydraAI interpretation and limits**
+- This suggests a two-stage hypothesis: continuation after an abnormal daily move within the same day, then reversal on the following day. These are different horizons and must be registered separately.
+- Source uses daily abnormal triggers and hourly intraday returns, not M1/M5 micro-signals. It cannot establish short expiry WR.
+- Recover exact standard-deviation multiplier, rolling estimation window, trading entry/exit, session schedule and costs from the full PDF before reproducing. Do not choose these parameters from Hydra TEST.
+- A binary adaptation must test both directions: continuation and exact inversion, with identical event timestamps; expiry must be separately predeclared.
+
+## LIT-018 — FX jump-detection robustness (2022)
+
+**Publication:** “The jump dynamics of foreign exchange rates: how reliable and consistent are the results of widely utilized jump detection procedures”, *Heliyon*, 8(10), 2022, e10909. DOI: 10.1016/j.heliyon.2022.e10909.
+
+**Primary open-access source:** https://pmc.ncbi.nlm.nih.gov/articles/PMC9563180/  
+**Publisher record:** https://www.sciencedirect.com/science/article/pii/S2405844022021971
+
+**Verified facts**
+- Compares BNS (Barndorff-Nielsen–Shephard) and AJ (Aït-Sahalia–Jacod) jump tests on 11 currency pairs, including EUR/USD, from 2010-01-01 to 2016-12-31.
+- Uses indicative bid/ask quotes and midpoint log-prices at 1m, 5m, 15m, 30m and 60m frequencies.
+- Jump detection is based on a 95% significance level. The authors report that jump counts vary materially with both detector and sampling frequency.
+- For EUR/USD, Table 1 gives BNS counts 1,433 / 1,216 / 1,258 / 1,433 / 1,336 for 1m / 5m / 15m / 30m / 60m, and AJ counts 1,242 / 1,332 / 1,301 / 1,242 / 1,279.
+- For EUR/USD at 5m, BNS identifies 1,216 jump intervals out of 735,264 (about 0.165%); the number of jump days is much higher because at least one jump can occur on a day.
+- The paper also examines links between jumps and scheduled macroeconomic announcements.
+
+**HydraAI interpretation**
+- This is a methodological control for LIT-014: a jump is not an objective label independent of sampling frequency and statistical detector.
+- If we test jump-following or jump-reversal candidates, compare at least two defensible detection methods (e.g. Lee–Mykland vs BNS/AJ where implementable), record disagreement, and freeze detector/thresholds before VALIDATION.
+- Do not optimize the detector by selecting whichever one yields the best TEST WR. No standalone trading edge is claimed by this paper.
+
+- 2026-11-11: added LIT-016 (FX fixing reversals), LIT-017 (abnormal daily move continuation/next-day reversal), and LIT-018 (jump-detector robustness). Key distinction recorded: fixing pattern is statistically strong but client returns are negative after costs; jump labels vary by method/frequency. No candidate promoted.
