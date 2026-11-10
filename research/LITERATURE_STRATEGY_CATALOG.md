@@ -550,3 +550,58 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Status: `VOLATILITY_REGIME_FILTER / PROXY_LIMITATION`.
 
 - 2026-11-11: added LIT-024–026. Catalog now has 26 literature records. Of these, some are strategy leads, some filters/regime hypotheses, and some negative/methodological controls; the count is not 26 proven binary strategies. No candidate promoted.
+
+
+## LIT-027 — Evans & Speight (2010): EUR exchange-rate 5-minute volatility periodicity and news response
+
+**Source**
+- Kevin P. Evans & Alan E. H. Speight, “Intraday periodicity, calendar and announcement effects in Euro exchange rate volatility”, *Research in International Business and Finance* 24(1), 2010, pp.82–101. DOI: 10.1016/j.ribaf.2009.04.001.
+- Publisher record: https://www.sciencedirect.com/science/article/pii/S0275531909000166
+- Cardiff repository record: https://orca.cardiff.ac.uk/id/eprint/19015/
+
+**What was tested**
+- Interbank bid/ask quotes for EUR/USD, EUR/GBP and EUR/JPY, sampled every five minutes from 2002-01-01 to 2003-07-31.
+- Compares Fourier flexible-form and cubic-spline filters for intraday volatility periodicity.
+- Calendar/time-of-day effects are often only marginally significant and economically insignificant.
+- Macroeconomic announcement effects are larger and absorbed more quickly than the Fourier filter suggests; US releases dominate, while Eurozone, German and UK releases also matter. Eurozone announcements can affect volatility before release.
+
+**HydraAI interpretation**
+- Useful M5 volatility-normalization and event-window control, not a directional CALL/PUT edge.
+- Pre-register a small set of release windows and compare volatility-normalized outcomes against matched non-event periods. Do not interpret volatility spikes as direction.
+- Status: `VOLATILITY_FILTER / EVENT_CONTROL`.
+
+## LIT-028 — Elaut, Frömmel & Lampaert (2018): intraday momentum in a market-hours FX market
+
+**Source**
+- Gert Elaut, Michael Frömmel & Kevin Lampaert, “Intraday momentum in FX markets: Disentangling informed trading from liquidity provision”, *Journal of Financial Markets* 37, 2018, pp.35–51. DOI: 10.1016/j.finmar.2016.09.002.
+- Publisher record: https://www.sciencedirect.com/science/article/pii/S1386418116300313
+- Ghent University record: https://biblio.ugent.be/publication/8060014
+
+**What was tested**
+- Transaction-level RUB/USD data from the Moscow Interbank Currency Exchange, 2005–2014.
+- Intraday momentum is defined as a positive relation between the first and last half-hour returns.
+- Authors attribute the effect mainly to liquidity providers' aversion to overnight inventory risk; it is stronger during financial crises and depends on market trading hours.
+
+**HydraAI interpretation**
+- Not EUR/USD and not a 24-hour decentralized spot market; do not transfer the result as an established EUR/USD rule.
+- It motivates one narrowly pre-registered exploratory test: whether an early-session return predicts a later-session return conditional on a defined session regime. Compare against no-momentum and exact-inverse controls.
+- Status: `CROSS_MARKET_HYPOTHESIS / LOW_PRIORITY`.
+
+## LIT-029 — Stauskas & Sucarrat (2025): non-stationary intraday zero-return periodicity in FX
+
+**Source**
+- Ovidijus Stauskas & Genaro Sucarrat, “Testing the Zero-Process of Intraday Financial Returns for Non-Stationary Periodicity”, *Journal of Financial Econometrics* 23(3), 2025, nbaf013. DOI: 10.1093/jjfinec/nbaf013.
+- Publisher full text: https://academic.oup.com/jfec/article/23/3/nbaf013/8117923
+
+**What was tested**
+- Six FX rates from Forexite, 2017-01-02 to 2018-12-31, including USD/EUR (inverse quote of EUR/USD), at frequencies from 1 minute to hourly.
+- At 1-minute frequency, zero-return observations account for roughly 38.4%–48.9%, depending on pair; zero indicators exhibit intraday and across-day dependence.
+- The authors find strong non-stationary intraday periodicity in the zero-return process, particularly at high frequencies. Their dependence-robust tests also find evidence at selected 5-minute specifications.
+- This is a study of the occurrence of zero returns, not positive/negative return direction.
+
+**HydraAI interpretation**
+- Important methodological warning for M1/M5: flat candles/zero returns are not identically distributed through the day, and observations are dependent across intraday periods and days.
+- Before scoring directional candidates, report zero-return rate by fixed time bucket and use dependence-aware uncertainty estimates; avoid treating every candle as an independent Bernoulli trial.
+- Status: `METHODOLOGY_CONTROL / DATA_QUALITY_FEATURE`.
+
+- 2026-11-11: added LIT-027–029. Catalog now contains 29 literature records. These include strategy leads, filters, cross-market hypotheses and methodological controls; the total is not a count of proven binary strategies. No candidate promoted.
