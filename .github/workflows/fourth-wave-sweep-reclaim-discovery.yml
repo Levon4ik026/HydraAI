@@ -2,6 +2,10 @@ name: Fourth-wave prior-period sweep/reclaim discovery
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fourth-wave-sweep-reclaim-discovery.yml"
 
 permissions:
   contents: read
