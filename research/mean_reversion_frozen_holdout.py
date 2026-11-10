@@ -26,6 +26,8 @@ SCAN_START = 41
 TAIL_GUARD = 13  # preserve the original standalone screen's candidate eligibility
 Z_THRESHOLD = 1.5
 HOLDOUT_START = datetime(2026, 11, 10, tzinfo=timezone.utc)  # default; CI supplies each run date
+TRAIN_END_DATE = datetime(2025, 9, 17, tzinfo=timezone.utc).date()
+VALIDATION_END_DATE = datetime(2026, 4, 14, tzinfo=timezone.utc).date()
 RANDOM_REPLICATES = 10_000
 RANDOM_SEED = 20261109
 EPS = 1e-12
@@ -145,15 +147,19 @@ def classify_period(signal_time: datetime, settle_time: datetime,
 
 
 def chronological_boundaries(segments):
-    days = sorted({
+    """Return the original frozen dates; appending new data must not move splits."""
+    observed_days = {
         bar.timestamp.date()
         for segment in segments
         for bar in segment
         if bar.timestamp < HOLDOUT_START
-    })
-    if len(days) < 30:
-        raise ValueError(f"Need at least 30 pre-holdout M5 dates, found {len(days)}")
-    return days[int(0.60 * len(days))], days[int(0.80 * len(days))]
+    }
+    has_train = any(day < TRAIN_END_DATE for day in observed_days)
+    has_validation = any(TRAIN_END_DATE <= day < VALIDATION_END_DATE for day in observed_days)
+    has_test = any(day >= VALIDATION_END_DATE for day in observed_days)
+    if not (has_train and has_validation and has_test):
+        raise ValueError("Dataset does not span the frozen TRAIN/VALIDATION/TEST boundaries")
+    return TRAIN_END_DATE, VALIDATION_END_DATE
 
 
 def event_stream(segments, side: str, regime_only: bool = False):

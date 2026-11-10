@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mean_reversion_frozen_holdout import (
     HOLDOUT_START, Bar, prior_close_zscore, event_stream, outcome,
     nonoverlap, classify_period, random_direction_baseline,
-    load_dukascope_m1,
+    load_dukascope_m1, chronological_boundaries,
 )
 
 
@@ -80,6 +80,19 @@ class FrozenMeanReversionTests(unittest.TestCase):
         accepted = nonoverlap(events)
         self.assertEqual(len(accepted), 2)
         self.assertEqual([x["index"] for x in accepted], [10, 11])
+
+    def test_historical_split_boundaries_do_not_move_when_new_dates_are_added(self):
+        timestamps = [
+            datetime(2025, 9, 16, tzinfo=timezone.utc),
+            datetime(2025, 9, 17, tzinfo=timezone.utc),
+            datetime(2026, 4, 13, tzinfo=timezone.utc),
+            datetime(2026, 4, 14, tzinfo=timezone.utc),
+            HOLDOUT_START,
+        ]
+        bars = [Bar(ts, 1.0, 1.0, 1.0, 1.0) for ts in timestamps]
+        d1, d2 = chronological_boundaries([bars])
+        self.assertEqual(d1, datetime(2025, 9, 17).date())
+        self.assertEqual(d2, datetime(2026, 4, 14).date())
 
     def test_default_holdout_starts_after_previously_inspected_nov9_window(self):
         self.assertEqual(HOLDOUT_START, datetime(2026, 11, 10, tzinfo=timezone.utc))
