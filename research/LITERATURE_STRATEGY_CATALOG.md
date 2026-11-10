@@ -271,3 +271,69 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Because ORB signals cluster around session opens and volatility bursts, report event counts and dependence by day/session, and use non-overlapping outcomes.
 
 - 2026-11-11: added LIT-010 adaptive genetic-programming FX system, LIT-011 channel-pattern FX study, and LIT-012 crude-oil ORB study. Explicitly separated verified abstract-level facts from unavailable full-text parameters; no reported result was converted to binary WR and no candidate promoted.
+
+
+| LIT-013 | Adaptive Strongly Typed Genetic Programming on M1 FX — Manahov, Hudson & Gebka (2014) | M1 data, EUR/USD plus five other major FX pairs | Abstract reports statistically and economically significant excess returns after transaction costs; STGP outperforms traditional econometric forecasting models in the study. | **HIGH-PRIORITY SOURCE AUDIT** — direct EUR/USD M1 and adaptive rule learning, but no exact WR; full formulas, sample dates, costs and reproducible rule definitions must be extracted before any adaptation. |
+| LIT-014 | After-jump momentum using Lee–Mykland L-estimator — Fičura (2019) | EUR/USD, GBP/USD, USD/CHF, USD/JPY; 1m, 5m, 15m, 30m, 1h, 4h, 1d; FX data 1999–2015 | EUR/USD OOS: 30m 682 trades, profit 30,999, drawdown ratio 0.3268; 15m 1,022 trades, profit 34,545, ratio 0.4312; 5m 1,229 trades, profit 12,856, ratio 0.1101; 1m 3,503 trades, loss -50,517. Includes 1-pip spread+commission. Metrics are spot strategy profits, not WR. | **TOP RESEARCH CANDIDATE FOR ADAPTATION** — exact jump detector and OOS design recovered. The source optimizes hold horizon on TRAIN and trades jump direction; binary fixed-expiry conversion is new. Prioritize 15m/30m research, with 5m as secondary; do not extrapolate 15m/30m spot returns to M1 binary options. |
+| LIT-015 | Technical indicators on intraday EUR/USD — Mastný (2004) | EUR/USD, 5m/15m/30m/60m; SMA, weighted/variable MA, RSI, MACD | Most indicator variants did not outperform buy-and-hold; strongest results often occurred at 60m, not the shortest timeframe. | **NEGATIVE CONTROL** — useful evidence against assuming a short-period parameter or indicator is universally optimal; no ready binary strategy. |
+
+## LIT-013 — Manahov, Hudson & Gebka (2014): adaptive genetic programming on one-minute FX
+
+**Publication:** Viktor Manahov, Robert Hudson & Bartosz Gebka, “Does high frequency trading affect technical analysis and market efficiency? And if so, how?”, *Journal of International Financial Markets, Institutions and Money*, 28 (2014), pp. 131–157. DOI: 10.1016/j.intfin.2013.11.002.
+
+**Sources**
+- Publisher abstract: https://www.sciencedirect.com/science/article/pii/S1042443113000954
+- Newcastle University publication record: https://eprints.ncl.ac.uk/196455
+- Hull repository record: https://hull-repository.worktribe.com/output/524135
+
+**Verified abstract-level facts**
+- Uses real one-minute FX data for EUR/USD, USD/JPY, GBP/USD, AUD/USD, USD/CHF and USD/CAD.
+- Applies an adaptive form of Strongly Typed Genetic Programming (STGP) to learn trading/forecasting rules.
+- Compares STGP with parametric and non-parametric models using in-sample and out-of-sample forecast and investment-return tests.
+- The abstract reports STGP significantly outperforming traditional econometric models and statistically/economically significant excess returns after appropriate transaction costs.
+
+**Limitations / HydraAI interpretation**
+- Accessible full-text record was not available in this audit. Sample dates, quote source, exact transaction costs, grammar/functions, fitness objective, re-optimization schedule, OOS metrics by pair and trade ledger remain unverified.
+- This is a strong direct-market/method lead, not a reported binary-options WR.
+- Before implementation, recover full paper and exact STGP setup. If a proxy is constructed, fit only on TRAIN, freeze the grammar and model-selection protocol before VALIDATION, and evaluate paired inversion on identical event times.
+
+## LIT-014 — Fičura (2019): after-jump momentum with non-parametric L-estimator
+
+**Publication:** Milan Fičura, “Profitability of Trading in the Direction of Asset Price Jumps - Analysis of Multiple Assets and Frequencies”, *Prague Economic Papers*, 28(4), 2019, pp. 385–401. DOI: 10.18267/j.pep.703.
+
+**Primary full text (author working-paper version):** https://quantitative.cz/wp-content/uploads/2018/09/profitability-of-trading-in-the-direction-of-asset-price-jumps-analysis-of-multiple-assets-and-frequencies-milan-ficura-2017.pdf  
+**Published journal record:** https://pep.vse.cz/artkey/pep-201904-0001_profitability-of-trading-in-the-direction-of-asset-price-jumps-analysis-of-multiple-assets-and-frequencies.php
+
+**Exact method extracted**
+- FX dataset covers 1999-11-01 to 2015-06-12, from forexhistorydatabase.com; pairs EUR/USD, GBP/USD, USD/JPY and USD/CHF.
+- Tests seven frequencies: M1, M5, M15, M30, H1, H4 and D1.
+- Detects price jumps using the Lee–Mykland (2008) non-parametric L-estimator: returns normalized by local volatility estimated from realized bipower variation. A jump is flagged when the normalized return exceeds a selected extreme-value quantile.
+- At a detected jump, enters in the direction of the jump at the close of that bar.
+- Holds for a fixed number of bars h, chosen from {1,2,4,8,16}. The local-volatility lookback k is chosen from {4,8,16,32,64,128,256}; confidence threshold p from {0.9,0.95,0.99,0.999}. These parameters are selected by grid search on the first 50% of the sample; the last 50% is OOS.
+- Includes 1 pip per-trade spread + commission for FX.
+- EUR/USD Table 3 OOS: M30 selected k=32, p=0.95, h=16; 682 trades; profit 30,999; max DD -11,741; drawdown ratio 0.3268. M15: k=64, p=0.90, h=16; 1,022 trades; profit 34,545; max DD -9,916; ratio 0.4312. M5: k=128, p=0.999, h=16; 1,229 trades; profit 12,856; max DD -14,457; ratio 0.1101. M1: k=64, p=0.999, h=1; 3,503 trades; loss -50,517; max DD -51,192; ratio -0.1221.
+- The paper explains that M1 produces many small jumps with insufficient predictive power to cover trading costs; M15/M30 are its strongest frequencies for EUR/USD. M5 is positive but materially weaker.
+- These profits and drawdown ratios are spot-trading metrics, not accuracy or binary-option WR. The OOS is the second chronological half, but the parameter search is extensive and only one historical split is reported.
+
+**HydraAI assessment / adaptation protocol**
+- This is the most concrete short-horizon EUR/USD lead found in this round: exact jump detector, thresholds, entry and holding logic, costs, chronological split, and OOS trade counts are available.
+- However, the paper's best EUR/USD holds are 16 bars: 4 hours on M15 or 8 hours on M30. That is not a Pocket Option short expiry. Its positive M5 configuration also holds 16 bars (80 minutes), while its M1 version loses after costs.
+- Therefore do not port the published 15m/30m returns as a binary signal. Register a distinct adaptation: detect a jump using only completed bars, enter no earlier than the next executable quote/bar, and test predeclared binary expiries separately. Do not tune the expiry on TEST.
+- Test exact inversion on identical jump timestamps and entry/expiry schedule. Also report event clustering, session dependence, overlap handling and sample count. The binary adaptation may fail even if the source spot strategy worked.
+
+## LIT-015 — Mastný (2004): intraday EUR/USD indicator comparison
+
+**Publication:** Václav Mastný, “Performance of technical indicators in forecasting high-frequency foreign exchange rates”, *Acta Universitatis Agriculturae et Silviculturae Mendelianae Brunensis*, 52(3), 2004, pp. 157–166. DOI: 10.11118/actaun200452030157.
+
+**Source:** https://acta.mendelu.cz/artkey/acu-200403-0015_performance-of-technical-indicators-in-forecasting-high-frequency-foreign-exchange-rates.php
+
+**Verified facts**
+- Tests simple, weighted and variable moving averages, RSI and MACD on EUR/USD at 5-, 15-, 30- and 60-minute frequencies.
+- Each indicator is tested across multiple parameter settings in a simple trading model and compared with buy-and-hold.
+- The abstract concludes that parameters optimized at one frequency do not necessarily transfer to another; most of the strongest returns were at 60-minute frequency, and with few exceptions individual indicators did not beat buy-and-hold.
+
+**HydraAI interpretation**
+- A useful negative control: do not assume an indicator setting that looks good on M1 must work on M5, or vice versa.
+- Not a ready fixed-expiry binary strategy. Exact full-paper trade definitions and parameter table should be extracted only if this control becomes necessary.
+
+- 2026-11-11: added LIT-013 (Manahov et al. adaptive STGP on M1 FX), LIT-014 (Fičura after-jump strategy with full parameter/OOS table), and LIT-015 (Mastný indicator-frequency comparison). LIT-014 is flagged as the strongest concrete EUR/USD M15/M30 research lead, with an explicit warning that spot-horizon results do not establish binary-option WR. No candidate promoted.
