@@ -1,10 +1,11 @@
-name: First-wave exact-event inversion audit
+name: Frozen inverse lead robustness audit
 on:
   workflow_dispatch:
   push:
     branches: [hydra/research-validation]
     paths:
-      - "research/first_wave_inversion_screen.py"\n      - "research/inverse_lead_robustness_audit.py"
+      - "research/first_wave_inversion_screen.py"
+      - "research/inverse_lead_robustness_audit.py"
       - ".github/workflows/first-wave-inversion-audit.yml"
 permissions:
   contents: read
@@ -35,8 +36,8 @@ jobs:
               raise SystemExit("Raw CSV validation failed")
           print(f"Verified {len(rows):,} M1 rows in {p}")
           PY
-      - name: Run first-wave exact-event inversion audit
-        run: python research/first_wave_inversion_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/FIRST_WAVE_INVERSION_AUDIT.md
+      - name: Run frozen inverse lead robustness audit
+        run: python research/inverse_lead_robustness_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/INVERSE_LEAD_ROBUSTNESS_AUDIT.md
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
