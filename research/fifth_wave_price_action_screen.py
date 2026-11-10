@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from collections import defaultdict
 from pathlib import Path
+from datetime import timedelta
 from expanded_strategy_screen import read_m1, outcome, stats
 from long_history_validation import make_m5
 
@@ -70,7 +71,7 @@ def main():
                 for horizon in HORIZONS:
                     if i+horizon>=len(bars): continue
                     signal_day=bars[i].timestamp.date()
-                    settle_day=bars[i+horizon].timestamp.date()
+                    settle_day=(bars[i+horizon].timestamp+timedelta(minutes=5)).date()
                     period="TRAIN" if signal_day<d1 else "VALIDATION" if signal_day<d2 else "TEST"
                     if (period=="TRAIN" and settle_day>=d1) or (period=="VALIDATION" and settle_day>=d2):
                         continue
