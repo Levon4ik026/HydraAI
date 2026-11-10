@@ -475,3 +475,25 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Status: `DATA_BLOCKED / EVENT_HYPOTHESIS`.
 
 - 2026-11-11: added LIT-019–022. Two event/news directions are data-blocked or longer-horizon only; LIT-021 is a negative control. No candidate promoted.
+
+
+## LIT-023 — Breedon & Ranaldo (2013; SNB working paper 2011): intraday FX session return pattern
+
+**Source**
+- Francis Breedon & Angelo Ranaldo, “Intraday Patterns in FX Returns and Order Flow”, *Journal of Money, Credit and Banking* 45(5), 2013, pp.953–965; earlier Swiss National Bank Working Paper 2011-04.
+- Official full text: https://www.snb.ch/public/asset/en/www-snb-ch/publications/research/working-papers/2011/working_paper_2011_04/publications0_en/working_paper_2011_04.n.pdf
+
+**What was tested**
+- EBS firm bid/ask and transaction/order-flow data, January 1997 to early June 2007; hourly aggregation; EUR/USD and five other major FX crosses.
+- Currencies tend to depreciate during their own local trading hours and appreciate during the counter-currency's local hours.
+- EUR/USD session results (annualized log returns in the paper's table): EUR session midquote return -0.084, GARCH-adjusted -0.095, share of positive hourly/session returns 0.44; USD session +0.100, adjusted +0.111, share positive 0.53.
+- A simple bid/ask strategy that shorts EUR during the EUR session and goes long EUR during the USD session was profitable in the interdealer sample after transaction costs; reported Sharpe ratios 1.3 for morning short and 0.9 for afternoon long.
+- Authors attribute the pattern partly to predictable local-session order flow. They report that the difference between EUR and USD session returns remained relatively stable through most sample years.
+
+**HydraAI interpretation**
+- This is a genuine EUR/USD directional time-of-day hypothesis with actual bid/ask profitability evidence, making it more relevant than generic indicator papers.
+- But the source is hourly/session-based, uses institutional EBS execution and 1997–2007 data. It does not establish 1–5 minute binary-option WR or current Pocket Option payout profitability.
+- Candidate adaptations must be separate and predeclared: (A) EUR-session short bias; (B) USD-session long bias; test M1/M5 fixed expiries only after session boundaries, DST, holidays, and overlapping signals are handled. Also test exact inverse on identical timestamps.
+- Do not copy the reported Sharpe as a binary-option edge. Status: `PROMISING_SESSION_HYPOTHESIS / ADAPTATION_REQUIRED`.
+
+- 2026-11-11: added LIT-023 (EUR/USD session return and order-flow pattern). Strong source-level directional evidence, but no short-expiry binary result; no candidate promoted.
