@@ -497,3 +497,56 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Do not copy the reported Sharpe as a binary-option edge. Status: `PROMISING_SESSION_HYPOTHESIS / ADAPTATION_REQUIRED`.
 
 - 2026-11-11: added LIT-023 (EUR/USD session return and order-flow pattern). Strong source-level directional evidence, but no short-expiry binary result; no candidate promoted.
+
+
+## LIT-024 — Khademalomoom & Narayan (2019): intraday effects in six major FX pairs
+
+**Source**
+- Siroos Khademalomoom & Paresh Kumar Narayan, “Intraday effects of the currency market”, *Journal of International Financial Markets, Institutions and Money* 58 (2019), pp.65–77. DOI: 10.1016/j.intfin.2018.09.008.
+- Publisher record: https://www.sciencedirect.com/science/article/pii/S1042443117306121
+- Author/institution record: https://research.monash.edu/en/publications/intraday-effects-of-the-currency-market/
+
+**What was tested**
+- Hourly exchange rates for six liquid currencies against USD, including EUR/USD, over 2004–2014.
+- Reports three time-of-day effects: local-market post-opening, major-market activity, and market-overlap effects.
+- The abstract establishes robust time-of-day structure, but accessible records do not provide enough EUR/USD cell-level returns, exact timestamps, or executable rule parameters to reproduce a directional trade.
+
+**HydraAI interpretation**
+- Supports session-open and London/New York overlap as pre-registered regime features.
+- It is a distinct cross-pair confirmation of session dependence, but not an independently specified signal yet.
+- Test only a small number of fixed session windows; avoid scanning all 24 hours and selecting the best from the same sample.
+- Status: `SESSION_FILTER / SPECIFICATION_INCOMPLETE`.
+
+## LIT-025 — Popović & Đurović (2014): EUR/USD hourly day-of-week × hour anomalies
+
+**Source**
+- Saša Popović & Andrija Đurović, “Intraweek and intraday trade anomalies: evidence from FOREX”, *Applied Economics* 46(32), 2014, pp.3968–3979. DOI: 10.1080/00036846.2014.948676.
+- Publisher record: https://www.tandfonline.com/doi/abs/10.1080/00036846.2014.948676
+
+**What was tested**
+- Hourly EUR/USD spot rates from a Swiss FOREX source, 2004-01-01 to 2014-01-11.
+- Tests daily, hourly, and day/hour interaction effects using ANOVA, t-tests, and Tukey HSD pairwise comparisons.
+- Reports intraday and day/hour anomalies; abstract highlights a Friday pattern involving buying EUR/selling USD at 00:00 and reversing at 03:00.
+
+**HydraAI interpretation**
+- A specific Friday-hour hypothesis can be recovered for exploratory replication, but the abstract does not provide enough detail about quote construction, exact execution prices, costs, or full robustness to treat it as a trading edge.
+- Since it is hourly, adaptation to M1/M5 binary expiry is a separate hypothesis. Preserve exact Friday timestamps and test the exact inverse on identical entries.
+- Status: `CALENDAR_SESSION_HYPOTHESIS / ADAPTATION_REQUIRED`.
+
+## LIT-026 — Cyree, Griffiths & Winters (2004): intraday volatility and EUR/USD market openings
+
+**Source**
+- Ken B. Cyree, Mark D. Griffiths & Drew B. Winters, “An empirical examination of the intraday volatility in euro–dollar rates”, *The Quarterly Review of Economics and Finance* 44(1), 2004, pp.44–57. DOI: 10.1016/S1062-9769(03)00002-4.
+- Publisher record: https://www.sciencedirect.com/science/article/pii/S1062976903000024
+
+**What was tested**
+- Hourly observations of one-month euro-dollar rates; GARCH modelling of intraday volatility.
+- Finds intraday volatility is highest during regular Asian business hours and lowest during regular U.S. business hours in this particular rate series.
+- Also finds volatility spikes at the start of Tokyo, London, and New York business days.
+
+**HydraAI interpretation**
+- This is a volatility/time-of-day study, not a directional strategy and not spot EUR/USD M1 evidence.
+- Use only as a candidate source for predeclared opening-volatility regime labels; do not assume the historical pattern transfers to modern spot or Pocket Option quotes.
+- Status: `VOLATILITY_REGIME_FILTER / PROXY_LIMITATION`.
+
+- 2026-11-11: added LIT-024–026. Catalog now has 26 literature records. Of these, some are strategy leads, some filters/regime hypotheses, and some negative/methodological controls; the count is not 26 proven binary strategies. No candidate promoted.
