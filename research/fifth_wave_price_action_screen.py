@@ -3,7 +3,6 @@
 from __future__ import annotations
 import argparse
 from collections import defaultdict
-from datetime import timedelta
 from pathlib import Path
 from expanded_strategy_screen import read_m1, outcome, stats
 from long_history_validation import make_m5
@@ -62,9 +61,10 @@ def main():
         raise SystemExit("Insufficient or unexpectedly fragmented history")
     dates=sorted({b.timestamp.date() for seg in segments for b in seg})
     d1=dates[int(.60*len(dates))]; d2=dates[int(.80*len(dates))]
-    raw=defaultdict(list)
+    raw=defaultdict(list); family_names=set()
     for sid,bars in enumerate(segments):
         events=price_action_events(bars)
+        family_names.update(events)
         for name,items in events.items():
             for i,side in items:
                 for horizon in HORIZONS:
@@ -114,5 +114,5 @@ def main():
       "- A promising row remains a candidate until independent analog periods, matched controls, dependence-aware uncertainty and prospective Pocket Option quote validation.",""]
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text("\n".join(lines),encoding="utf-8")
-    print(f"Fifth-wave screen complete: M1={len(m1):,}; M5={total_m5:,}; event families={len(events):,}; report={a.out}")
+    print(f"Fifth-wave screen complete: M1={len(m1):,}; M5={total_m5:,}; event families={len(family_names):,}; report={a.out}")
 if __name__=="__main__": main()
