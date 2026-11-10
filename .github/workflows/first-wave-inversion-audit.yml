@@ -4,7 +4,7 @@ on:
   push:
     branches: [hydra/research-validation]
     paths:
-      - "research/first_wave_inversion_screen.py"
+      - "research/first_wave_inversion_screen.py"\n      - "research/inverse_lead_robustness_audit.py"
       - ".github/workflows/first-wave-inversion-audit.yml"
 permissions:
   contents: read
@@ -40,6 +40,6 @@ jobs:
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: hydra-first-wave-inversion-audit
-          path: research/FIRST_WAVE_INVERSION_AUDIT.md
+          name: hydra-inverse-lead-robustness-audit
+          path: research/INVERSE_LEAD_ROBUSTNESS_AUDIT.md
           if-no-files-found: error
