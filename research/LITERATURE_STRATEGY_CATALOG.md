@@ -626,3 +626,40 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Status: `PROMISING_EVENT_STRATEGY / FULL_TEXT_AUDIT_REQUIRED`.
 
 - 2026-11-11: added LIT-030. Catalog now contains 30 literature records, reaching the agreed upper target. No candidate promoted; source-level evidence is not a HydraAI binary-options result.
+
+
+# Deep audit notes — 2026-11-11
+
+## Audit 1: LIT-030 jump-cluster strategy (Novotný, Petrov & Urga, 2015)
+
+**Full-text verification**
+- Accepted manuscript and publisher record were located. The sample is Morningstar tick-by-tick spot FX for eight USD pairs, 2013-03-01 through 2013-06-06, sampled at 5-minute frequency and pre-averaged to reduce microstructure noise.
+- The authors explicitly describe their strategy as a volatility-based delta trade: enter long/short after a detected jump, hold for a fixed horizon, then unwind. This is not a binary-option win-rate strategy and does not establish CALL/PUT accuracy.
+- Their abstract and introduction report that after bid/ask spread and slippage, EUR and JPY strategies can remain profitable; rand is profitable only for some horizons. They also caution that Sharpe is low and P/L ratios are well below two, and describe the strategy as fragile.
+- The study window is only about three months and includes a specific stressed macro period. It is not independent evidence of persistence across modern regimes.
+- The paper's strategy is not simply “jump then follow” versus “jump then reverse”: it is a volatility-based position held for a specified horizon. Do not substitute an intuitive continuation rule and call it a replication.
+
+**HydraAI decision**
+- Keep LIT-030 as a high-priority source for an adaptation experiment, but mark source-faithful reproduction as blocked until the full mathematical jump/cluster definition, exact trigger timing, position sign, tested holding horizons, and EUR-specific table cells are transcribed from the full paper.
+- Once recovered, implement a source-faithful spot-return reproduction first, if the required input data and execution assumptions can be matched. Only then create a separately named binary adaptation.
+- For the binary adaptation, predeclare a small expiry set and score CALL, PUT, exact inverse, and WAIT/no-trade. Entry must occur only after the event is observable; no retrospective cluster labels or future-confirmed jump timestamps.
+- Use non-overlapping event windows for the primary score and a separate all-events sensitivity analysis. Confidence intervals must resample by day/event block, not individual candle.
+- The paper's reported profitability is not transferable to a 92% payout binary contract. The binary decisive break-even rate at 92% payout is 52.083%; ties/refunds must be handled separately.
+
+## Related methodological cross-check (not a new catalog record)
+
+**Larkin & Larkin (2026), “When, Not Which Way” (SSRN 6919443; working paper, not peer reviewed)**
+- Uses Dukascopy EUR/USD tick quotes, one training month and held-out periods in 2022–2023. A trailing-volatility model predicts the occurrence of a ≥5-pip move within 120 seconds (reported OOS AUC 0.846), but a feature battery predicts direction at no more than 0.53 AUC at causal decision points.
+- Their tick-accurate direction-agnostic breakout-straddle simulations lose about 0.35 pip/trade after spread. They also document a large spurious direction result when observations are anchored retrospectively at the first-passage move-start tick.
+- This is a recent author working paper and must be treated as provisional, not as settled fact. Its value for HydraAI is methodological: separate “when volatility/movement occurs” from “which direction it takes”; enforce strictly causal event timestamps; do not confuse a detected move's retrospective start with an executable signal.
+- Source: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6919443 ; reproducibility code: https://github.com/Larkin-Research/fx-move-occurrence
+
+## Initial audit prioritization (not performance ranking)
+
+1. **LIT-014 + LIT-018 + LIT-030 — jump detection / post-jump response.** Best coherent family for a controlled event-study pipeline; requires harmonized causal jump detection and exact inversion.
+2. **LIT-023 + LIT-024 + LIT-025 + LIT-026 — session/calendar effects.** Pre-register only the source-supported time windows; avoid searching all hours and weekdays for the best cell.
+3. **LIT-001 — EMA crossover.** Blocked on unresolved source definitions; keep separate paper-faithful and explicitly labelled proxy implementations.
+4. **LIT-002 + LIT-008 + LIT-010 + LIT-013 — adaptive/ensemble rule learning.** High research value but exact rule recovery/reproduction burden is large; avoid a broad uncorrected search over thousands of rules.
+5. **LIT-019–022 + LIT-027 — announcement/event effects.** Separate volatility response from directional response; requires reliable scheduled release timestamps and consensus/actual surprise data.
+
+No result from this audit promotes a candidate. These priorities reflect reproducibility and relevance to EUR/USD M1/M5, not demonstrated binary profitability.
