@@ -31,6 +31,11 @@ This register separates what a source actually specifies/reports, our operationa
 | LIT-006 | Large-scale intraday technical-rule universe — Frömmel & Lampaert (2016) | RUB/USD tick transactions, 2000–2011; resampled 10/15/30/60-minute bars; >8,000 rules | Authors report technical profits appear more at higher frequency, but realistic observed, time-varying transaction costs erase most profitability; some exception during managed exchange-rate policy. Not EUR/USD and not binary options. | **NEGATIVE CONTROL / METHODOLOGY** — useful warning about costs and frequency; not a direct HydraAI candidate. |
 | LIT-007 | Intraday FX technical rules selected by genetic programming and optimized linear forecasting — Neely & Weller (2003) | Intraday FX data; paper studies rules selected in-sample then evaluated out-of-sample | No excess returns after realistic transaction costs and trading hours, although some patterns were stable. | **NEGATIVE CONTROL / RESEARCH METHOD** — exact candidate rules are not yet extracted; use as guardrail against overfitting, not as a high-WR candidate. |
 
+
+
+| LIT-008 | Eight-indicator intraday FX ensemble + genetic programming / reinforcement learning — Dempster et al. (2001) | GBP/USD, 15-minute bars from tick data; 1994–1998; rolling 1-year train / 1-month OOS, 48 OOS months | Authors report positive average annual OOS return at 1 bp slippage (GA 21.6%, RL 16.3%), but at 4 bp all methods are around zero/negative and at 8–10 bp results are small/unstable. Not a binary WR. | **HIGH-VALUE METHOD / NOT READY-MADE BINARY RULE** — exact indicator families and Boolean-combination method extracted; market is GBP/USD, not EUR/USD; strategy is stateful currency switching, not fixed expiry. |
+| LIT-009 | M1 moving-average deviation / mean reversion diagnostics — Wiśniewska (2014/2015) | EUR/USD M1 LastBid, 2004–2006; moving-average windows from 60 to 7,200 minutes and 1–5 days; 24 entry hours assessed | ADF with drift rejects unit root (p≈0.009); deviations around moving averages show heavy tails. Study compares best attainable long/short returns within 24h, not forward fixed-horizon direction. | **MARKET PROPERTY / NOT AN ENTRY SYSTEM** — exact windows and analysis recovered; reported maximum favorable excursions are hindsight extrema and cannot be used as prospective win rate. |
+
 ## LIT-001 — Kolková (2017): exact source extraction
 
 **Publication:** Andrea Kolková, “Testing EMA Indicator for the Currency Pair EUR / USD”, *International Journal of Entrepreneurial Knowledge*, 5(1), 2017, pp. 35–40. DOI: 10.1515/ijek-2017-0003 (the journal page also lists DOI 10.37335/ijek.v5i1.51).
@@ -114,7 +119,8 @@ Each needs its own primary citation, full rule definition, timeframe, data perio
 ## Change log
 
 - 2026-11-10: created literature intake register; added LIT-001 and LIT-002 with source-level details and unresolved-specification flags. Deep-inspected LIT-002 author code and daily EURUSD.csv. Recorded daily frequency, rolling splits, Romano–Wolf selection, exact rule families/parameter grids, OOS costs, and missing per-rule leaderboard. No candidate promoted and no TEST-driven tuning performed.
-- 2026-11-10: added LIT-003 after full-PDF extraction of Wiśniewska's EUR/USD M1 study; clarified that its 95% statement is not binary WR and that its method is paired spot long/short with take-profit, not a fixed-expiry directional signal. Added two 2026 SSRN preprint hypotheses (LIT-004/005) with no performance claims, plus two intraday negative controls (LIT-006/007).
+- 2026-11-10: added LIT-003 after full-PDF extraction of Wiśniewska's EUR/USD M1 volatility study; clarified that its 95% statement is about daily maximum returns and its strategy is paired spot long/short with take-profit, not fixed-expiry direction. Added two 2026 SSRN preprint hypotheses (LIT-004/005) without performance claims, plus intraday negative controls (LIT-006/007).
+- 2026-11-11: full-PDF extracted LIT-009 (Wiśniewska 2014 EUR/USD M1 moving-average deviations) and LIT-008 (Dempster et al. 2001 eight-indicator ensemble/GA/RL). Recorded exact M1 MA windows, the hindsight maximum-excursion limitation, GBP/USD 15-minute source, rolling OOS design and slippage sensitivity. No reported metric was relabelled as binary WR; no candidate promoted.
 
 
 ## LIT-003 — Wiśniewska (2016): EUR/USD M1 volatility and mean reversion
@@ -154,4 +160,48 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 
 - Frömmel & Lampaert (2016), “Does frequency matter for intraday technical trading?”, *Finance Research Letters* 18, 177–183, DOI 10.1016/j.frl.2016.04.014. More than 8,000 rules on RUB/USD tick transactions (2000–2011), resampled to 10/15/30/60 minutes. Real observed, time-varying costs wipe away most profits; profitability is reported mainly in a period of managed exchange rates. This is not an EUR/USD candidate, but directly supports realistic cost sensitivity.
 - Neely & Weller (2003), “Intraday technical trading in the foreign exchange market”, *Journal of International Money and Finance* 22(2), 223–237, DOI 10.1016/S0261-5606(02)00101-8. Genetic-program and optimized-linear rules are selected in-sample and assessed out-of-sample; the authors find no excess returns after realistic transaction costs and trading hours, while some patterns are stable. Use as an anti-overfitting control.
+
+
+
+## LIT-008 — Dempster et al. (2001): intraday technical-indicator ensemble and learning
+
+**Publication:** M. A. H. Dempster, Tom W. Payne, Yazann Romahi & G. W. P. Thompson, “Computational Learning Techniques for Intraday FX Trading Using Popular Technical Indicators”, *IEEE Transactions on Neural Networks*, 12(4), July 2001, pp. 744–754. DOI: 10.1109/72.935088.
+
+**Primary full-text PDF:** https://www.jbs.cam.ac.uk/wp-content/uploads/2020/08/wp0030-1.pdf
+
+**Exact source setup**
+- GBP/USD tick data aggregated to 15-minute OHLC bars; 1994-01 through 1998-01.
+- Rolling evaluation: one year of training followed by one month OOS, rolled forward for 48 OOS months.
+- Eight indicator families provide paired buy/sell bits (16 binary inputs): Price Channel Breakout, Adaptive Moving Average, RSI, Stochastics, MACD, Moving Average Crossover, Momentum Oscillator, and CCI.
+- The GA represents a rule as a Boolean tree over indicator bits using AND/OR/XOR, maximum depth 4; population 250, 100 generations, 75% crossover / 25% mutation. It learns a stateful long-GBP / neutral decision, not a one-shot CALL/PUT.
+- Reinforcement learning, Markov-chain linear programming, and a heuristic are compared with the GA.
+- The heuristic uses expected forward return over horizon ell conditioned on the current indicator state; buys above threshold b and sells below threshold x. Parameters are fitted in-sample.
+- OOS average annual returns in Table I: at 0 bp, RL 93.8%, GA 94.5%, LP 96.8%, heuristic 96.3%; at 1 bp, RL 16.3%, GA 21.6%, LP 15.9%, heuristic 8.56%; at 4 bp, RL -1.55%, GA 1.67%, LP -1.76%, heuristic -5.03%; at 8 bp, values range from -4.89% to +1.64%; at 10 bp, from -5.63% to +1.71%.
+- Authors conclude none of the methods produced significant profits at realistic transaction costs; heuristic strongly overfit; GA generalization constraint helped OOS performance. Indicators used by GA varied with slippage: RSI gained importance as costs increased, while price-channel breakout, stochastics and MA crossover were prominent at zero cost.
+- This paper's return metrics are not directional accuracy or binary-option WR. The market is GBP/USD, and the position switching logic differs from our fixed-expiry instrument.
+
+**HydraAI use**
+- Do not copy the reported 21.6% annual return as an EUR/USD or binary-option result.
+- The most useful contribution is a disciplined way to combine multiple indicator states and constrain rule complexity. A Hydra adaptation could use the eight signal families as candidate inputs, but it must be a separately registered model, trained only on TRAIN, with feature/state definitions frozen before VALIDATION/TEST.
+- Do not build an unconstrained combinatorial sweep. The paper explicitly demonstrates overfit risk and cost sensitivity. Our event-based binary scoring, payout, non-overlap and inversion protocol remain separate.
+
+## LIT-009 — Wiśniewska (2014/2015): EUR/USD M1 price reversal and moving-average deviations
+
+**Publication:** Marta Wiśniewska, “EURUSD Intraday Price Reversal”, *Folia Oeconomica Stetinensia*, 14(2), 2014, pp. 152–162. DOI: 10.1515/foli-2015-0014.
+
+**Primary full-text PDF:** https://bazhum.muzhp.pl/media/texts/folia-oeconomica-stetinensia/2014-tom-1422-numer-2/folia_oeconomica_stetinensia-r2014-t1422-n2-s152-162.pdf
+
+**Exact source extraction**
+- EUR/USD one-minute LastBid data covering 2004–2006. The paper separately discusses bid/ask for the long/short spot calculations.
+- Moving-average windows tested: 60, 120, 180, 240, 300, 360, 720 minutes; 24h, 48h, 72h; 4 days and 5 days.
+- ADF test with drift gives p-values about 0.0091–0.0094 at 10/20/60 lags; without drift, p-values about 0.1525–0.1566. The stationarity result is conditional on including a drift.
+- The deviation distributions around short moving averages are fat-tailed (e.g. excess-tail kurtosis values shown in Table 4); deviations have means/medians close to zero.
+- Trading analysis opens hypothetical long or short spot positions at each of 24 hourly start points and computes the maximum favorable return available at any minute over the next 24 hours. Average maxima are similar for long and short: 0.005525 and 0.006046 in the paper's price-difference units.
+- This is a hindsight maximum-excursion analysis, not a tradable signal with a pre-specified exit or fixed expiry. The paper explicitly notes that some maximum returns are negative and asks for shorter-horizon and robustness studies; it also warns that changing the OTC quote provider may matter.
+
+**HydraAI assessment**
+- This is useful evidence that M1 EUR/USD deviations from moving averages and possible intraday mean reversion deserve investigation, but it does not specify a validated entry threshold or a forward expiry.
+- The 24-hour maximum-return results are not WR and cannot be converted into CALL/PUT accuracy.
+- Candidate research hypotheses (not source-faithful replications) may be registered separately: (a) price deviation from rolling mean normalized by rolling volatility; (b) same deviation plus higher-timeframe trend-state exclusion; (c) exact inverse on identical event timestamps. All thresholds and expiry choices must be selected on TRAIN only and frozen before VALIDATION.
+- Do not infer the best lookback solely from Table 3 fit/R²; a high R² of price level on moving average is not evidence of predictive trading edge.
 
