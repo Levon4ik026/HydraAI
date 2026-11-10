@@ -212,3 +212,23 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Limitations:** Weekly-level family is sparse; confidence intervals are wide; serial dependence and multiple-testing effects unmodeled; BID feed and fixed payout do not reproduce Pocket Option execution.
 - **Report / workflow:** [Fourth-wave discovery report artifact](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511), run 42798893511.
 - **Code:** research/fourth_wave_sweep_reclaim_screen.py.
+
+
+## HYD-CAND-010 — Previous-day low close breakout, inverse CALL, 60m
+
+- **Status:** Exploratory candidate lead; not confirmed. VALIDATION clears the 57% discovery threshold (57.71%, n=202) and all three chronological splits have positive assumed-payout net, but TRAIN is only 52.35% and TEST is 54.59%. This is a consistency lead for independent replication, not a promoted strategy.
+- **Source event:** On a closed M5 candle, the close crosses below the immediately preceding observed completed UTC day's low, with the prior M5 close at or above that level. Original event direction is PUT. The inverse candidate is CALL on the exact same event timestamps.
+- **Execution:** Entry at next M5 open; expiry at close of the twelfth subsequent M5 candle (60m). Original/inverse share identical events and non-overlap schedule.
+- **Data / accounting:** Dukascopy EUR/USD M1 BID, 2024-01-01 through 2026-11-08; assumed payout 92% (+0.92u/-1u/0u). Chronological splits and boundary purging as specified in the sixth-wave report.
+- **Results:**
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) | Max loss streak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| TRAIN | 578 | 301 / 274 / 3 | 52.35% | [48.26, 56.40]% | +2.92 | 31.40 | 7 |
+| VALIDATION | 202 | 116 / 85 / 1 | 57.71% | [50.80, 64.33]% | +21.72 | 8.08 | 8 |
+| TEST | 198 | 107 / 89 / 2 | 54.59% | [47.60, 61.41]% | +9.44 | 13.04 | 6 |
+
+- **Interpretation:** This is the most consistent sixth-wave lead among the validation-threshold results: positive net in TRAIN, VALIDATION and TEST, with validation above 57%. However, TRAIN is only marginally above the 92%-payout break-even rate, TEST is below the 57% target, and all Wilson intervals include materially weaker performance. It remains exploratory and needs a new independent period / prospective quote-level replication. Do not tune against this VALIDATION or TEST.
+- **Limitations:** Sixth-wave screen tested 14 event families × 6 expiries × 2 directions; substantial multiple-testing exposure and serial dependence remain. Wilson intervals do not correct either. Dukascopy BID is not Pocket Option executable pricing; fixed 92% payout, spread and latency assumptions are not verified.
+- **Report / workflow:** [Sixth-wave discovery run 42810760458](https://github.com/Levon4ik026/HydraAI/actions/runs/42810760458), artifact `hydra-sixth-wave-market-situation-discovery`.
+- **Code:** research/sixth_wave_market_situation_screen.py.
