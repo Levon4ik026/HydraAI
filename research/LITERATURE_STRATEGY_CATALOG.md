@@ -205,3 +205,69 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 - Candidate research hypotheses (not source-faithful replications) may be registered separately: (a) price deviation from rolling mean normalized by rolling volatility; (b) same deviation plus higher-timeframe trend-state exclusion; (c) exact inverse on identical event timestamps. All thresholds and expiry choices must be selected on TRAIN only and frozen before VALIDATION.
 - Do not infer the best lookback solely from Table 3 fit/R²; a high R² of price level on moving average is not evidence of predictive trading edge.
 
+
+
+| LIT-010 | Adaptive multi-frequency indicator ensemble using genetic programming — Dempster & Jones (2001) | USD/GBP spot FX tick data, 1994–1997, aggregated to intraday frequencies | Abstract reports the best adaptive rule modestly but significantly profitable after realistic transaction costs; individual indicators were generally loss-making. Exact performance and rule ledger not available from accessible abstract. | **PROMISING METHOD; SOURCE AUDIT REQUIRED** — adaptive rule portfolio with periodic re-selection and feedback; not a ready-made binary signal and no published WR. |
+| LIT-011 | FX channel-pattern classification — Dempster & Jones (2002) | USD/GBP spot FX tick data, 1989–1997 | Abstract reports statistically significant links between detected channel attributes and profitability; does not provide a binary WR or full rule specification in accessible record. | **PATTERN FAMILY LEAD** — full paper is access-restricted; exact channel geometry, entry/exit, costs and OOS protocol remain unverified. |
+| LIT-012 | Opening Range Breakout (ORB) — Holmberg, Lönnbark & Lundström (2013) | Intraday commodity futures (crude oil futures, not FX) | Tests threshold-based ORB using joint distribution of open/high/low/close; abstract reports higher returns and success rate than a fair-game benchmark. Exact result metrics/specification need full-text audit. | **NON-FX METHOD REFERENCE** — do not transfer its reported success to EUR/USD. Potentially useful only as a separately labelled session-breakout hypothesis after independent Hydra validation. |
+
+## LIT-010 — Dempster & Jones (2001): adaptive genetic-programming FX system
+
+**Publication:** M. A. H. Dempster & C. M. Jones, “A real-time adaptive trading system using genetic programming”, *Quantitative Finance*, 1(4), 2001, pp. 397–413. DOI: 10.1088/1469-7688/1/4/301.
+
+**Sources**
+- Publisher record: https://www.tandfonline.com/doi/abs/10.1088/1469-7688/1/4/301
+- RePEc abstract and bibliographic record: https://ideas.repec.org/a/taf/quantf/v1y2001i4p397-413.html
+- Cambridge author publication listing: https://www.statslab.cam.ac.uk/~mrt31/CFR/people/michaeldempsterpublications.html
+
+**What is verified**
+- The study follows earlier work in which popular technical indicators used individually were generally loss-making.
+- It combines rules based on multiple indicators calculated at different frequencies and lags.
+- An initial portfolio of rules is selected using a genetic algorithm on USD/GBP spot FX tick data from 1994–1997, aggregated to intraday frequencies.
+- The genetic algorithm is subsequently re-run at regular intervals on out-of-sample data to generate new rules; a feedback system rebalances the rule portfolio. This is a two-level adaptive architecture.
+- The abstract reports that the best rule found was modestly, but significantly, profitable after realistic transaction costs.
+
+**Limitations / HydraAI interpretation**
+- The accessible abstract does not expose the exact indicator list, tree constraints, rebalance interval, cost schedule, full OOS ledger or numerical effect size. Do not invent these details.
+- Market is USD/GBP, not EUR/USD; source strategy is adaptive position/rule-portfolio logic, not fixed-expiry CALL/PUT.
+- This is a method worth investigating, not evidence of a 57%+ binary WR.
+- If implemented as a Hydra research model, fit candidate rules on TRAIN only, freeze the selection protocol, and simulate periodic re-selection only using data available at each historical decision time. Keep an untouched forward period for prospective validation; avoid letting the genetic algorithm see future labels.
+
+## LIT-011 — Dempster & Jones (2002): channel-pattern FX trading
+
+**Publication:** M. A. H. Dempster & C. M. Jones, “Can channel pattern trading be profitably automated?”, *The European Journal of Finance*, 8(3), 2002, pp. 275–301. DOI: 10.1080/13518470110052831.
+
+**Sources**
+- RePEc record and abstract: https://ideas.repec.org/a/taf/eurjfi/v8y2002i3p275-301.html
+- Publisher record: https://www.tandfonline.com/doi/abs/10.1080/13518470110052831
+
+**What is verified**
+- The authors construct a sample of channel patterns using pattern-recognition algorithms applied to USD/GBP spot FX tick data from 1989–1997.
+- They statistically analyze channel attributes to classify patterns that may be traded profitably with simple trading rules.
+- The accessible abstract reports statistically significant links between channel attributes and profitability.
+
+**Limitations / HydraAI interpretation**
+- Full text is access-restricted in the accessible record. Exact channel construction, feature definitions, thresholds, entry/exit rules, costs, train/test protocol and effect sizes are not verified.
+- Statistical association between pattern attributes and profitability is not itself a tradable binary-option win rate.
+- Register as a pattern-family lead only. No implementation or promotion until the full specification can be recovered. If a proxy is later defined, label it as a Hydra adaptation and test its exact inverse on identical event timestamps.
+
+## LIT-012 — Holmberg, Lönnbark & Lundström (2013): Opening Range Breakout
+
+**Publication:** “Assessing the profitability of intraday opening range breakout strategies”, *Finance Research Letters*, 10(1), 2013, pp. 27–33. DOI: 10.1016/j.frl.2012.09.001.
+
+**Sources**
+- Publisher abstract: https://www.sciencedirect.com/science/article/pii/S1544612312000438
+- Umeå University full-text record: https://www.diva-portal.org/smash/get/diva2%3A1521889/FULLTEXT01.pdf
+
+**What is verified**
+- The study evaluates mechanical Open Range Breakout rules that enter only after price moves beyond a predetermined threshold.
+- The abstract describes a method based on normally distributed returns and the joint distribution of low, high, open and close over a chosen horizon.
+- It reports returns significantly above zero and a higher success rate than a fair-game benchmark.
+- The study is about crude-oil futures, not EUR/USD FX. The abstract alone does not provide enough detail to reproduce exact range duration, threshold, exit or numerical success rate.
+
+**HydraAI interpretation**
+- This is not direct evidence for EUR/USD or binary options.
+- A session-range breakout can be considered only as a separately labelled hypothesis. Define session, range window, breakout buffer, entry timing and expiry before TRAIN testing; do not import the paper's reported success rate.
+- Because ORB signals cluster around session opens and volatility bursts, report event counts and dependence by day/session, and use non-overlapping outcomes.
+
+- 2026-11-11: added LIT-010 adaptive genetic-programming FX system, LIT-011 channel-pattern FX study, and LIT-012 crude-oil ORB study. Explicitly separated verified abstract-level facts from unavailable full-text parameters; no reported result was converted to binary WR and no candidate promoted.
