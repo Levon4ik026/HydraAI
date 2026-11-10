@@ -11,33 +11,39 @@ from long_history_validation import make_m5
 HORIZONS=(1,2,3,4,6,12)
 
 def prior_levels(segments):
-    """Map each bar to prior observed UTC trading-day and prior completed UTC-week levels."""
-    out=[]
+    """Use globally aggregated, fully completed prior UTC dates and ISO weeks.
+
+    Aggregation must cross gap-separated M5 segments: otherwise a new segment
+    after a market/data gap would see only a fragment of the prior day/week.
+    """
+    daymap=defaultdict(list); weekmap=defaultdict(list)
     for bars in segments:
-        daymap=defaultdict(list); weekmap=defaultdict(list)
         for b in bars:
             daymap[b.timestamp.date()].append(b)
             iso=b.timestamp.isocalendar()
             weekmap[(iso.year,iso.week)].append(b)
-        dates=sorted(daymap)
-        weeks=sorted(weekmap)
-        day_prev={}
-        for j,d in enumerate(dates):
-            if j:
-                prev=daymap[dates[j-1]]
-                day_prev[d]=(max(x.high for x in prev),min(x.low for x in prev),dates[j-1])
-        week_prev={}
-        for j,w in enumerate(weeks):
-            if j:
-                prev=weekmap[weeks[j-1]]
-                week_prev[w]=(max(x.high for x in prev),min(x.low for x in prev),weeks[j-1])
+
+    dates=sorted(daymap)
+    weeks=sorted(weekmap)
+    day_prev={}
+    for j,d in enumerate(dates):
+        if j:
+            prev=daymap[dates[j-1]]
+            day_prev[d]=(max(x.high for x in prev),min(x.low for x in prev),dates[j-1])
+    week_prev={}
+    for j,w in enumerate(weeks):
+        if j:
+            prev=weekmap[weeks[j-1]]
+            week_prev[w]=(max(x.high for x in prev),min(x.low for x in prev),weeks[j-1])
+
+    out=[]
+    for bars in segments:
         levels=[]
         for b in bars:
             d=b.timestamp.date(); iso=b.timestamp.isocalendar(); wk=(iso.year,iso.week)
             levels.append((day_prev.get(d),week_prev.get(wk)))
         out.append(levels)
     return out
-
 def events_for(segments):
     ev=defaultdict(list)
     all_levels=prior_levels(segments)
