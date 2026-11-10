@@ -663,3 +663,76 @@ The accessible abstract describes a mean-reversion setup combining prior-session
 5. **LIT-019–022 + LIT-027 — announcement/event effects.** Separate volatility response from directional response; requires reliable scheduled release timestamps and consensus/actual surprise data.
 
 No result from this audit promotes a candidate. These priorities reflect reproducibility and relevance to EUR/USD M1/M5, not demonstrated binary profitability.
+
+
+## Jump-family audit — detailed reproducibility specification (2026-11-11)
+
+### A. LIT-014 Fičura (2019): source-faithful momentum hypothesis
+
+**Recovered source rules**
+- EUR/USD source series spans 1999-11-01 to 2015-06-12; each frequency is constructed from the underlying historical series.
+- Jump detector: Lee–Mykland (2008) non-parametric L-estimator. For each bar, compute log return and normalize by local volatility estimated from trailing realized bipower variation. A jump is flagged when the normalized statistic exceeds the chosen extreme-value confidence threshold.
+- The source paper's parameter grid includes local-volatility lookbacks k={4,8,16,32,64,128,256}, confidence p={0.90,0.95,0.99,0.999}, and holding horizon h={1,2,4,8,16} bars. It optimized k, p and h on the first 50% of the sample and evaluated the last 50%.
+- Entry is at the closing price of the bar in which the jump is identified; direction is the sign of that jump; exit after h bars. Source reports 1 pip per-trade spread+commission.
+- EUR/USD OOS results from Table 3: M30 k=32, p=.95, h=16; 682 trades, profit 30,999, max drawdown -11,741, drawdown ratio .3268. M15 k=64, p=.90, h=16; 1,022 trades, profit 34,545, max drawdown -9,916, drawdown ratio .4312. M5 k=128, p=.999, h=16; 1,229 trades, profit 12,856, max drawdown -14,457, drawdown ratio .1101. M1 k=64, p=.999, h=1; 3,503 trades, loss -50,517, max drawdown -51,192, drawdown ratio -.1221.
+- Important caveat: the paper says the source entry occurs at the jump bar close. A causal implementation must verify when that close is actually observable and whether the quote/price used to enter is executable without look-ahead. Do not backdate a signal to the first tick of a bar if the full bar return is needed to identify it.
+- The source's M1 result is negative; its best EUR/USD evidence is M15/M30, not M1. The M5 result is positive but substantially weaker than M15/M30. This materially lowers priority for a short-expiry M1 binary adaptation.
+
+**HydraAI adaptation boundary**
+- First reproduce the spot-direction strategy only at M5/M15/M30, with causal bar-close detection and next-observable-price entry, then compare to the paper's close-entry convention as a non-executable benchmark.
+- Keep source parameters fixed to the paper's reported OOS selections for a faithful descriptive check; do not re-optimize them on our TEST. Any parameter search must happen inside TRAIN with nested chronological validation.
+- Separate binary experiments: expiry 1, 2, 3, 5, 8 bars, fixed before evaluation. Use only completed candles and enter on the next available quote/bar open; score CALL, PUT, exact inverse and WAIT. Binary results are a new hypothesis, not reproduction of paper P/L.
+- If the event is detected at the close of the jump candle, the jump candle itself cannot also be the entry candle in a causal test.
+
+### B. LIT-018 Yesilyurt & Erol (2022): detector robustness control
+
+- The study applies BNS and Aït-Sahalia–Jacod jump tests to FX at M1/M5/M15/M30/H1 over 2010–2016.
+- EUR/USD jump counts materially vary by detector and sampling frequency; for example, BNS reports 1,216 jumps at M5, while AJ reports 1,332. The authors emphasize strong sensitivity to sampling frequency and detector choice.
+- Their event-study analysis links FX jumps with scheduled macro announcements. This supports treating news proximity as a potential confounder, not assuming all detected jumps are equivalent.
+- HydraAI should implement LIT-018 as a robustness comparison only: same underlying quote/candle data, same timestamp convention, BNS vs AJ vs Lee–Mykland where feasible. Compare event overlap, direction agreement, and subsequent outcomes. Do not select the detector that performs best on TEST.
+
+### C. LIT-030 Novotný, Petrov & Urga (2015): cluster strategy, separate from LIT-014
+
+- Accepted manuscript full text is available at City Research Online. The source sample is Morningstar high-frequency FX spot data for eight USD pairs from 2013-03-01 to 2013-06-06, sampled at five-minute frequency.
+- Authors explicitly describe their trading exercise as a one-unit long/short fixed-horizon spot delta trade triggered by price jumps/clusters; it is volatility-based. The paper notes positive net results for EUR and JPY after spread and slippage, but low Sharpe and P/L ratios well below two; it describes the strategy as fragile.
+- Cluster construction uses a formal clustering procedure on jump arrivals; clusters are not interchangeable with a simple count of adjacent large candles. A source-faithful replication must transcribe the exact jump input and clustering/holding logic from the accepted manuscript, including how the EUR/USD cluster's direction and cluster representative are defined.
+- The sample is short and concentrated in a distinctive macro period. Treat it as a mechanism study and not robust evidence of persistent edge.
+- For HydraAI, implement only after exact rule transcription. Preserve the source cluster method as a separate event feature from the LIT-014 single-jump Lee–Mykland detector.
+
+### D. Frozen experiment matrix (proposal for implementation; not yet run)
+
+1. **Data and causality**
+   - Use only non-OTC EUR/USD.
+   - Primary data: Dukascopy BID M1, aggregated to M5/M15/M30 with UTC boundaries. Record that this is a BID proxy, not Pocket Option executable bid/ask.
+   - Compute indicators only from completed bars. Signal timestamp is the close time at which the full return becomes known; entry is the next available bar open/quote. No same-bar close fill in the primary causal result.
+   - Remove incomplete bars, duplicates, and stale/gapped intervals; retain a data-quality report.
+
+2. **Event detectors**
+   - Detector A: Lee–Mykland L-estimator with trailing bipower variation, using only past returns.
+   - Detector B: BNS jump test at compatible sampling intervals.
+   - Detector C: AJ test where a reliable implementation is available.
+   - Detector D: paper-specific LIT-030 jump-cluster algorithm after exact transcription.
+   - Freeze detector parameters from TRAIN only. Report overlap and disagreement between detectors; do not union them after seeing outcomes.
+
+3. **Signal hypotheses**
+   - H1: single-jump momentum (CALL on positive jump, PUT on negative).
+   - H2: exact inverse of H1 on the identical event timestamps.
+   - H3: cluster-triggered momentum per LIT-030 exact rule.
+   - H4: exact inverse of H3.
+   - H5: cluster/volatility event used only as WAIT/filter, with no directional assumption.
+   - H6: post-event reversal only as a separately pre-registered exploratory hypothesis; do not present it as the source paper's rule.
+
+4. **Horizons**
+   - Source-faithful spot horizons: LIT-014 M5 h=16, M15 h=16, M30 h=16, evaluated separately from the paper's original M15/M30 selections; report source-paper parameter set without re-tuning on later data.
+   - Binary adaptation horizons: 1, 2, 3, 5, 8 bars, with payout scenarios 0.85, 0.92 and 0.95, and actual payout recorded when available. At 92%, decisive break-even WR is 52.083%; draws/refunds are reported separately.
+   - The source's M15/M30 h=16 is 4 hours/8 hours respectively, not a short binary expiry. This is a key transfer limitation.
+
+5. **Evaluation and leakage controls**
+   - Chronological TRAIN/VALIDATION/TEST; purge trades/events whose outcome window crosses a boundary.
+   - TRAIN-only parameter selection; validation used for selection among a small frozen candidate set; TEST remains descriptive/exploratory because previous Hydra research has already examined it repeatedly.
+   - Primary event schedule: non-overlapping events, one active event per expiry window. Secondary sensitivity: all events, with overlapping outcomes explicitly marked.
+   - Report n, decisive wins/losses/draws, WR excluding draws and with a predeclared draw treatment, net units at each payout, Wilson interval plus day-block bootstrap interval, max loss streak, event/day concentration, detector agreement and split consistency.
+   - Invert weak directional hypotheses on the same timestamps and exact same schedule. Do not independently select a better event set for the inverse.
+   - No strategy promoted on a single split or a high point estimate alone; require prospective forward collection with quote-level Pocket Option comparisons before any operational claim.
+
+**Current status:** research specification prepared; no code implementation or backtest has been run in this audit. No candidate promoted.
