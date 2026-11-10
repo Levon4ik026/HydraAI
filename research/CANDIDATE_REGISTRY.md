@@ -25,6 +25,7 @@
 | HYD-CAND-010 | Previous-day low close breakout, inverse CALL, 60m | Previous observed completed UTC day low close breakout | CALL (inverse) | 60m | VALIDATION 57.71% (n=202); TEST 54.59% (n=198) | Exploratory candidate lead — consistency not yet established |
 | HYD-CAND-011 | Up-shock second-bar reversal | Prior >=2x median-TR upward shock; second bar reverses | PUT | 15m | VALIDATION 56.52% (n=490); TEST 52.04% (n=594) | Exploratory lead — split instability |
 
+| HYD-CAND-012 | Bearish EMA20/EMA50 cross, inverted CALL | Fresh EMA20 cross below EMA50 with close below EMA20; exact-event inverse | CALL (inverse) | 5m | VALIDATION 58.67% (n=229); TEST 54.26% (n=193); positive net all splits | Exploratory lead — inverse direction; not confirmed |
 ---
 
 ## HYD-CAND-001 — RSI14-70 bearish reversal, PUT, 5m
@@ -263,3 +264,24 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Limitations:** 8 event families × 6 expiries × 2 directions screened; substantial multiple-testing exposure. Wilson intervals do not account for serial dependence. No block bootstrap, matched controls, or platform quote/spread/latency validation. TEST has prior exploratory exposure.
 - **Report / workflow:** [Eighth-wave discovery run 42814659845](https://github.com/Levon4ik026/HydraAI/actions/runs/42814659845), artifact `hydra-eighth-wave-market-situation-discovery`.
 - **Code:** `research/eighth_wave_market_situation_screen.py`; discovery commit `db311cef57b4ff441361b8b00bd88b58c8fb4704`.
+
+
+## HYD-CAND-012 — Bearish EMA20/EMA50 cross, inverse CALL, 5m
+
+- **Status:** Exploratory inverse lead; not confirmed. Retained because the exact-schedule inverse has positive assumed-payout net in all three chronological splits and VALIDATION reaches 58.67% (n=229). TRAIN is only 52.28% and TEST is 54.26%, so the evidence is not yet stable and TEST does not meet the 57% discovery target.
+- **Original event definition:** On a completed M5 candle, EMA20 crosses from at/above EMA50 to below EMA50, and the signal candle closes below EMA20. The original direction is PUT. The candidate is the exact-event inverse: CALL on those same bearish-cross timestamps. No signal, timestamp, filter, or event schedule is changed.
+- **Execution:** Entry at the next M5 open; expiry after the first subsequent M5 bar (5 minutes). One active trade per family/expiry/continuous segment/split. Original and inverse use identical event timestamps and non-overlap schedule.
+- **Data / accounting:** Dukascopy EUR/USD M1 BID aggregated to M5; 1,061,815 valid M1 rows; 209,934 M5 bars; coverage 2024-01-01T22:00Z through 2026-11-08T23:58Z. Assumed payout 92% (+0.92u/-1u/0u); break-even decisive WR 52.083%. Not Pocket Option executable pricing.
+- **Chronological splits:** TRAIN before 2025-09-17; VALIDATION 2025-09-17 through 2026-04-14; TEST from 2026-04-14. Boundary-crossing outcomes purged.
+
+| Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) |
+|---|---:|---:|---:|---:|---:|---:|
+| TRAIN | 627 | 321 / 293 / 13 | 52.28% | [48.33, 56.20]% | +2.32 | 15.72 |
+| VALIDATION | 229 | 132 / 93 / 4 | 58.67% | [52.14, 64.90]% | +28.44 | 7.56 |
+| TEST | 193 | 102 / 86 / 5 | 54.26% | [47.12, 61.22]% | +7.84 | 13.32 |
+
+- **Exact-schedule original PUT comparison:** TRAIN 47.72% (293/321/13, n=627, -51.44u); VALIDATION 41.33% (93/132/4, n=229, -46.44u); TEST 45.74% (86/102/5, n=193, -22.88u). Inversion materially improves all three split results on the same event schedule.
+- **Interpretation:** A meaningful validation lead with positive assumed-payout net across all splits, but TRAIN is modest and TEST drops below 57%. Wilson intervals are wide and overlap weaker outcomes; they do not account for serial dependence. Keep as a research candidate for later market-context profiling, not a confirmed strategy. Do not tune against this already-exposed TEST.
+- **Limitations:** Ninth-wave screen covered 10 directional event families × 6 expiries × 2 variants × 3 splits (360 result rows); multiple-testing exposure and serial dependence remain. No block bootstrap, matched controls, or platform quote/spread/latency validation. Payout is fixed at 92%.
+- **Report / workflow:** [Ninth-wave discovery run 42815649623](https://github.com/Levon4ik026/HydraAI/actions/runs/42815649623), artifact `hydra-ninth-wave-market-situation-discovery`.
+- **Code:** `research/ninth_wave_market_situation_screen.py`; discovery commit `894fa96da6f41187dcf60209a377b066c142526c`.
