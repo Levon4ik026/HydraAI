@@ -81,6 +81,20 @@ class FrozenMeanReversionTests(unittest.TestCase):
         self.assertEqual(len(accepted), 2)
         self.assertEqual([x["index"] for x in accepted], [10, 11])
 
+    def test_default_holdout_starts_after_previously_inspected_nov9_window(self):
+        self.assertEqual(HOLDOUT_START, datetime(2026, 11, 10, tzinfo=timezone.utc))
+        d1 = datetime(2026, 11, 10).date()
+        d2 = datetime(2026, 11, 11).date()
+        prior_signal = datetime(2026, 11, 9, 23, 55, tzinfo=timezone.utc)
+        prior_settle = datetime(2026, 11, 10, 0, 5, tzinfo=timezone.utc)
+        self.assertIsNone(classify_period(
+            prior_signal, prior_settle, d1, d2, HOLDOUT_START + timedelta(days=1)
+        ))
+        self.assertEqual(classify_period(
+            HOLDOUT_START, HOLDOUT_START + timedelta(minutes=10),
+            d1, d2, HOLDOUT_START + timedelta(days=1)
+        ), "FRESH HOLDOUT")
+
     def test_split_boundary_crossing_is_purged(self):
         d1 = datetime(2026, 11, 10).date()
         d2 = datetime(2026, 11, 11).date()

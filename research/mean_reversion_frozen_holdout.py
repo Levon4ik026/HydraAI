@@ -25,7 +25,7 @@ WINDOW = 20
 SCAN_START = 41
 TAIL_GUARD = 13  # preserve the original standalone screen's candidate eligibility
 Z_THRESHOLD = 1.5
-HOLDOUT_START = datetime(2026, 11, 9, tzinfo=timezone.utc)
+HOLDOUT_START = datetime(2026, 11, 10, tzinfo=timezone.utc)  # default; CI supplies each run date
 RANDOM_REPLICATES = 10_000
 RANDOM_SEED = 20261109
 EPS = 1e-12
@@ -520,17 +520,21 @@ def build_report(path: Path, snapshot_utc: datetime, out: Path, ledger_out: Path
 
 
 def main():
+    global HOLDOUT_START
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--snapshot-utc", required=True,
                         help="UTC snapshot taken after download; incomplete latest M1 candles are excluded")
+    parser.add_argument("--holdout-start-utc", default=HOLDOUT_START.isoformat(),
+                        help="UTC start of the genuinely new, previously uninspected forward window")
     parser.add_argument("--out", type=Path,
                         default=Path("research/MEAN_REV_20_Z1.5_CALL_FORWARD_HOLDOUT.md"))
     parser.add_argument("--ledger-out", type=Path, default=None)
     args = parser.parse_args()
+    HOLDOUT_START = parse_utc(args.holdout_start_utc)
     snapshot = parse_utc(args.snapshot_utc)
     if snapshot < HOLDOUT_START:
-        raise SystemExit("Snapshot predates the frozen holdout start")
+        raise SystemExit("Snapshot predates the requested forward holdout start")
     ledger_out = args.ledger_out or args.out.with_name(args.out.stem + "_TRADES.csv")
     build_report(args.data, snapshot, args.out, ledger_out)
 
