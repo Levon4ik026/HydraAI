@@ -1,0 +1,55 @@
+name: Fičura M1 inverse robustness audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/ficura_m1_robustness.py"
+      - "research/ficura_jump_replication.py"
+      - "research/lee_mykland_jump.py"
+      - ".github/workflows/ficura-m1-robustness.yml"
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run detector unit tests
+        run: python -m unittest research.tests.test_lee_mykland_jump -v
+      - name: Download EURUSD M1 BID history from Dukascopy
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+      - name: Verify input data
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          if not p.exists():
+              raise SystemExit(f"Missing dataset: {p}")
+          with p.open(newline="", encoding="utf-8-sig") as f:
+              r = csv.DictReader(f)
+              rows = sum(1 for _ in r)
+              fields = set(r.fieldnames or [])
+          required = {"timestamp", "open", "high", "low", "close"}
+          print(f"FILE={p} ROWS={rows:,} FIELDS={sorted(fields)}")
+          if not required.issubset(fields) or rows < 100_000:
+              raise SystemExit("Dataset schema/coverage check failed")
+          PY
+      - name: Run M1 inverse robustness audit
+        run: |
+          python research/ficura_m1_robustness.py \
+            --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv \
+            --out research/FICURA_M1_ROBUSTNESS.md \
+            --iterations 5000
+      - name: Upload robustness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ficura-m1-inverse-robustness
+          path: research/FICURA_M1_ROBUSTNESS.md
+          if-no-files-found: error
