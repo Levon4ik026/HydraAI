@@ -79,13 +79,9 @@ def main():
     n_full=max(3,len(bars)-len(segments))
     n_train=max(3,train_end-sum(1 for s in segments if s and s[0].ts.timestamp()*1000 >= 0)) # replaced below with deterministic train returns
     # Count only bars in chronological TRAIN, minus one return per uninterrupted segment portion.
-    train_bars=sum(1 for b in bars[:train_end])
-    train_segments=0
-    for s in segments:
-        train_segments += sum(1 for b in s if b.ts <= bars[train_end-1].ts)
-        if s and s[0].ts <= bars[train_end-1].ts:
-            train_segments -= 1
-    n_train=max(3,train_bars-max(0,train_segments))
+    train_bars=train_end
+    train_segment_count=sum(1 for s in segments if s and s[0].ts <= bars[train_end-1].ts)
+    n_train=max(3,train_bars-train_segment_count)
     policies={"FULL_HISTORY_REFERENCE":n_full,"TRAIN_FROZEN":n_train,
               "ROLLING_1D_EQUIVALENT":1440,"ROLLING_1W_EQUIVALENT":10080,
               "ROLLING_1M_EQUIVALENT":43200}
