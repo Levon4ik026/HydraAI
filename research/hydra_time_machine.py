@@ -164,9 +164,13 @@ def choose_validation_variants(segments, d1, d2):
             delta=bars[i+h].close-bars[i+1].open
             signed=delta if side=="CALL" else -delta
             outcomes.append("D" if abs(signed)<1e-12 else "W" if signed>0 else "L")
-        n,w,l,d,wr,net,pf=summarize(outcomes)
+        summary = summarize(outcomes)
+        n = summary["n"]
+        wr = summary["wr"]
+        net = summary["net"]
+        pf = summary["pf"]
         family=name.split("_")[0]
-        if n<500 or not (wr>100*BREAK_EVEN and net>0 and pf>=1.05):
+        if n<500 or wr is None or not (wr>100*BREAK_EVEN and net>0 and pf>=1.05):
             continue
         score=(net,wr,n)
         if family not in family_best or score>family_best[family][0]:
@@ -213,7 +217,7 @@ def outcome_from(bars,i,side,h):
     return "DRAW" if abs(signed)<1e-10 else "WIN" if signed>0 else "LOSS"
 
 def summary_outcomes(outcomes):
-    """Adapt portfolio labels to the shared W/L/D summarizer contract."""
+    """Adapt portfolio labels and return the shared summary dictionary."""
     mapping={"WIN":"W","LOSS":"L","DRAW":"D"}
     return summarize([mapping[x] for x in outcomes])
 
@@ -259,7 +263,11 @@ def main():
                           "regime":regime,"tm":sim["p_win"],"tod":tod_p,"all":all_p,
                           "ev":sim["ev"],"mc_se":sim["mc_se"]})
     outcomes=[t["outcome"] for t in trades]
-    n,w,l,d,wr,net,pf=summary_outcomes(outcomes)
+    summary = summary_outcomes(outcomes)
+    n, w, l, d = (summary[key] for key in ("n", "w", "l", "d"))
+    wr, net, pf = summary["wr"], summary["net"], summary["pf"]
+    wr_text = "n/a" if wr is None else f"{wr:.2f}%"
+    pf_text = "inf" if pf == math.inf else f"{pf:.2f}"
     # Normalize over every observed TEST trading date, including no-signal dates.
     days=len({b.timestamp.date() for seg in segments for b in seg if b.timestamp.date()>=d2})
     freq=20*n/max(1,days)
@@ -278,7 +286,7 @@ def main():
       "## Validation-selected portfolio — TEST performance","",
       "| Trades | W/L/D | Decisive WR | Net u | PF | Signals / 20 trading dates |",
       "|---:|---|---:|---:|---:|---:|",
-      f"| {n} | {w}/{l}/{d} | {wr:.2f}% | {net:+.2f} | {pf:.2f} | {freq:.2f} |",
+      f"| {n} | {w}/{l}/{d} | {wr_text} | {net:+.2f} | {pf_text} | {freq:.2f} |",
       "",
       f"Time Machine forecasts scored: {len(forecasts)} / {len(trades)} portfolio trades; insufficient pool: {insufficient}; coverage {100*len(forecasts)/max(1,len(trades)):.1f}%.",
       "## Probability quality (TEST, exploratory)","",

@@ -28,10 +28,21 @@ class TimeMachineTests(unittest.TestCase):
         self.assertIsNotNone(trailing_vol(bars,12))
 
     def test_portfolio_summary_maps_full_outcome_labels(self):
-        n,w,l,d,wr,net,pf=summary_outcomes(["WIN","LOSS","WIN","DRAW"])
-        self.assertEqual((n,w,l,d),(4,2,1,1))
-        self.assertAlmostEqual(wr,200/3)
-        self.assertGreater(net,0)
+        summary = summary_outcomes(["WIN", "LOSS", "WIN", "DRAW"])
+        self.assertEqual(
+            (summary["n"], summary["w"], summary["l"], summary["d"]),
+            (4, 2, 1, 1),
+        )
+        self.assertAlmostEqual(summary["wr"], 200 / 3)
+        self.assertGreater(summary["net"], 0)
+        self.assertAlmostEqual(summary["pf"], 1.84)
+        self.assertIsNotNone(summary["wilson"])
+
+    def test_portfolio_summary_handles_draw_only_sample(self):
+        summary = summary_outcomes(["DRAW", "DRAW"])
+        self.assertEqual(summary["n"], 2)
+        self.assertIsNone(summary["wr"])
+        self.assertEqual(summary["net"], 0)
 
     def test_probability_scores_exclude_draws(self):
         rows=[
