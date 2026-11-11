@@ -167,9 +167,12 @@ def main():
     p.add_argument("--data",type=Path,required=True); p.add_argument("--out",type=Path,required=True)
     p.add_argument("--reps",type=int,default=10000); a=p.parse_args()
     m1=read_m1(a.data); segments=make_m5(m1)
+    dates=sorted({b.timestamp.date() for seg in segments for b in seg})
+    if not dates: raise SystemExit("No complete M5 dates in source data")
     # Keep the previously frozen chronological split boundaries exactly.
     d1,d2=date(2025,9,17),date(2026,4,14)
     rows=[]
+    eligible_bars=defaultdict(int)
     for sid,bars in enumerate(segments):
         events=build_events(bars); closes=[b.close for b in bars]; ema20=ema_series(closes)
         tr=[]
@@ -179,6 +182,15 @@ def main():
                 prev=bars[i-1].close
                 tr.append(max(b.high-b.low,abs(b.high-prev),abs(b.low-prev)))
         raw=[]
+        # Denominator for candidate signal frequency: all feature-ready M5
+        # signal bars with a valid 20m settlement inside the same split/segment.
+        for i in range(72, len(bars)-H):
+            day=bars[i].timestamp.date()
+            split="TRAIN" if day<d1 else "VALIDATION" if day<d2 else "TEST"
+            settle_day=(bars[i+H].timestamp+timedelta(minutes=5)).date()
+            if (split=="TRAIN" and settle_day>=d1) or (split=="VALIDATION" and settle_day>=d2):
+                continue
+            eligible_bars[split]+=1
         for i,_side in events.get(NAME,[]):
             if i+H>=len(bars):continue
             ts=bars[i].timestamp; settle_day=(bars[i+H].timestamp+timedelta(minutes=5)).date()
@@ -187,8 +199,10 @@ def main():
             if (split=="TRAIN" and settle_day>=d1) or (split=="VALIDATION" and settle_day>=d2):continue
             f=causal_features(bars,i,tr,ema20)
             if f is None:continue
+            put_result=outcome(bars,i,"PUT",H)
+            call_result={"W":"L","L":"W","D":"D"}[put_result]
             raw.append({"i":i,"ts":ts,"day":day,"month":ts.strftime("%Y-%m"),"split":split,
-                        "result":outcome(bars,i,"PUT",H),"features":f,"segment":sid})
+                        "result":put_result,"result_call":call_result,"features":f,"segment":sid})
         for split in ("TRAIN","VALIDATION","TEST"):
             nxt=-1
             for r in sorted((x for x in raw if x["split"]==split),key=lambda x:x["i"]):
@@ -207,6 +221,11 @@ def main():
     radius=quantile([dist(r) for r in seeds],.90)
     historical=[r for r in rows if r["split"] in ("TRAIN","VALIDATION")]
     for r in historical:r["analog"]=dist(r)<=radius
+    split_ranges={
+        "TRAIN":(dates[0],d1-timedelta(days=1)),
+        "VALIDATION":(d1,d2-timedelta(days=1)),
+        "TEST":(d2,dates[-1]),
+    }
     analog=[r for r in historical if r["analog"]]
     control=[r for r in historical if not r["analog"]]
     lines=["# HYD-CAND-013 — dependence-aware situation audit","",
@@ -214,8 +233,9 @@ def main():
       f"Splits: TRAIN < {d1}; VALIDATION {d1}–{d2}; TEST >= {d2}; boundary-crossing outcomes purged.",
       "Frozen candidate/profile: same R2.0/C0.75 inverse PUT, 20m expiry, next-M5-open entry, 92% assumed payout; seed profile and radius unchanged from prior audit.",
       f"Seed: May+October 2026 TEST; N={len(seeds)}; profile radius={radius:.6f}. These seed months are exploratory and not independent confirmation.",
-      "Bootstrap: circular moving blocks over every calendar date from first to last cohort event, explicitly including dates with zero candidate events; 10,000 replicates by default. 5-day and 10-day blocks preserve within-day clustering and short-range serial dependence; intervals are percentile intervals, not a cure for selection bias.",
-      "Control: candidate events outside the frozen analog radius, same split and execution rules. Control count is small; compare cautiously.",
+      "Bootstrap: non-wrapping moving blocks over complete UTC calendar-day grids, including zero-event dates; TRAIN and VALIDATION are resampled separately in combined estimates. 5-day and 10-day blocks preserve within-day clustering and short-range calendar dependence; intervals are percentile intervals, not a cure for selection bias.",
+      f"Historical candidate-event analog coverage: {len(analog)}/{len(historical)} ({100*len(analog)/len(historical):.2f}%); control share={100*len(control)/len(historical):.2f}%. The small control cohort limits matched comparisons.",
+      "Control: candidate events outside the frozen analog radius, same split and execution rules. This is a candidate-event control, not a matched all-market baseline.",
       "No month/weekday filtering or candidate parameter changes. Dukascopy BID proxy; fixed 92% payout; no Pocket Option execution model.","",
       "## Seed cohort (feature-complete events)",""]
     for mo in sorted(SEED_MONTHS):
@@ -284,6 +304,6 @@ def main():
       "- May/October seed cohorts remain contaminated for independent confirmation because they defined the profile.",
       "- Next legitimate confirmation must use a future untouched period or prospective Pocket Option demo quote capture; no changes to the candidate/profile before that.",""]
     a.out.parent.mkdir(parents=True,exist_ok=True);a.out.write_text("\n".join(lines),encoding="utf-8")
-    print(f"HYD-CAND-013 dependence audit complete: historical={len(historical)} analog={len(analog)} control={len(control)} analog_share={100*len(analogs)/len(historical):.2f}% report={a.out}")
+    print(f"HYD-CAND-013 dependence audit complete: historical={len(historical)} analog={len(analog)} control={len(control)} analog_share={100*len(analog)/len(historical):.2f}% report={a.out}")
 
 if __name__=="__main__":main()
