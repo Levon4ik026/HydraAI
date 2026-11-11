@@ -68,7 +68,7 @@ def make_feature_rows(bars):
         ret=lambda k: None if i<k or not a else (b.close-bars[i-k].close)/a
         hist=[v/bars[j].close for j,v in enumerate(atr[:i]) if v is not None and bars[j].close]
         rank=percentile_rank(hist,a/b.close) if a is not None and len(hist)>=60 else None
-        bias="UP" if e20[i] is not None and e50[i] is not None and e20[i]>e50[i] else "DOWN" if e20[i] is not None and e50[i] is not None and e20[i]<e50[i] else "FLAT"
+        bias=None if e20[i] is None or e50[i] is None else "UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT"
         adx=ind[i]["adx"]
         adx_band="LOW(<20)" if adx is not None and adx<20 else "MID(20-30)" if adx is not None and adx<30 else "HIGH(>=30)" if adx is not None else None
         vol_band="LOW(<=33%)" if rank is not None and rank<=1/3 else "MID(33-67%)" if rank is not None and rank<=2/3 else "HIGH(>67%)" if rank is not None else None
