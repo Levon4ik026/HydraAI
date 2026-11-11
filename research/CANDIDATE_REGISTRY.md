@@ -26,6 +26,7 @@
 | HYD-CAND-011 | Up-shock second-bar reversal | Prior >=2x median-TR upward shock; second bar reverses | PUT | 15m | VALIDATION 56.52% (n=490); TEST 52.04% (n=594) | Exploratory lead — split instability |
 
 | HYD-CAND-012 | Bearish EMA20/EMA50 cross, inverted CALL | Fresh EMA20 cross below EMA50 with close below EMA20; exact-event inverse | CALL (inverse) | 5m | VALIDATION 58.67% (n=229); TEST 54.26% (n=193); positive net all splits | Exploratory lead — inverse direction; not confirmed |
+| HYD-CAND-013 | Bullish abnormal impulse continuation, inverted PUT | M5 range ≥2.0× prior 20-bar mean TR; body ≥60%; close in upper 25%; exact-event inverse | PUT (inverse) | 20m | VALIDATION 62.60% (n=380); TEST May 56.72% (n=69), October 58.67% (n=76) | Candidate — market-situation profiling required |
 ---
 
 ## HYD-CAND-001 — RSI14-70 bearish reversal, PUT, 5m
@@ -285,3 +286,26 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Limitations:** Ninth-wave screen covered 10 directional event families × 6 expiries × 2 variants × 3 splits (360 result rows); multiple-testing exposure and serial dependence remain. No block bootstrap, matched controls, or platform quote/spread/latency validation. Payout is fixed at 92%.
 - **Report / workflow:** [Ninth-wave discovery run 42815649623](https://github.com/Levon4ik026/HydraAI/actions/runs/42815649623), artifact `hydra-ninth-wave-market-situation-discovery`.
 - **Code:** `research/ninth_wave_market_situation_screen.py`; discovery commit `894fa96da6f41187dcf60209a377b066c142526c`.
+
+
+## HYD-CAND-013 — Bullish abnormal-impulse continuation, inverse PUT, 20m
+
+- **Status:** Candidate for market-situation profiling; not confirmed. This is a specialized candidate, not a strategy expected to work across all market states.
+- **Signal family:** On a completed M5 bullish candle, range is at least 2.0× the mean true range of the preceding 20 completed M5 candles (signal candle excluded); body/range is at least 0.60; close is in the upper 25% of the candle. The original continuation direction is CALL. Candidate direction is the exact-event inverse: PUT after that same bullish impulse candle.
+- **Execution:** Entry at next M5 open; expiry at close of the fourth subsequent M5 candle (20 minutes). One active trade per candidate/expiry/continuous segment/split. The original and inverse share the same signal timestamps and non-overlap schedule; only CALL/PUT is inverted.
+- **Data / accounting:** Dukascopy EUR/USD M1 BID aggregated to complete M5 bars; coverage 2024-01-01T22:00Z through 2026-11-08T23:58Z; assumed payout 92% (+0.92u/-1u/0u), break-even decisive WR 52.083%. This is a historical BID proxy, not Pocket Option executable pricing.
+- **Chronological splits:** TRAIN before 2025-09-17; VALIDATION 2025-09-17 through 2026-04-14; TEST from 2026-04-14. Split-crossing outcomes purged.
+
+| Split / cohort | Trades | W / L / D | Decisive WR | Net (u) | Wilson 95% CI |
+|---|---:|---:|---:|---:|---:|
+| TRAIN | 1,215 | 644 / 560 / 11 | 53.49% | +32.48 | [50.66,56.29]% |
+| VALIDATION | 380 | 236 / 141 / 3 | 62.60% | +76.12 | [57.61,67.33]% |
+| TEST — all | 441 | 227 / 206 / 8 | 52.42% | +2.84 | [47.72,57.09]% |
+| TEST — May 2026 | 69 | 38 / 29 / 2 | 56.72% | +5.96 | [44.81,67.90]% |
+| TEST — October 2026 | 76 | 44 / 31 / 1 | 58.67% | +9.48 | [47.37,69.12]% |
+
+- **Why retained:** VALIDATION is strong on a meaningful sample, and May/October 2026 TEST subcohorts are both above the 92%-payout break-even rate with positive net. This supports investigating the market situation in which the candidate works; it does not establish that calendar month itself is causal or that these months define a repeatable regime.
+- **Important counter-evidence:** June–August 2026 are weak for this same candidate: June 47.54% (n=63, -5.32u), July 46.38% (n=70, -7.56u), August 46.15% (n=52, -5.92u). Thus the candidate is not universal, and the month-level differences must be explained by observable pre-entry market conditions rather than a retrospective month filter.
+- **Next research step (frozen):** profile the pre-entry market state around May and October 2026 candidate events using only causal features; find analogous situations in earlier history; rerun the unchanged R2.0/C0.75 inverted-PUT rule at next M5 open, 20m expiry and the same 92% accounting on those analogs. Compare against matched non-analog candidate events / base cohorts. May/October are already-inspected TEST seed cohorts, so this is exploratory situation discovery, not an independent confirmation. No threshold/expiry/direction changes and no TEST-based tuning.
+- **Report / workflow:** eleventh-wave discovery run 42976524995 and frozen calendar audit run 42980368158.
+- **Code:** `research/eleventh_wave_impulse_screen.py`; `research/eleventh_wave_impulse_calendar_audit.py`; discovery commit `0cd5ba8f10e351b393cb744578a1e2db6a4a2e7e`.
