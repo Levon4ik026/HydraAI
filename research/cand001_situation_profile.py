@@ -113,7 +113,9 @@ def main():
     events=[]; backgrounds=[]; purged=0
     for sid,bars in enumerate(segments):
         feats=make_feature_rows(bars); rs=[x["rsi14"] for x in feats]
-        for i in range(1,len(bars)-1):
+        # Match the discovery screen shared indicator warm-up and tail guard exactly.
+        # The original expanded screen evaluated candidates only in range(60, len(bars)-13).
+        for i in range(60,len(bars)-13):
             if bars[i+1].timestamp-bars[i].timestamp!=timedelta(minutes=5): continue
             settle=bars[i+1].timestamp+timedelta(minutes=5)
             period=period_for(bars[i].timestamp,settle)
