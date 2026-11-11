@@ -1,6 +1,6 @@
 import sys
 import unittest
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -8,7 +8,7 @@ RESEARCH_DIR = Path(__file__).resolve().parents[1]
 if str(RESEARCH_DIR) not in sys.path:
     sys.path.insert(0, str(RESEARCH_DIR))
 
-from standalone_strategy_screen import summarize, wilson_interval, split_dates
+from standalone_strategy_screen import summarize, wilson_interval, split_dates, split_mode
 
 
 class StandaloneStrategyMetricsTests(unittest.TestCase):
@@ -54,13 +54,18 @@ class StandaloneStrategyMetricsTests(unittest.TestCase):
             (date(2025, 9, 17), date(2026, 4, 14)),
         )
 
-    def test_split_dates_reject_incomplete_chronological_coverage(self):
+    def test_short_history_uses_relative_chronological_fallback(self):
+        days = [date(2026, 10, 1) + timedelta(days=i) for i in range(10)]
         segment = [
-            SimpleNamespace(timestamp=datetime(2024, 1, 2, tzinfo=timezone.utc)),
-            SimpleNamespace(timestamp=datetime(2025, 9, 17, tzinfo=timezone.utc)),
+            SimpleNamespace(timestamp=datetime(day.year, day.month, day.day, tzinfo=timezone.utc))
+            for day in days
         ]
-        with self.assertRaises(ValueError):
-            split_dates([segment])
+        d1, d2 = split_dates([segment])
+        self.assertEqual((d1, d2), (days[6], days[8]))
+        self.assertEqual(
+            split_mode(d1, d2),
+            "relative 60/80% fallback for shorter history",
+        )
 
     def test_no_decisive_outcomes_has_no_win_rate_interval(self):
         result = summarize(["D", "D"])

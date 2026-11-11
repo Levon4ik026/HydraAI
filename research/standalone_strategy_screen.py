@@ -109,18 +109,26 @@ TEST_START_DATE = date(2026, 4, 14)
 
 
 def split_dates(segments):
-    # Frozen chronological boundaries: appending new history must not move
-    # validation or TEST and must never reclassify already-scored candles.
+    # Full multi-year research always uses these frozen boundaries. Compact
+    # sub-studies without the full history use an explicit chronological
+    # 60/80% fallback; they must not shift the multi-year cohort boundaries.
     dates = sorted({b.timestamp.date() for segment in segments for b in segment})
+    if not dates:
+        raise ValueError("No M5 dates available for chronological split")
     has_train = any(day < TRAIN_END_DATE for day in dates)
     has_validation = any(TRAIN_END_DATE <= day < TEST_START_DATE for day in dates)
     has_test = any(day >= TEST_START_DATE for day in dates)
-    if not (has_train and has_validation and has_test):
-        raise ValueError(
-            "History must cover TRAIN before 2025-09-17, VALIDATION "
-            "2025-09-17 through 2026-04-13, and TEST from 2026-04-14."
-        )
-    return TRAIN_END_DATE, TEST_START_DATE
+    if has_train and has_validation and has_test:
+        return TRAIN_END_DATE, TEST_START_DATE
+    if len(dates) < 3:
+        raise ValueError("At least three distinct M5 dates are required for a chronological split")
+    return dates[int(.60 * len(dates))], dates[int(.80 * len(dates))]
+
+
+def split_mode(d1, d2):
+    if d1 == TRAIN_END_DATE and d2 == TEST_START_DATE:
+        return "frozen multi-year boundaries"
+    return "relative 60/80% fallback for shorter history"
 
 def wilson_interval(wins, decisive, z=1.959963984540054):
     if decisive <= 0:
@@ -211,7 +219,7 @@ def main():
     rows=["# Standalone EURUSD strategy-family screen","",
       f"Source: Dukascopy EURUSD M1 BID; {len(m1):,} M1 rows; {sum(map(len,segments)):,} complete M5 bars; {len(segments):,} gap-separated segments.",
       f"Coverage: {m1[0].timestamp.isoformat()} to {m1[-1].timestamp.isoformat()}.",
-      f"Chronological split by calendar dates: TRAIN < {d1}; VALIDATION {d1} through {d2-timedelta(days=1)}; TEST >= {d2}.",
+      f"Chronological split ({split_mode(d1,d2)}): TRAIN < {d1}; VALIDATION {d1} through {d2-timedelta(days=1)}; TEST >= {d2}.",
       "Families: false range breaks, momentum range breaks, mean reversion, engulfing, rejection pin bars.",
       "Parameters fixed before evaluation; no optimization. Closed M5 signal, next M5 open entry; expiry at close of Nth subsequent M5 bar.",
       "Horizon set: 5/10/15/20/30/60 minutes. Payout: WIN +0.92u, LOSS -1u, DRAW 0u; break-even decisive WR 52.0833%.",
