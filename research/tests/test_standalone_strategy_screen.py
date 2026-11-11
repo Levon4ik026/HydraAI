@@ -1,12 +1,14 @@
 import sys
 import unittest
+from datetime import date, datetime, timezone
+from types import SimpleNamespace
 from pathlib import Path
 
 RESEARCH_DIR = Path(__file__).resolve().parents[1]
 if str(RESEARCH_DIR) not in sys.path:
     sys.path.insert(0, str(RESEARCH_DIR))
 
-from standalone_strategy_screen import summarize, wilson_interval
+from standalone_strategy_screen import summarize, wilson_interval, split_dates
 
 
 class StandaloneStrategyMetricsTests(unittest.TestCase):
@@ -32,6 +34,33 @@ class StandaloneStrategyMetricsTests(unittest.TestCase):
         low, high = wilson_interval(1, 2)
         self.assertAlmostEqual(low, 9.45, places=1)
         self.assertAlmostEqual(high, 90.55, places=1)
+
+
+    def test_split_dates_are_frozen_when_history_is_extended(self):
+        days = [
+            date(2024, 1, 2),
+            date(2025, 9, 16),
+            date(2025, 9, 17),
+            date(2026, 4, 13),
+            date(2026, 4, 14),
+            date(2026, 11, 11),
+        ]
+        segment = [
+            SimpleNamespace(timestamp=datetime(day.year, day.month, day.day, tzinfo=timezone.utc))
+            for day in days
+        ]
+        self.assertEqual(
+            split_dates([segment]),
+            (date(2025, 9, 17), date(2026, 4, 14)),
+        )
+
+    def test_split_dates_reject_incomplete_chronological_coverage(self):
+        segment = [
+            SimpleNamespace(timestamp=datetime(2024, 1, 2, tzinfo=timezone.utc)),
+            SimpleNamespace(timestamp=datetime(2025, 9, 17, tzinfo=timezone.utc)),
+        ]
+        with self.assertRaises(ValueError):
+            split_dates([segment])
 
     def test_no_decisive_outcomes_has_no_win_rate_interval(self):
         result = summarize(["D", "D"])

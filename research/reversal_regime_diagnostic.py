@@ -8,6 +8,7 @@ signals by a simple prior-12-bar efficiency-ratio regime.
 from __future__ import annotations
 
 import argparse
+from datetime import timedelta
 from collections import defaultdict
 from pathlib import Path
 
@@ -119,7 +120,7 @@ def main():
         f"Source: {len(m1):,} valid Dukascopy M1 rows; "
         f"{sum(map(len, segments)):,} complete M5 bars; "
         f"coverage {m1[0].timestamp.isoformat()} to {m1[-1].timestamp.isoformat()}.",
-        f"Splits: TRAIN < {d1}; VALIDATION {d1} through {d2}; TEST >= {d2}.",
+        f"Splits: TRAIN < {d1}; VALIDATION {d1} through {d2-timedelta(days=1)}; TEST >= {d2}.",
         "Frozen cohort is inherited unchanged from the TRAIN-only reversal audit "
         f"(n >= {MIN_TRAIN_TRADES}, original WR <= {MAX_TRAIN_WR:.1f}%, original net < 0).",
         "Regime uses only the 12 completed M5 bars before the signal candle. "

@@ -7,6 +7,7 @@ This script does not optimize parameters or select a regime filter.
 from __future__ import annotations
 
 import argparse
+from datetime import timedelta
 from collections import defaultdict
 from pathlib import Path
 
@@ -66,7 +67,7 @@ def main():
         f"Source: {len(m1):,} valid M1 rows; {sum(map(len, segments)):,} complete M5 bars; "
         f"{len(segments)} gap-separated segments.",
         f"Coverage: {m1[0].timestamp.isoformat()} to {m1[-1].timestamp.isoformat()}.",
-        f"Splits: TRAIN < {d1}; VALIDATION {d1} through {d2}; TEST >= {d2}.",
+        f"Splits: TRAIN < {d1}; VALIDATION {d1} through {d2-timedelta(days=1)}; TEST >= {d2}.",
         f"Frozen cohort inherited from TRAIN-only audit: n >= {MIN_TRAIN_TRADES}, "
         f"original decisive WR <= {MAX_TRAIN_WR:.4f}%, original net < 0.",
         "All outcomes are exact paired direction reversals on the same events. "
@@ -113,7 +114,7 @@ def main():
         "",
         "- A positive aggregate does not establish stability if quarterly results are concentrated in a few periods.",
         "- At 90%, 88%, 85% and 80% payout the report recalculates exact net using the same W/L/D sequence; no win-rate approximation is used.",
-        "- Candidate discovery screened 360 strategy/expiry combinations. This creates multiple-testing and selection bias; all later-period results are descriptive, not a new independent holdout.",
+        "- Candidate discovery screened 120 distinct strategy/expiry variants, reported across 3 splits (360 variant/split rows). This creates multiple-testing and selection bias; all later-period results are descriptive, not a new independent holdout.",
         "- Dukascopy BID candles are not Pocket Option executable quotes. Spread, latency, quote differences, payout changes by instrument/time, and execution rejection are not modeled.",
         "- No strategy is approved for live use; no trades are executed.",
         "",

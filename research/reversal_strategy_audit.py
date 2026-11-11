@@ -9,6 +9,7 @@ and PUT direction is flipped. No parameter tuning or holdout-based selection.
 from __future__ import annotations
 
 import argparse
+from datetime import timedelta
 from collections import defaultdict
 from pathlib import Path
 
@@ -138,7 +139,7 @@ def main():
         "gap-separated segments.",
         f"Coverage: {m1[0].timestamp.isoformat()} to {m1[-1].timestamp.isoformat()}.",
         f"Chronological split inherited from standalone screen: TRAIN < {d1}; "
-        f"VALIDATION {d1} through {d2}; TEST >= {d2}.",
+        f"VALIDATION {d1} through {d2-timedelta(days=1)}; TEST >= {d2}.",
         f"Selection frozen on TRAIN only: n >= {MIN_TRAIN_TRADES}, "
         f"original decisive WR <= {MAX_TRAIN_WR:.2f}%, and original net < 0.",
         "Payout: WIN +0.92u, LOSS -1u, DRAW 0u; decisive break-even WR 52.0833%.",

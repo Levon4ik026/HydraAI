@@ -44,7 +44,7 @@ def main():
       f"Frozen TRAIN-only cohort: n >= {MIN_TRAIN_TRADES}, original WR <= {MAX_TRAIN_WR:.4f}%, original net < 0.",
       f"Bootstrap: {B:,} resamples; resample UTC calendar days with replacement within each split; zero-trade days retained; seed={SEED}.",
       "Each day's P&L sums all exact inverse trades signalled that day. This preserves within-day clustering, but assumes daily clusters are exchangeable; multi-day dependence is not removed.",
-      "Payout 92%; WIN +0.92u, LOSS -1u, DRAW 0u. Bootstrap is descriptive and does not correct the 360-combination discovery/multiple-testing bias.",
+      "Payout 92%; WIN +0.92u, LOSS -1u, DRAW 0u. Discovery screened 120 distinct strategy/expiry variants across 3 splits (360 variant/split rows); bootstrap does not correct this multiple-testing bias.",
       "",
       "| Strategy | Expiry | Split | Trades | Active days / calendar days | Net | Bootstrap 95% CI total net | P(net > 0) |",
       "|---|---:|---|---:|---:|---:|---:|---:|"
@@ -69,7 +69,7 @@ def main():
         lines.append(f"| {name} | {h*5}m | {period} | {len(rows)} | {sum(x!=0 for x in vals)} / {n_days} | {total:+.2f}u | [{lo:+.2f}, {hi:+.2f}]u | {prob:.1f}% |")
     lines += ["","## Interpretation","",
       "- A confidence interval spanning zero means this resampling exercise does not establish positive average performance for that split.",
-      "- The bootstrap is not a substitute for a genuinely untouched forward period; candidate selection was performed on TRAIN and 360 combinations were screened.",
+      "- The bootstrap is not a substitute for a genuinely untouched forward period; candidate selection was performed on TRAIN and 120 distinct strategy/expiry variants (360 variant/split rows) were screened.",
       "- The BID feed, platform quote differences, payout variation, latency, and execution costs are not modeled.",
       "- No live strategy is approved and no trades are executed.",""]
     write_report(args.out, lines)
