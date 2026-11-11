@@ -230,7 +230,7 @@ def main():
     control=[r for r in historical if not r["analog"]]
     lines=["# HYD-CAND-013 — dependence-aware situation audit","",
       f"Data: Dukascopy EUR/USD M1 BID; M1={len(m1):,}; M5={sum(map(len,segments)):,}; segments={len(segments)}.",
-      f"Splits: TRAIN < {d1}; VALIDATION {d1}–{d2}; TEST >= {d2}; boundary-crossing outcomes purged.",
+      f"Splits: TRAIN before {d1}; VALIDATION {d1} through {d2-timedelta(days=1)}; TEST from {d2}; boundary-crossing outcomes purged.",
       "Frozen candidate/profile: same R2.0/C0.75 inverse PUT, 20m expiry, next-M5-open entry, 92% assumed payout; seed profile and radius unchanged from prior audit.",
       f"Seed: May+October 2026 TEST; N={len(seeds)}; profile radius={radius:.6f}. These seed months are exploratory and not independent confirmation.",
       "Bootstrap: non-wrapping moving blocks over complete UTC calendar-day grids, including zero-event dates; TRAIN and VALIDATION are resampled separately in combined estimates. 5-day and 10-day blocks preserve within-day clustering and short-range calendar dependence; intervals are percentile intervals, not a cure for selection bias.",
