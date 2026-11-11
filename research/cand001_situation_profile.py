@@ -66,7 +66,10 @@ def make_feature_rows(bars):
     for i,b in enumerate(bars):
         a=atr[i]; rng=b.high-b.low
         ret=lambda k: None if i<k or not a else (b.close-bars[i-k].close)/a
-        hist=[v/bars[j].close for j,v in enumerate(atr[:i]) if v is not None and bars[j].close]
+        # Rolling percentile against exactly the prior 120 completed M5 bars.
+        # Exclude the signal bar itself to keep the feature strictly pre-entry.
+        lo=max(0,i-120)
+        hist=[atr[j]/bars[j].close for j in range(lo,i) if atr[j] is not None and bars[j].close]
         rank=percentile_rank(hist,a/b.close) if a is not None and len(hist)>=60 else None
         bias=None if e20[i] is None or e50[i] is None else "UP" if e20[i]>e50[i] else "DOWN" if e20[i]<e50[i] else "FLAT"
         adx=ind[i]["adx"]
@@ -126,6 +129,19 @@ def main():
             if rs[i] is None or rs[i]<70 or bars[i].close>=bars[i].open: continue
             outcome="D" if abs(delta)<1e-12 else "W" if delta<0 else "L"
             events.append({**base,"outcome":outcome,"segment":sid,"index":i})
+    # Fail-fast reproduction gate: profile results are invalid unless the frozen candidate cohort matches the registry.
+    expected={
+      "TRAIN": (735,401,323,11),
+      "VALIDATION": (192,110,80,2),
+      "TEST": (218,124,93,1),
+    }
+    actual={}
+    for p in expected:
+        subset=[x for x in events if x["period"]==p]
+        actual[p]=(len(subset),sum(x["outcome"]=="W" for x in subset),sum(x["outcome"]=="L" for x in subset),sum(x["outcome"]=="D" for x in subset))
+    if actual != expected:
+        raise SystemExit(f"FROZEN COHORT MISMATCH: expected={expected}; actual={actual}. Stop; do not interpret profile.")
+    print(f"Frozen cohort reproduced exactly: {actual}")
     # Exact candidate event rule, one active 5m trade; trigger candles cannot overlap by construction.
     signal_times={x["time"] for x in events}
     bg=[x for x in backgrounds if x["time"] not in signal_times]
@@ -144,7 +160,7 @@ def main():
     for p in ("TRAIN","VALIDATION","TEST"):
         chosen=[x for x in events if x["period"]==p]; n,w,l,d,wr,ci,net=stat(chosen)
         lines.append(f"| {p} | {n} | {w}/{l}/{d} | {wr:.2f}% | [{ci[0]:.2f},{ci[1]:.2f}]% | {net:+.2f}u |" if ci else f"| {p} | {n} | {w}/{l}/{d} | n/a | n/a | {net:+.2f}u |")
-    dims=[("EMA20/EMA50 bias","bias"),("ADX strength","adx_band"),("Prior 120-bar ATR percentile","vol_band"),("Signal RSI severity","rsi_band"),("Prior 6-bar return / ATR","mom6_band")]
+    dims=[("EMA20/EMA50 bias","bias"),("ADX strength","adx_band"),("Prior 120 completed M5 bars ATR percentile","vol_band"),("Signal RSI severity","rsi_band"),("Prior 6-bar return / ATR","mom6_band")]
     for title,key in dims:
         lines += ["",f"## One-dimensional situation map: {title}","",
           "| Split | Situation bin | Candidate n | W/L/D | Candidate WR | Matched background n | Background PUT-equivalent rate | Lift (pp) | Net u |",
