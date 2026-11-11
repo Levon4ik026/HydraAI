@@ -27,7 +27,7 @@ def main():
     m1=read_m1(a.data)
     from reproduce_m5_bb_williams_adx import make_m5
     segments=make_m5(m1)
-    cand=[]; bg=[]
+    cand=[]; bg=[]; all_signal_times=set()
     for bars in segments:
         f=make_feature_rows(bars)
         for i in range(60,len(bars)-13):
@@ -36,16 +36,20 @@ def main():
             split=period_for(bars[i].timestamp,settle)
             if split!="VALIDATION": continue
             x=f[i]
+            # Exclude every frozen HYD-CAND-001 trigger from background,
+            # not only triggers that also pass the situation gate.
+            is_candidate = x["rsi14"] is not None and x["rsi14"]>=70 and bars[i].close<bars[i].open
+            if is_candidate:
+                all_signal_times.add(bars[i].timestamp)
             if x["bias"]!="UP" or x["vol_band"]!="HIGH(>67%)": continue
             delta=bars[i+1].close-bars[i+1].open
             outcome="D" if abs(delta)<1e-12 else "DOWN" if delta<0 else "UP"
             bg.append((bars[i].timestamp.date(),outcome,bars[i].timestamp))
-            if x["rsi14"] is not None and x["rsi14"]>=70 and bars[i].close<bars[i].open:
+            if is_candidate:
                 cand.append((bars[i].timestamp.date(),"D" if outcome=="D" else "W" if outcome=="DOWN" else "L",bars[i].timestamp))
-    # Preserve the profile report's background definition: all eligible situation bars,
-    # excluding candidate signal timestamps; candidate trades use the frozen trigger.
-    sig={x[2] for x in cand}
-    bg=[x for x in bg if x[2] not in sig]
+    # Match the discovery report: remove all candidate trigger timestamps,
+    # including triggers outside the situation gate, from situation background.
+    bg=[x for x in bg if x[2] not in all_signal_times]
     cw=sum(x[1]=="W" for x in cand); cl=sum(x[1]=="L" for x in cand); cd=sum(x[1]=="D" for x in cand)
     bw=sum(x[1]=="DOWN" for x in bg); bl=sum(x[1]=="UP" for x in bg)
     if (len(cand),cw,cl,cd)!=(123,75,48,0):
