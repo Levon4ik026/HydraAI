@@ -244,7 +244,7 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Signal family:** A completed upward M5 shock candle has true range at least 2× the median true range of the preceding 20 completed M5 candles; the following second bar shows reversal, producing a PUT signal. Signals are based only on closed bars.
 - **Execution:** Entry at next M5 open; expiry after 15 minutes (three M5 bars); one active position per family/expiry/continuous segment/split. Original and inverse variants use identical event timestamps and schedule; only CALL/PUT direction changes.
 - **Data / accounting:** Dukascopy EUR/USD M1 BID aggregated to M5; 1,061,815 M1 rows; coverage 2024-01-01T22:00Z through 2026-11-08T23:58Z; assumed payout 92% (+0.92u/-1u/0u). This is not Pocket Option executable pricing.
-- **Chronological splits:** TRAIN before 2025-09-17; VALIDATION 2025-09-17 through 2026-04-14; TEST from 2026-04-14. Boundary-crossing outcomes purged.
+- **Chronological splits:** TRAIN before 2025-09-17; VALIDATION 2025-09-17 through 2026-04-13; TEST from 2026-04-14. Boundary-crossing outcomes purged.
 - **Original PUT results:**
 
 | Split | Trades | W / L / D | Decisive WR | Wilson 95% CI | Net (u) | Max DD (u) |
