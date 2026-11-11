@@ -9,7 +9,7 @@ Research only; no production or execution changes.
 from __future__ import annotations
 import argparse, math, random
 from collections import defaultdict
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 from statistics import median
 
@@ -62,14 +62,20 @@ def fmt(m):
     wr="n/a" if m["wr"] is None else f'{m["wr"]:.2f}%'
     return f'N={m["n"]} W/L/D={m["w"]}/{m["l"]}/{m["d"]} WR={wr} Net={m["net"]:+.2f}u'
 
-def day_block_sample(days, block, rng):
-    n=len(days)
+def day_block_sample(calendar_days, block, rng):
+    """Circular moving blocks over every calendar date, including zero-event days."""
+    n=len(calendar_days)
     if not n: return []
     out=[]
     while len(out)<n:
         start=rng.randrange(n)
-        out.extend(days[(start+k)%n] for k in range(block))
+        out.extend(calendar_days[(start+k)%n] for k in range(block))
     return out[:n]
+
+def full_calendar_days(event_days):
+    if not event_days: return []
+    first,last=min(event_days),max(event_days)
+    return [first+timedelta(days=i) for i in range((last-first).days+1)]
 
 def decisive_wr(rows):
     w=sum(r["result"]=="W" for r in rows)
@@ -80,7 +86,8 @@ def bootstrap(rows, block, reps, seed):
     """Circular moving-block bootstrap over calendar days, retaining within-day clusters."""
     byday=defaultdict(list)
     for r in rows: byday[r["day"]].append(r)
-    days=sorted(byday)
+    event_days=sorted(byday)
+    days=full_calendar_days(event_days)
     if len(days)<block*2: return None
     rng=random.Random(seed)
     wrs=[]; nets=[]
@@ -97,7 +104,8 @@ def paired_difference_bootstrap(rows, block, reps, seed):
     """Analog minus non-analog decisive WR on the same sampled calendar blocks."""
     byday=defaultdict(list)
     for r in rows: byday[r["day"]].append(r)
-    days=sorted(byday)
+    event_days=sorted(byday)
+    days=full_calendar_days(event_days)
     if len(days)<block*2:return None
     rng=random.Random(seed); diffs=[]
     for _ in range(reps):
@@ -115,8 +123,8 @@ def main():
     p.add_argument("--data",type=Path,required=True); p.add_argument("--out",type=Path,required=True)
     p.add_argument("--reps",type=int,default=10000); a=p.parse_args()
     m1=read_m1(a.data); segments=make_m5(m1)
-    dates=sorted({b.timestamp.date() for seg in segments for b in seg})
-    d1,d2=dates[int(.60*len(dates))],dates[int(.80*len(dates))]
+    # Keep the previously frozen chronological split boundaries exactly.
+    d1,d2=date(2025,9,17),date(2026,4,14)
     rows=[]
     for sid,bars in enumerate(segments):
         events=build_events(bars); closes=[b.close for b in bars]; ema20=ema_series(closes)
@@ -162,7 +170,7 @@ def main():
       f"Splits: TRAIN < {d1}; VALIDATION {d1}–{d2}; TEST >= {d2}; boundary-crossing outcomes purged.",
       "Frozen candidate/profile: same R2.0/C0.75 inverse PUT, 20m expiry, next-M5-open entry, 92% assumed payout; seed profile and radius unchanged from prior audit.",
       f"Seed: May+October 2026 TEST; N={len(seeds)}; profile radius={radius:.6f}. These seed months are exploratory and not independent confirmation.",
-      "Bootstrap: circular moving blocks of calendar days; 10,000 replicates by default. 5-day and 10-day blocks preserve within-day clustering and short-range serial dependence; intervals are percentile intervals, not a cure for selection bias.",
+      "Bootstrap: circular moving blocks over every calendar date from first to last cohort event, explicitly including dates with zero candidate events; 10,000 replicates by default. 5-day and 10-day blocks preserve within-day clustering and short-range serial dependence; intervals are percentile intervals, not a cure for selection bias.",
       "Control: candidate events outside the frozen analog radius, same split and execution rules. Control count is small; compare cautiously.",
       "No month/weekday filtering or candidate parameter changes. Dukascopy BID proxy; fixed 92% payout; no Pocket Option execution model.","",
       "## Seed cohort (feature-complete events)",""]
@@ -177,8 +185,8 @@ def main():
         m=metrics(rs);wr="n/a" if m["wr"] is None else f'{m["wr"]:.2f}%'
         lines.append(f'| {mo} | {sp} | {m["n"]} | {m["w"]}/{m["l"]}/{m["d"]} | {wr} | {m["net"]:+.2f} |')
     lines += ["", "## Split performance and day-block bootstrap","",
-      "| Split/cohort | N | WR | Net u | 5d WR 95% CI | 10d WR 95% CI | 5d net 95% CI | 10d net 95% CI |",
-      "|---|---:|---:|---:|---|---|---|---|"]
+      "| Split/cohort | N | Active days | Calendar days | WR | Net u | 5d WR 95% CI | 10d WR 95% CI | 5d net 95% CI | 10d net 95% CI |",
+      "|---|---:|---:|---:|---:|---:|---|---|---|---|"]
     cohorts=[("TRAIN analog",[r for r in analog if r["split"]=="TRAIN"]),
              ("VALIDATION analog",[r for r in analog if r["split"]=="VALIDATION"]),
              ("TRAIN+VALIDATION analog",analog),
@@ -188,7 +196,9 @@ def main():
         def ci(b,k1,k2):
             return "n/a" if b is None else f"[{b[k1]:.2f},{b[k2]:.2f}]"
         wr="n/a" if m["wr"] is None else f'{m["wr"]:.2f}%'
-        lines.append(f'| {name} | {m["n"]} | {wr} | {m["net"]:+.2f} | {ci(b5,0,1)} | {ci(b10,0,1)} | {ci(b5,2,3)} | {ci(b10,2,3)} |')
+        active=len({r["day"] for r in rs})
+        calendar=len(full_calendar_days([r["day"] for r in rs]))
+        lines.append(f'| {name} | {m["n"]} | {active} | {calendar} | {wr} | {m["net"]:+.2f} | {ci(b5,0,1)} | {ci(b10,0,1)} | {ci(b5,2,3)} | {ci(b10,2,3)} |')
     lines += ["", "## Paired analog-vs-control day-block comparison","",
       "| Split | Observed WR gap (pp) | 5d bootstrap 95% CI | 10d bootstrap 95% CI | P(gap>0) 5d / 10d |",
       "|---|---:|---|---|---:|"]
@@ -204,7 +214,7 @@ def main():
     lines += ["", "## Interpretation guardrails","",
       "- A Validation result that is strong but absent in TRAIN is period-dependent evidence, not a confirmed stable situation-strategy pair.",
       "- Monthly rows expose concentration; sparse months are not standalone evidence.",
-      "- Day-block bootstrap intervals quantify sampling variability under short-range dependence, but do not correct retrospective seed selection, broad candidate search, or market-feed mismatch.",
+      "- Calendar-day blocks include zero-event days. These intervals quantify sampling variability under short-range dependence, but do not correct retrospective seed selection, broad candidate search, or market-feed mismatch.",
       "- A positive paired analog-control gap is useful only if both groups have adequate representation across dates; control N and active days must be considered.",
       "- May/October seed cohorts remain contaminated for independent confirmation because they defined the profile.",
       "- Next legitimate confirmation must use a future untouched period or prospective Pocket Option demo quote capture; no changes to the candidate/profile before that.",""]
