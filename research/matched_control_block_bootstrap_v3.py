@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse, json, hashlib, random
 from collections import defaultdict
+from bisect import bisect_right, insort
 from datetime import timedelta
 from pathlib import Path
 from universal_profile_engine import PAYOUT, SPLITS, parse_dt, read_matrix, build_candidate_events
@@ -36,10 +37,10 @@ def counts(rows):
     d=sum(x["outcome"]=="D" for x in rows); dec=w+l
     return w,l,d,(100*w/dec if dec else None),w*PAYOUT-l
 
-def intervals_overlap(a,b,h):
-    """Conservative half-open UTC trade windows, measured by elapsed M5 bars."""
-    duration=timedelta(minutes=5*h)
-    return a["time"] < b["time"]+duration and b["time"] < a["time"]+duration
+def time_overlaps_any(t, sorted_starts, duration):
+    """Check half-open UTC interval overlap in O(log n)."""
+    pos=bisect_right(sorted_starts,t-duration)
+    return pos<len(sorted_starts) and sorted_starts[pos]<t+duration
 
 def match_controls(c,accepted,background):
     h=int(c["expiry_bars"])
@@ -53,9 +54,13 @@ def match_controls(c,accepted,background):
         rows.sort(key=lambda x:(x["time"],x["segment"],x["index"]))
     used=set()
     selected_by_period=defaultdict(list)
-    events_by_period=defaultdict(list)
+    event_starts_by_period=defaultdict(list)
     for event in accepted:
-        events_by_period[event["period"]].append(event)
+        event_starts_by_period[event["period"]].append(event["time"])
+    for starts in event_starts_by_period.values():
+        starts.sort()
+    selected_starts_by_period=defaultdict(list)
+    duration=timedelta(minutes=5*h)
     pairs=[]
     window=timedelta(days=MATCH_WINDOW_DAYS)
     for event in sorted(accepted,key=lambda x:(x["period"],x["time"],x["segment"],x["index"])):
@@ -68,9 +73,9 @@ def match_controls(c,accepted,background):
             ck=(control["segment"],control["period"],control["index"])
             if ck in used:
                 continue
-            if any(intervals_overlap(control,e,h) for e in events_by_period[event["period"]]):
+            if time_overlaps_any(control["time"],event_starts_by_period[event["period"]],duration):
                 continue
-            if c["nonoverlap"] and any(intervals_overlap(control,x,h) for x in selected_by_period[event["period"]]):
+            if c["nonoverlap"] and time_overlaps_any(control["time"],selected_starts_by_period[event["period"]],duration):
                 continue
             rank=(abs(control["time"]-t),control["time"],control["segment"],control["index"])
             if best is None or rank<best[0]:
@@ -79,6 +84,7 @@ def match_controls(c,accepted,background):
             control=best[1]
             used.add((control["segment"],control["period"],control["index"]))
             selected_by_period[event["period"]].append(control)
+            insort(selected_starts_by_period[event["period"]],control["time"])
             pairs.append((event,control))
     return pairs
 
