@@ -164,6 +164,12 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Report / workflow:** [Fourth-wave discovery report artifact](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511), run 42798893511.
 - **Code:** research/fourth_wave_sweep_reclaim_screen.py.
 
+- **Situation-profile audit (2026-11-12):** [workflow run 43199215672](https://github.com/Levon4ik026/HydraAI/actions/runs/43199215672), report `research/CAND008_SITUATION_PROFILE_DISCOVERY.md`. Frozen baseline reproduced exactly: TRAIN 227 (130/97/0), VALIDATION 45 (25/20/0), TEST 76 (47/29/0). Descriptive causal-at-signal-close features examined: EMA20/50 bias, ADX14 strength, ATR14/close percentile vs prior 120 completed M5 bars (signal bar excluded), and prior 6-bar return/ATR.
+- **Situation-profile interpretation:** No sufficiently supported target situation identified yet. VALIDATION EMA-DOWN subgroup was 14/9 (60.87%, n=23; descriptive background lift +12.24 pp), but sample is too small and EMA-UP subgroup was 11/11 (n=22). ADX-HIGH was 9/6 (n=15), ADX-LOW 9/9 (n=18); ATR-percentile bins had only 6 and 4 trades in LOW/MID. Prior-momentum bins did not separate strongly in VALIDATION. Do not promote any of these as a filter. The apparent stronger TEST bins are not eligible for selection.
+- **Next step:** Keep candidate unchanged and treat it as a low-priority analog-study lead, not a profiled strategy. Any situation hypothesis must be developed on TRAIN or a new development cohort and checked on fresh prospective data; no tuning against VALIDATION/TEST.
+- **Profile limitations:** Background is all eligible M5 bars (overlapping), excluding raw candidate timestamps; it is descriptive, not a matched non-overlapping control schedule. Small VALIDATION sample; multiple testing and serial dependence remain. No dependence-aware bootstrap for this candidate yet.
+- **Profile report / code:** [HYD-CAND-008 situation-profile run](https://github.com/Levon4ik026/HydraAI/actions/runs/43199215672); `research/cand008_situation_profile.py`.
+
 ## HYD-CAND-007 — Previous-day high sweep/reclaim, inverse CALL, 30m
 
 - **Status:** Archived exploratory inverse lead; not promoted and not confirmed.
