@@ -64,6 +64,39 @@ class UniversalProfileEngineTests(unittest.TestCase):
         self.assertEqual(accepted[0]["index"], 65)
         self.assertEqual(purged, 0)
 
+    def test_additional_frozen_event_families(self):
+        d1 = datetime(2025, 9, 17, tzinfo=timezone.utc)
+        d2 = datetime(2026, 4, 14, tzinfo=timezone.utc)
+        cases = [
+            ("previous_day_high_sweep_reclaim_bearish", "CALL"),
+            ("previous_day_low_close_breakout", "CALL"),
+            ("ema20_bearish_cross", "CALL"),
+            ("donchian50_bullish_breakout", "PUT"),
+            ("bullish_abnormal_impulse", "PUT"),
+        ]
+        for event_type, side in cases:
+            bars = self.make_segment()
+            i = 65
+            if event_type == "previous_day_high_sweep_reclaim_bearish":
+                bars[i].update(previous_observed_utc_day_high="1.1050",
+                               open=1.1050, high=1.1060, low=1.1030, close=1.1040)
+            elif event_type == "previous_day_low_close_breakout":
+                bars[i-1]["close"] = 1.0960
+                bars[i].update(previous_observed_utc_day_low="1.0950",
+                               open=1.0960, high=1.0970, low=1.0930, close=1.0940)
+            elif event_type == "ema20_bearish_cross":
+                bars[i-1].update(ema20=1.1010, ema50=1.1000)
+                bars[i].update(ema20=1.0990, ema50=1.1000, close=1.0980)
+            elif event_type == "donchian50_bullish_breakout":
+                bars[i].update(open=1.1000, high=1.1030, low=1.0990, close=1.1020)
+            elif event_type == "bullish_abnormal_impulse":
+                bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1030)
+            candidate = {"event_type": event_type, "side": side,
+                         "expiry_bars": 1, "nonoverlap": False}
+            accepted, _, purged = build_candidate_events(candidate, {0: bars}, d1, d2)
+            self.assertEqual([x["index"] for x in accepted], [i], event_type)
+            self.assertEqual(purged, 0, event_type)
+
 
 if __name__ == "__main__":
     unittest.main()
