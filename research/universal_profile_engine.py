@@ -90,6 +90,22 @@ def build_candidate_events(c, segments, d1, d2):
                 mean_tr=sum(prior_tr)/len(prior_tr) if len(prior_tr)==20 else None
                 event=(mean_tr is not None and rng>=2.0*mean_tr and body>=0.60
                        and sig["close"]>sig["open"] and close_loc>=0.75)
+            elif c["event_type"]=="up_shock_second_bar_reversal":
+                prior_tr=[]
+                for j in range(max(1,i-21),i-1):
+                    prev_close=bars[j-1]["close"]
+                    x=bars[j]
+                    prior_tr.append(max(x["high"]-x["low"],abs(x["high"]-prev_close),abs(x["low"]-prev_close)))
+                shock=bars[i-1]
+                shock_prev_close=bars[i-2]["close"] if i>=2 else None
+                shock_tr=(max(shock["high"]-shock["low"],abs(shock["high"]-shock_prev_close),
+                              abs(shock["low"]-shock_prev_close)) if shock_prev_close is not None else None)
+                med_tr=sorted(prior_tr)[len(prior_tr)//2] if len(prior_tr)==20 else None
+                if med_tr is not None and len(prior_tr)==20 and len(prior_tr)%2==0:
+                    med_tr=(sorted(prior_tr)[9]+sorted(prior_tr)[10])/2.0
+                event=(med_tr is not None and shock_tr is not None and med_tr>0
+                       and shock_tr>=2.0*med_tr and shock["close"]>shock["open"]
+                       and sig["close"]<sig["open"] and sig["close"]<shock["close"])
             else:
                 raise ValueError("Unsupported event type: "+c["event_type"])
             if event: raw.append({**base,"outcome":win_loss(delta,side)})
