@@ -32,11 +32,17 @@ runs:
             raise SystemExit(f"Frozen EURUSD snapshot mismatch: expected 1,061,819 rows, got {len(rows):,}")
         import hashlib
         digest=hashlib.sha256(p.read_bytes()).hexdigest()
+        expected_sha256="4a084d3af598342e2b55e52bb79558825797c64410b875ff8e83ec019972decd"
+        if digest != expected_sha256:
+            raise SystemExit(f"Frozen EURUSD snapshot SHA-256 mismatch: {digest} != {expected_sha256}")
         manifest=Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.manifest.txt")
         manifest.write_text(
-            "dataset_id=EURUSD_M1_BID_DUKASCOPY_2024-01-01_to_2026-11-09_capture_2026-11-12_v1\n"
-            f"rows={len(rows)}\nsha256={digest}\n",
+            "dataset_id=EURUSD_M1_BID_DUKASCOPY_2024-01-01_to-2026-11-09_capture_2026-11-12_v1" + chr(10)
+            + f"rows={len(rows)}" + chr(10) + f"sha256={digest}" + chr(10),
             encoding="utf-8"
         )
+        parsed=dict(line.split("=",1) for line in manifest.read_text(encoding="utf-8").splitlines())
+        if parsed.get("rows") != str(len(rows)) or parsed.get("sha256") != digest:
+            raise SystemExit("Snapshot manifest round-trip validation failed")
         print(f"Verified frozen snapshot: rows={len(rows):,}; sha256={digest}; cache_hit=${{ steps.cache.outputs.cache-hit }}")
         PY
