@@ -91,7 +91,7 @@ class UniversalProfileEngineTests(unittest.TestCase):
             elif event_type == "donchian50_bullish_breakout":
                 bars[i].update(open=1.1000, high=1.1030, low=1.0990, close=1.1020)
             elif event_type == "bullish_abnormal_impulse":
-                bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1030)
+                bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1032)
             elif event_type == "up_shock_second_bar_reversal":
                 bars[i-1].update(open=1.1000, high=1.1050, low=1.1000, close=1.1040)
                 bars[i].update(open=1.1030, high=1.1035, low=1.1015, close=1.1020)
