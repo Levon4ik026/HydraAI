@@ -28,6 +28,19 @@ jobs:
             --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv \
             --out research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
             --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+      - name: Run universal candidate situation profiles
+        run: |
+          python research/universal_profile_engine.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v1.json \
+            --out research-artifacts/universal-candidate-profiles.md
+      - name: Upload universal profile report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-universal-candidate-profiles-v1
+          path: research-artifacts/universal-candidate-profiles.md
+          if-no-files-found: error
       - name: Upload shared matrix and manifest
         uses: actions/upload-artifact@v4
         with:
