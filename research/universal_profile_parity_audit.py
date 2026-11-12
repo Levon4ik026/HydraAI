@@ -58,8 +58,8 @@ def main():
         f"- Feature matrix SHA-256: {manifest['matrix_sha256']}",
         "- The legacy event builders and universal engine receive the same reconstructed, gap-separated M5 OHLC segments.",
         "- This audit compares raw trigger timestamps, accepted non-overlap timestamps, and outcomes; it does not validate profitability.","",
-        "| Candidate | Legacy raw events | Engine accepted | Legacy accepted | Raw timestamp parity | Accepted timestamp parity | Outcome parity | Result |",
-        "|---|---:|---:|---:|---|---|---|---|"
+        "| Candidate | Legacy raw events | Engine raw events | Engine accepted | Legacy accepted | Raw timestamp parity | Accepted timestamp parity | Outcome parity | Result |",
+        "|---|---:|---:|---:|---:|---|---|---|---|"
     ]
     failures=0
     for c in cfg["candidates"]:
@@ -68,7 +68,7 @@ def main():
             continue
         builder,event_name=LEGACY[cid]
         d1,d2=derive_split_dates(c,days,d1_fixed,d2_fixed)
-        engine_accepted,_,_=build_candidate_events(c,segments_rows,d1,d2)
+        engine_accepted,_,_,engine_raw=build_candidate_events(c,segments_rows,d1,d2,include_raw=True)
         legacy_raw=[]
         for sid,bars in bars_by_segment.items():
             found=builder(bars).get(event_name,[])
@@ -109,12 +109,9 @@ def main():
                         next_allowed=i+h
         engine_keys={(x["segment"],x["index"],x["period"]) for x in engine_accepted}
         legacy_keys=set(legacy_accepted)
-        raw_keys={(sid,i) for sid,i,_ in legacy_raw}
-        engine_raw_keys=set()
-        # The engine's accepted set is a subset of raw triggers. For raw parity, recover
-        # every legacy event after the same eligibility and split-boundary rules.
-        legacy_raw_eligible={(sid,i) for sid,i,_ in legacy_eligible}
-        raw_parity=(len(legacy_raw)==len(set((sid,i) for sid,i,_ in legacy_raw)))
+        legacy_raw_keys={(sid,i,p) for sid,i,p in legacy_eligible}
+        engine_raw_keys={(x["segment"],x["index"],x["period"]) for x in engine_raw}
+        raw_parity=(legacy_raw_keys==engine_raw_keys)
         accepted_parity=(engine_keys==legacy_keys)
         engine_out={(x["segment"],x["index"],x["period"]):x["outcome"] for x in engine_accepted}
         outcomes_ok=True
@@ -124,20 +121,11 @@ def main():
             expected=win_loss(delta,c["side"])
             if engine_out.get((sid,i,p))!=expected:
                 outcomes_ok=False
-        # Independently verify the raw event set by comparing legacy builder output
-        # with the universal event predicate for each eligible bar through the engine.
-        # build_candidate_events exposes accepted events; with nonoverlap disabled this
-        # is a direct raw-event comparison, otherwise timestamp scheduling is checked above.
-        if not c["nonoverlap"]:
-            raw_parity=(raw_keys=={(x["segment"],x["index"]) for x in engine_accepted})
-        else:
-            raw_parity=(len(legacy_raw)==len(set((sid,i) for sid,i,_ in legacy_raw)))
-        ok=accepted_parity and outcomes_ok
+        ok=raw_parity and accepted_parity and outcomes_ok
         failures += 0 if ok else 1
         report.append(
-            f"| {cid} | {len(legacy_raw)} | {len(engine_accepted)} | {len(legacy_accepted)} | "
-            f"{'unique' if raw_parity else 'duplicate timestamps'} | "
-            f"{'PASS' if accepted_parity else 'FAIL'} | {'PASS' if outcomes_ok else 'FAIL'} | "
+            f"| {cid} | {len(legacy_raw)} | {len(engine_raw)} | {len(engine_accepted)} | {len(legacy_accepted)} | "
+            f"{'PASS' if raw_parity else 'FAIL'} | {'PASS' if accepted_parity else 'FAIL'} | {'PASS' if outcomes_ok else 'FAIL'} | "
             f"{'PASS' if ok else 'FAIL'} |"
         )
         if not accepted_parity:
