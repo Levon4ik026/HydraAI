@@ -35,6 +35,20 @@ def derive_split_dates(c, days, d1_fixed, d2_fixed):
                 datetime.combine(days[int(.80*len(days))],datetime.min.time(),tzinfo=timezone.utc))
     raise ValueError(f"Unsupported split scheme: {scheme}")
 
+def format_candidate_row(
+    cid, legacy_builder_raw_count, legacy_eligible_raw_count,
+    engine_eligible_raw_count, engine_accepted_count, legacy_accepted_count,
+    raw_parity, accepted_parity, outcomes_ok,
+):
+    ok = raw_parity and accepted_parity and outcomes_ok
+    return (
+        f"| {cid} | {legacy_builder_raw_count} | {legacy_eligible_raw_count} | "
+        f"{engine_eligible_raw_count} | {engine_accepted_count} | {legacy_accepted_count} | "
+        f"{'PASS' if raw_parity else 'FAIL'} | {'PASS' if accepted_parity else 'FAIL'} | "
+        f"{'PASS' if outcomes_ok else 'FAIL'} | {'PASS' if ok else 'FAIL'} |"
+    )
+
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--matrix",type=Path,required=True)
@@ -58,8 +72,8 @@ def main():
         f"- Feature matrix SHA-256: {manifest['matrix_sha256']}",
         "- The legacy event builders and universal engine receive the same reconstructed, gap-separated M5 OHLC segments.",
         "- This audit compares raw trigger timestamps, accepted non-overlap timestamps, and outcomes; it does not validate profitability.","",
-        "| Candidate | Legacy raw events | Engine raw events | Engine accepted | Legacy accepted | Raw timestamp parity | Accepted timestamp parity | Outcome parity | Result |",
-        "|---|---:|---:|---:|---:|---|---|---|---|"
+        "| Candidate | Legacy builder raw (pre-guard) | Legacy eligible raw | Engine eligible raw | Engine accepted | Legacy accepted | Eligible raw timestamp parity | Accepted timestamp parity | Outcome parity | Result |",
+        "|---|---:|---:|---:|---:|---:|---|---|---|---|"
     ]
     failures=0
     for c in cfg["candidates"]:
@@ -68,7 +82,7 @@ def main():
             continue
         builder,event_name=LEGACY[cid]
         d1,d2=derive_split_dates(c,days,d1_fixed,d2_fixed)
-        engine_accepted,_,_,engine_raw=build_candidate_events(c,segments_rows,d1,d2,include_raw=True)
+        engine_accepted,_,_,engine_eligible_raw=build_candidate_events(c,segments_rows,d1,d2,include_raw=True)
         legacy_raw=[]
         for sid,bars in bars_by_segment.items():
             found=builder(bars).get(event_name,[])
@@ -110,8 +124,8 @@ def main():
         engine_keys={(x["segment"],x["index"],x["period"]) for x in engine_accepted}
         legacy_keys=set(legacy_accepted)
         legacy_raw_keys={(sid,i,p) for sid,i,p in legacy_eligible}
-        engine_raw_keys={(x["segment"],x["index"],x["period"]) for x in engine_raw}
-        raw_parity=(legacy_raw_keys==engine_raw_keys)
+        engine_eligible_raw_keys={(x["segment"],x["index"],x["period"]) for x in engine_eligible_raw}
+        raw_parity=(legacy_raw_keys==engine_eligible_raw_keys)
         accepted_parity=(engine_keys==legacy_keys)
         engine_out={(x["segment"],x["index"],x["period"]):x["outcome"] for x in engine_accepted}
         outcomes_ok=True
@@ -123,11 +137,17 @@ def main():
                 outcomes_ok=False
         ok=raw_parity and accepted_parity and outcomes_ok
         failures += 0 if ok else 1
-        report.append(
-            f"| {cid} | {len(legacy_raw)} | {len(engine_raw)} | {len(engine_accepted)} | {len(legacy_accepted)} | "
-            f"{'PASS' if raw_parity else 'FAIL'} | {'PASS' if accepted_parity else 'FAIL'} | {'PASS' if outcomes_ok else 'FAIL'} | "
-            f"{'PASS' if ok else 'FAIL'} |"
-        )
+        report.append(format_candidate_row(
+            cid=cid,
+            legacy_builder_raw_count=len(legacy_raw),
+            legacy_eligible_raw_count=len(legacy_raw_keys),
+            engine_eligible_raw_count=len(engine_eligible_raw),
+            engine_accepted_count=len(engine_accepted),
+            legacy_accepted_count=len(legacy_accepted),
+            raw_parity=raw_parity,
+            accepted_parity=accepted_parity,
+            outcomes_ok=outcomes_ok,
+        ))
         if not accepted_parity:
             missing=sorted(legacy_keys-engine_keys)[:8]
             extra=sorted(engine_keys-legacy_keys)[:8]
