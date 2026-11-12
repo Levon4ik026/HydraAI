@@ -77,6 +77,19 @@ jobs:
             --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
             --config research/candidate_profile_config_v2.json \
             --out research-artifacts/matched-control-block-bootstrap-v2.md
+      - name: Run v3 cross-segment matched controls and calendar-day block bootstrap
+        run: |
+          python research/matched_control_block_bootstrap_v3.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v2.json \
+            --out research-artifacts/matched-control-block-bootstrap-v3.md
+      - name: Upload v3 matched-control bootstrap report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-matched-control-block-bootstrap-v3
+          path: research-artifacts/matched-control-block-bootstrap-v3.md
+          if-no-files-found: error
       - name: Upload matched-control bootstrap report
         uses: actions/upload-artifact@v4
         with:
