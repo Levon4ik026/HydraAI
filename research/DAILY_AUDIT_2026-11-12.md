@@ -3,8 +3,7 @@
 ## Repository and CI
 - Branch HEAD at initial inspection: `hydra/research-validation` = `3b0d440b8665037346f7322a366e8e0188a0a890`; `hydra/stabilization` = `dce8d011ea7f56d7ff890749243ef7d54f0e1afc`; `main` = `b5dc96b089073c72619afafa03428827a92dbbf5`.
 - Current research-branch commit set included v3 cross-segment matched-control changes; latest exact-HEAD runs at the time of inspection: feature matrix 43232076249, research validation 43232086183, Math Core 43232086316 — all succeeded.
-- Branch comparison: research-validation is 517 commits ahead of stabilization, 0 behind; versus main it is 608 ahead and 6 behind.
-- No CI failure on the exact inspected HEAD.
+- At the initial pre-audit HEAD `3b0d440b`, research-validation was 517 commits ahead of stabilization and 608 ahead / 6 behind main. After four audit-only commits, current HEAD is `04723169d3603cad87609f84e3531cd3783f5256`; comparison is now 521 ahead / 0 behind stabilization and 612 ahead / 6 behind main.
 
 ## Frozen MEAN_REV forward boundary
 - Previous completed forward snapshot cutoff: 2026-11-12 12:01:06 UTC (run 43213808384).
@@ -27,6 +26,7 @@
 - The mean-reversion workflow itself is available, but the GitHub connector exposed no workflow-dispatch action, and a safe post-cutoff run boundary could not be supplied through the current workflow. The attempted temporary override file was removed; no workflow or strategy code was changed.
 
 ## Other research/CI observations
-- Latest research HEAD has successful exact-SHA runs for the shared M5 feature matrix, research validation, and Math Core.
-- Historical failed shared-feature-matrix runs 43215795809 and 43215763592 are being inspected separately; they do not affect the successful current-HEAD CI status.
+- Exact-HEAD status for `hydra/stabilization` has no associated Actions run; `main` exact HEAD has a successful run [42798893511](https://github.com/Levon4ik026/HydraAI/actions/runs/42798893511).
+- On current exact HEAD `04723169d3603cad87609f84e3531cd3783f5256`, Math Core run [43248028626](https://github.com/Levon4ik026/HydraAI/actions/runs/43248028626) succeeded. Research Validation push [43248013703](https://github.com/Levon4ik026/HydraAI/actions/runs/43248013703) and PR [43248028919](https://github.com/Levon4ik026/HydraAI/actions/runs/43248028919) had their research-unit-tests jobs succeed, while their long-history-reversal jobs were still downloading Dukascopy data; overall runs were not yet complete. The latest shared feature-matrix success [43232076249](https://github.com/Levon4ik026/HydraAI/actions/runs/43232076249) is on ancestor HEAD `3b0d440b`, not the current audit-only HEAD. Its pinned source ends 2026-11-08 23:58 UTC and is not fresh holdout data.
+- Exact current HEAD has no failed CI job observed so far; Research Validation remains pending until the long-history jobs finish. Historical failed shared-feature-matrix runs 43215795809 and 43215763592 are explained below in this audit and are fixed in later commits.
 - No changes to `main` or `hydra/stabilization`; no PR merge, production promotion, local user-file edit, or trade execution.
