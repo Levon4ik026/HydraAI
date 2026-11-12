@@ -389,7 +389,7 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "fixed",
+      "split_scheme": "observed_utc_date_quantiles_60_80",
       "split_settlement": "bar_close",
       "background_requires_level": "previous_observed_utc_week_low"
     }
