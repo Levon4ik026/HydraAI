@@ -121,10 +121,11 @@ def build_candidate_events(c, segments, d1, d2):
     bg=[x for x in bg if (x["segment"],x["index"]) not in event_keys]
     return accepted,bg,purged
 
-def profile_candidate(c, accepted, bg, purged):
+def profile_candidate(c, accepted, bg, purged, d1, d2):
     lines=["## "+c["id"]+" — "+c["name"],"",
       f"- Frozen event: {c['event_type']}; side={c['side']}; expiry={c['expiry_bars']*5}m; non-overlap={c['nonoverlap']}.",
-      f"- Boundary-crossing outcomes purged: {purged}.",
+      f"- Candidate-specific chronological splits: TRAIN < {d1.date()}; VALIDATION {d1.date()} through {d2.date()-timedelta(days=1)}; TEST >= {d2.date()}.",
+      f"- Split scheme: {c.get(\"split_scheme\", \"fixed\")}; boundary-crossing outcomes purged: {purged}.",
       "- Features are measured at the completed signal-bar close; entry is the next M5 open.",
       "- Background is all eligible M5 bars excluding raw candidate trigger timestamps; descriptive and overlapping, not matched non-overlap controls.","",
       "| Split | Actual n | W/L/D | WR | Net u | Expected n (W/L/D) | Gate |",
@@ -185,8 +186,11 @@ def main():
     for actual,expected in checks.items():
         if m[actual]!=cfg["dataset"][expected]:
             raise SystemExit(f"Dataset identity mismatch {actual}: {m[actual]} != {cfg['dataset'][expected]}")
-    d1=parse_dt(cfg["split_boundaries_utc"]["train_end"]); d2=parse_dt(cfg["split_boundaries_utc"]["validation_end"])
+    fixed_d1=parse_dt(cfg["split_boundaries_utc"]["train_end"]); fixed_d2=parse_dt(cfg["split_boundaries_utc"]["validation_end"])
     segments=read_matrix(a.matrix)
+    observed_days=sorted({row["timestamp"].date() for rows in segments.values() for row in rows})
+    if len(observed_days)<30:
+        raise SystemExit("Insufficient observed UTC dates for chronological split derivation")
     matrix_rows=sum(len(x) for x in segments.values())
     if matrix_rows != m["matrix_rows"]:
         raise SystemExit(f"Feature matrix row-count mismatch: {matrix_rows} != {m['matrix_rows']}")
@@ -198,8 +202,16 @@ def main():
       "- 92% payout is a scenario only (+0.92/-1/0); break-even decisive WR 52.0833%.",
       "- Dukascopy BID is not Pocket Option executable pricing.",""]
     for c in cfg["candidates"]:
+        scheme=c.get("split_scheme","fixed")
+        if scheme=="fixed":
+            d1,d2=fixed_d1,fixed_d2
+        elif scheme=="observed_utc_date_quantiles_60_80":
+            d1=datetime.combine(observed_days[int(0.60*len(observed_days))],datetime.min.time(),tzinfo=timezone.utc)
+            d2=datetime.combine(observed_days[int(0.80*len(observed_days))],datetime.min.time(),tzinfo=timezone.utc)
+        else:
+            raise SystemExit(f"Unknown split scheme for {c[chr(105)+chr(100)]}: {scheme}")
         accepted,bg,purged=build_candidate_events(c,segments,d1,d2)
-        report += profile_candidate(c,accepted,bg,purged)
+        report += profile_candidate(c,accepted,bg,purged,d1,d2)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text("\n".join(report)+"\n",encoding="utf-8")
     print(f"Universal profile engine complete: {len(cfg['candidates'])} candidate definitions; {a.out}")
