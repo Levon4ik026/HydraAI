@@ -297,6 +297,41 @@
         "momentum6_band"
       ],
       "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-011",
+      "name": "Up-shock second-bar reversal PUT, 15m",
+      "event_type": "up_shock_second_bar_reversal",
+      "side": "PUT",
+      "expiry_bars": 3,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 1573,
+          "w": 782,
+          "l": 781,
+          "d": 10
+        },
+        "VALIDATION": {
+          "n": 490,
+          "w": 273,
+          "l": 210,
+          "d": 7
+        },
+        "TEST": {
+          "n": 594,
+          "w": 306,
+          "l": 282,
+          "d": 6
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
     }
   ]
 }
