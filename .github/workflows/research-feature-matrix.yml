@@ -9,6 +9,7 @@ on:
       - "research/universal_profile_engine.py"
       - "research/universal_profile_parity_audit.py"
       - "research/matched_control_block_bootstrap.py"
+      - "research/matched_control_block_bootstrap_v3.py"
       - "research/candidate_profile_config_v1.json"
       - "research/candidate_profile_config_v2.json"
       - ".github/workflows/research-feature-matrix.yml"
