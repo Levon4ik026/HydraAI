@@ -44,8 +44,10 @@ def stat(xs):
 def build_candidate_events(c, segments, d1, d2):
     h=int(c["expiry_bars"]); side=c["side"]
     raw=[]; bg=[]; purged=0
+    min_index=int(c.get("min_signal_index",60))
+    tail_guard=int(c.get("tail_guard",13))
     for sid,bars in segments.items():
-        for i in range(60,len(bars)-13):
+        for i in range(min_index,len(bars)-tail_guard):
             sig,entry,settle_bar=bars[i],bars[i+1],bars[i+h]
             if entry["timestamp"]-sig["timestamp"] != timedelta(minutes=5): continue
             settlement_mode=c.get("split_settlement","bar_close")
