@@ -53,7 +53,9 @@
         }
       ],
       "split_scheme": "fixed",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "min_signal_index": 60,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-008",
@@ -91,7 +93,9 @@
       "predeclared_combinations": [],
       "split_scheme": "fixed",
       "split_settlement": "bar_close",
-      "background_requires_level": "previous_observed_utc_week_low"
+      "background_requires_level": "previous_observed_utc_week_low",
+      "min_signal_index": 60,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-003",
@@ -128,7 +132,9 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_open"
+      "split_settlement": "bar_open",
+      "min_signal_index": 51,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-006",
@@ -166,7 +172,9 @@
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
       "split_settlement": "bar_close",
-      "background_requires_level": "previous_observed_utc_day_high"
+      "background_requires_level": "previous_observed_utc_day_high",
+      "min_signal_index": 60,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-007",
@@ -204,7 +212,9 @@
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
       "split_settlement": "bar_close",
-      "background_requires_level": "previous_observed_utc_day_high"
+      "background_requires_level": "previous_observed_utc_day_high",
+      "min_signal_index": 60,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-010",
@@ -242,7 +252,9 @@
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
       "split_settlement": "bar_close",
-      "background_requires_level": "previous_observed_utc_day_low"
+      "background_requires_level": "previous_observed_utc_day_low",
+      "min_signal_index": 14,
+      "tail_guard": 12
     },
     {
       "id": "HYD-CAND-012",
@@ -279,7 +291,9 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_open"
+      "split_settlement": "bar_open",
+      "min_signal_index": 101,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-013",
@@ -316,7 +330,9 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "min_signal_index": 20,
+      "tail_guard": 4
     },
     {
       "id": "HYD-CAND-011",
@@ -353,7 +369,9 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_open"
+      "split_settlement": "bar_open",
+      "min_signal_index": 25,
+      "tail_guard": 13
     },
     {
       "id": "HYD-CAND-009",
@@ -391,7 +409,9 @@
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
       "split_settlement": "bar_close",
-      "background_requires_level": "previous_observed_utc_week_low"
+      "background_requires_level": "previous_observed_utc_week_low",
+      "min_signal_index": 60,
+      "tail_guard": 13
     }
   ]
 }
