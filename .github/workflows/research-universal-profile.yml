@@ -1,0 +1,45 @@
+name: Hydra universal candidate market-situation profiles
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful shared feature-matrix workflow run ID
+        required: true
+        default: "43208436512"
+  workflow_run:
+    workflows: ["Hydra shared EURUSD M5 feature matrix"]
+    types: [completed]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  profile:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download shared feature matrix from source run
+        uses: actions/download-artifact@v4
+        with:
+          name: hydra-eurusd-m5-causal-feature-matrix-v1
+          path: matrix
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+      - name: Run declarative candidate profiles
+        run: |
+          python research/universal_profile_engine.py \
+            --matrix matrix/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest matrix/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v1.json \
+            --out research-artifacts/universal-candidate-profiles.md
+      - name: Upload standardized profile report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-universal-candidate-profiles-v1
+          path: research-artifacts/universal-candidate-profiles.md
+          if-no-files-found: error
