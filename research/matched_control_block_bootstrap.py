@@ -159,7 +159,7 @@ def main():
       "- CI crossing zero is inconclusive; even a positive CI remains exploratory after candidate/regime search.",
       "- Do not tune filters from TEST. TEST has prior exposure and is descriptive only.",
       "- Dukascopy BID bars are not Pocket Option executable quotes.",""]
-    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\\n".join(report),encoding="utf-8")
+    a.out.write_text(chr(10).join(report)+chr(10),encoding="utf-8")
     print(f"Matched-control bootstrap complete: candidates={len(cfg['candidates'])}; output={a.out}")
 
 if __name__=="__main__": main()
