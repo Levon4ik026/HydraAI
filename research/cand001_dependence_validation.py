@@ -49,7 +49,7 @@ def main():
                 cand.append((bars[i].timestamp.date(),"D" if outcome=="D" else "W" if outcome=="DOWN" else "L",bars[i].timestamp))
     # Match the discovery report: remove all candidate trigger timestamps,
     # including triggers outside the situation gate, from situation background.
-    bg=[x for x in bg if x[2] not in all_signal_times]
+    bg=[x for x in bg if x[2] not in all_signal_times and x[1] in ("DOWN","UP")]
     cw=sum(x[1]=="W" for x in cand); cl=sum(x[1]=="L" for x in cand); cd=sum(x[1]=="D" for x in cand)
     bw=sum(x[1]=="DOWN" for x in bg); bl=sum(x[1]=="UP" for x in bg)
     if (len(cand),cw,cl,cd)!=(123,75,48,0):
