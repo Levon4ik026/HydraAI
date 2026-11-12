@@ -48,7 +48,13 @@ def build_candidate_events(c, segments, d1, d2):
         for i in range(60,len(bars)-13):
             sig,entry,settle_bar=bars[i],bars[i+1],bars[i+h]
             if entry["timestamp"]-sig["timestamp"] != timedelta(minutes=5): continue
-            settle=settle_bar["timestamp"]+timedelta(minutes=5)
+            settlement_mode=c.get("split_settlement","bar_close")
+            if settlement_mode=="bar_close":
+                settle=settle_bar["timestamp"]+timedelta(minutes=5)
+            elif settlement_mode=="bar_open":
+                settle=settle_bar["timestamp"]
+            else:
+                raise ValueError(f"Unsupported split_settlement: {settlement_mode}")
             p=period_for(sig["timestamp"],settle,d1,d2)
             if p is None:
                 purged+=1; continue
