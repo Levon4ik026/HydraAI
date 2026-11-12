@@ -61,6 +61,25 @@ def match_controls(c,accepted,background):
             selected_by_pool[key].append(control["index"]); selected_by_segment_split[(control["segment"],control["period"])].append(control["index"]); pairs.append((event,control))
     return pairs
 
+def calendar_dates(segments,d1,d2,split):
+    observed=[]
+    for rows in segments.values():
+        for row in rows:
+            t=row["timestamp"]
+            if ((split=="TRAIN" and t<d1) or
+                (split=="VALIDATION" and d1<=t<d2) or
+                (split=="TEST" and t>=d2)):
+                observed.append(t.date())
+    if not observed:
+        return []
+    lo,hi=min(observed),max(observed)
+    dates=[]
+    day=lo
+    while day<=hi:
+        dates.append(day)
+        day+=timedelta(days=1)
+    return dates
+
 def bootstrap_ci(pairs,dates,seed):
     if not pairs or not dates: return None
     daily={d:[0.0,0] for d in dates}
@@ -114,10 +133,7 @@ def main():
             eligible=[x for x in accepted if x["period"]==split]
             ps=[(x,y) for x,y in pairs if x["period"]==split]
             ca,co,cs,bs=summarize(ps)
-            dates=sorted({r["timestamp"].date() for rows in segments.values() for r in rows
-                if (split=="TRAIN" and r["timestamp"]<d1) or
-                   (split=="VALIDATION" and d1<=r["timestamp"]<d2) or
-                   (split=="TEST" and r["timestamp"]>=d2)})
+            dates=calendar_dates(segments,d1,d2,split)
             ci=bootstrap_ci(ps,dates,sum(ord(z) for z in c["id"]+split))
             coverage=100*len(ps)/len(eligible) if eligible else 0.0
             wr1=f"{cs[3]:.2f}%" if cs[3] is not None else "n/a"
@@ -130,10 +146,7 @@ def main():
             for split in SPLITS:
                 ps=[(x,y) for x,y in pairs if x["period"]==split and all(x["state"].get(k)==v for k,v in cond.items())]
                 ca,co,cs,bs=summarize(ps)
-                dates=sorted({r["timestamp"].date() for rows in segments.values() for r in rows
-                    if (split=="TRAIN" and r["timestamp"]<d1) or
-                       (split=="VALIDATION" and d1<=r["timestamp"]<d2) or
-                       (split=="TEST" and r["timestamp"]>=d2)})
+                dates=calendar_dates(segments,d1,d2,split)
                 ci=bootstrap_ci(ps,dates,sum(ord(z) for z in c["id"]+split)+101)
                 delta=(cs[4]-bs[4])/len(ps) if ps else None
                 report += ["",f"### Predeclared combination — {c['id']} / {combo['name']} / {split}",
