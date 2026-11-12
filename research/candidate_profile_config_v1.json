@@ -52,7 +52,8 @@
           }
         }
       ],
-      "split_scheme": "fixed"
+      "split_scheme": "fixed",
+      "split_settlement": "bar_close"
     },
     {
       "id": "HYD-CAND-008",
@@ -88,7 +89,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "fixed"
+      "split_scheme": "fixed",
+      "split_settlement": "bar_close"
     },
     {
       "id": "HYD-CAND-003",
@@ -124,7 +126,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_open"
     },
     {
       "id": "HYD-CAND-006",
@@ -160,7 +163,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_close"
     },
     {
       "id": "HYD-CAND-007",
@@ -196,7 +200,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_close"
     },
     {
       "id": "HYD-CAND-010",
@@ -232,7 +237,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_close"
     },
     {
       "id": "HYD-CAND-012",
@@ -268,7 +274,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_open"
     },
     {
       "id": "HYD-CAND-013",
@@ -304,7 +311,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_close"
     },
     {
       "id": "HYD-CAND-011",
@@ -340,7 +348,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "observed_utc_date_quantiles_60_80"
+      "split_scheme": "observed_utc_date_quantiles_60_80",
+      "split_settlement": "bar_open"
     },
     {
       "id": "HYD-CAND-009",
@@ -376,7 +385,8 @@
         "momentum6_band"
       ],
       "predeclared_combinations": [],
-      "split_scheme": "fixed"
+      "split_scheme": "fixed",
+      "split_settlement": "bar_close"
     }
   ]
 }
