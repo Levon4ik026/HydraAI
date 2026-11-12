@@ -121,17 +121,21 @@ class UniversalProfileEngineTests(unittest.TestCase):
         self.assertEqual(purged_open, 1)  # the next signal bar opens exactly at the split boundary
         self.assertEqual(purged_close, 2)  # both the boundary-crossing close and next bar are purged
 
-    def test_eleventh_wave_first_valid_signal_uses_exact_prior20_tr_window(self):
+    def test_bullish_abnormal_impulse_honors_candidate_warmup_and_tail_guard(self):
         bars = self.make_segment()
-        i = 20
-        bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1030)
+        first_valid = 21  # 20 complete prior true-range observations are required.
+        last_allowed = 105  # len(bars)=110 and tail_guard=4.
+        for i in (first_valid, last_allowed):
+            bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1032)
         candidate = {"event_type": "bullish_abnormal_impulse", "side": "PUT",
                      "expiry_bars": 1, "nonoverlap": False,
                      "min_signal_index": 20, "tail_guard": 4}
         d1 = datetime(2025, 9, 17, tzinfo=timezone.utc)
         d2 = datetime(2026, 4, 14, tzinfo=timezone.utc)
         accepted, _, _ = build_candidate_events(candidate, {0: bars}, d1, d2)
-        self.assertTrue(any(x["index"] == i for x in accepted))
+        accepted_indices = {x["index"] for x in accepted}
+        self.assertIn(first_valid, accepted_indices)
+        self.assertIn(last_allowed, accepted_indices)
 
 
 if __name__ == "__main__":
