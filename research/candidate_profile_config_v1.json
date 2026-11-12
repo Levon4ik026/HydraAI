@@ -87,6 +87,216 @@
         "momentum6_band"
       ],
       "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-003",
+      "name": "Donchian50 bullish close breakout, exact inverse PUT, 20m",
+      "event_type": "donchian50_bullish_breakout",
+      "side": "PUT",
+      "expiry_bars": 4,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 1887,
+          "w": 967,
+          "l": 910,
+          "d": 10
+        },
+        "VALIDATION": {
+          "n": 606,
+          "w": 345,
+          "l": 253,
+          "d": 8
+        },
+        "TEST": {
+          "n": 549,
+          "w": 289,
+          "l": 255,
+          "d": 5
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-006",
+      "name": "Previous observed UTC day high sweep/reclaim, exact inverse CALL, 10m",
+      "event_type": "previous_day_high_sweep_reclaim_bearish",
+      "side": "CALL",
+      "expiry_bars": 2,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 764,
+          "w": 381,
+          "l": 380,
+          "d": 3
+        },
+        "VALIDATION": {
+          "n": 258,
+          "w": 150,
+          "l": 107,
+          "d": 1
+        },
+        "TEST": {
+          "n": 267,
+          "w": 131,
+          "l": 133,
+          "d": 3
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-007",
+      "name": "Previous observed UTC day high sweep/reclaim, exact inverse CALL, 30m",
+      "event_type": "previous_day_high_sweep_reclaim_bearish",
+      "side": "CALL",
+      "expiry_bars": 6,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 565,
+          "w": 286,
+          "l": 275,
+          "d": 4
+        },
+        "VALIDATION": {
+          "n": 193,
+          "w": 113,
+          "l": 79,
+          "d": 1
+        },
+        "TEST": {
+          "n": 192,
+          "w": 92,
+          "l": 99,
+          "d": 1
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-010",
+      "name": "Previous observed UTC day low close breakout, exact inverse CALL, 60m",
+      "event_type": "previous_day_low_close_breakout",
+      "side": "CALL",
+      "expiry_bars": 12,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 578,
+          "w": 301,
+          "l": 274,
+          "d": 3
+        },
+        "VALIDATION": {
+          "n": 202,
+          "w": 116,
+          "l": 85,
+          "d": 1
+        },
+        "TEST": {
+          "n": 198,
+          "w": 107,
+          "l": 89,
+          "d": 2
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-012",
+      "name": "Fresh bearish EMA20/EMA50 cross, exact inverse CALL, 5m",
+      "event_type": "ema20_bearish_cross",
+      "side": "CALL",
+      "expiry_bars": 1,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 627,
+          "w": 321,
+          "l": 293,
+          "d": 13
+        },
+        "VALIDATION": {
+          "n": 229,
+          "w": 132,
+          "l": 93,
+          "d": 4
+        },
+        "TEST": {
+          "n": 193,
+          "w": 102,
+          "l": 86,
+          "d": 5
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-013",
+      "name": "Bullish abnormal impulse continuation, exact inverse PUT, 20m",
+      "event_type": "bullish_abnormal_impulse",
+      "side": "PUT",
+      "expiry_bars": 4,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 1215,
+          "w": 644,
+          "l": 560,
+          "d": 11
+        },
+        "VALIDATION": {
+          "n": 380,
+          "w": 236,
+          "l": 141,
+          "d": 3
+        },
+        "TEST": {
+          "n": 441,
+          "w": 227,
+          "l": 206,
+          "d": 8
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
     }
   ]
 }
