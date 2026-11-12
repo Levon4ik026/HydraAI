@@ -17,7 +17,7 @@ def read_matrix(path):
     with gzip.open(path, "rt", encoding="utf-8", newline="") as f:
         for r in csv.DictReader(f):
             sid = int(r["segment_id"])
-            for k in ("bar_index", "open", "high", "low", "close", "rsi14"):
+            for k in ("bar_index", "open", "high", "low", "close", "rsi14", "ema20", "ema50"):
                 r[k] = (int(r[k]) if k == "bar_index" else float(r[k])) if r.get(k) else None
             r["timestamp"] = parse_dt(r.pop("timestamp_utc"))
             groups[sid].append(r)
@@ -61,6 +61,35 @@ def build_candidate_events(c, segments, d1, d2):
             elif c["event_type"]=="previous_week_low_sweep_reclaim_bullish":
                 level=sig.get("previous_observed_utc_week_low")
                 event=bool(level) and sig["low"]<float(level) and sig["close"]>float(level) and sig["close"]>sig["open"]
+            elif c["event_type"]=="previous_day_high_sweep_reclaim_bearish":
+                level=sig.get("previous_observed_utc_day_high")
+                event=bool(level) and sig["high"]>float(level) and sig["close"]<float(level) and sig["close"]<sig["open"]
+            elif c["event_type"]=="previous_day_low_close_breakout":
+                level=sig.get("previous_observed_utc_day_low")
+                prev_close=bars[i-1]["close"] if i>0 else None
+                event=bool(level) and prev_close is not None and prev_close>=float(level) and sig["close"]<float(level)
+            elif c["event_type"]=="ema20_bearish_cross":
+                prev=bars[i-1] if i>0 else {}
+                event=(prev.get("ema20") is not None and prev.get("ema50") is not None
+                       and sig.get("ema20") is not None and sig.get("ema50") is not None
+                       and prev["ema20"]>=prev["ema50"] and sig["ema20"]<sig["ema50"]
+                       and sig["close"]<sig["ema20"])
+            elif c["event_type"]=="donchian50_bullish_breakout":
+                prior=bars[max(0,i-50):i]
+                event=(len(prior)==50 and sig["close"]>max(x["high"] for x in prior)
+                       and sig["close"]>sig["open"])
+            elif c["event_type"]=="bullish_abnormal_impulse":
+                prior_tr=[]
+                for j in range(max(1,i-20),i):
+                    prev_close=bars[j-1]["close"]
+                    x=bars[j]
+                    prior_tr.append(max(x["high"]-x["low"],abs(x["high"]-prev_close),abs(x["low"]-prev_close)))
+                rng=sig["high"]-sig["low"]
+                body=abs(sig["close"]-sig["open"])/rng if rng else 0.0
+                close_loc=(sig["close"]-sig["low"])/rng if rng else 0.0
+                mean_tr=sum(prior_tr)/len(prior_tr) if len(prior_tr)==20 else None
+                event=(mean_tr is not None and rng>=2.0*mean_tr and body>=0.60
+                       and sig["close"]>sig["open"] and close_loc>=0.75)
             else:
                 raise ValueError("Unsupported event type: "+c["event_type"])
             if event: raw.append({**base,"outcome":win_loss(delta,side)})
