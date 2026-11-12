@@ -34,8 +34,8 @@ runs:
         digest=hashlib.sha256(p.read_bytes()).hexdigest()
         manifest=Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.manifest.txt")
         manifest.write_text(
-            "dataset_id=EURUSD_M1_BID_DUKASCOPY_2024-01-01_to_2026-11-09_snapshot_v1\\n"
-            f"rows={len(rows)}\\nsha256={digest}\\n",
+            "dataset_id=EURUSD_M1_BID_DUKASCOPY_2024-01-01_to_2026-11-09_capture_2026-11-12_v1\n"
+            f"rows={len(rows)}\nsha256={digest}\n",
             encoding="utf-8"
         )
         print(f"Verified frozen snapshot: rows={len(rows):,}; sha256={digest}; cache_hit=${{ steps.cache.outputs.cache-hit }}")
