@@ -133,7 +133,7 @@ def profile_candidate(c, accepted, bg, purged, d1, d2):
     lines=["## "+c["id"]+" — "+c["name"],"",
       f"- Frozen event: {c['event_type']}; side={c['side']}; expiry={c['expiry_bars']*5}m; non-overlap={c['nonoverlap']}.",
       f"- Candidate-specific chronological splits: TRAIN < {d1.date()}; VALIDATION {d1.date()} through {d2.date()-timedelta(days=1)}; TEST >= {d2.date()}.",
-      f"- Split scheme: {c.get('split_scheme', 'fixed')}; boundary-crossing outcomes purged: {purged}.",
+      f"- Split scheme: {c.get('split_scheme', 'fixed')}; eligible M5 bars excluded at split boundaries: {purged}.",
       "- Features are measured at the completed signal-bar close; entry is the next M5 open.",
       "- Background is all eligible M5 bars excluding raw candidate trigger timestamps; descriptive and overlapping, not matched non-overlap controls.","",
       "| Split | Actual n | W/L/D | WR | Net u | Expected n (W/L/D) | Gate |",
