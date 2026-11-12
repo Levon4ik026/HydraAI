@@ -118,8 +118,8 @@ class UniversalProfileEngineTests(unittest.TestCase):
             {**base, "split_settlement": "bar_close"}, {0: bars}, d1, d2)
         self.assertTrue(any(x["index"] == i for x in open_mode))
         self.assertFalse(any(x["index"] == i for x in close_mode))
-        self.assertEqual(purged_open, 0)
-        self.assertEqual(purged_close, 1)
+        self.assertEqual(purged_open, 1)  # the next signal bar opens exactly at the split boundary
+        self.assertEqual(purged_close, 2)  # both the boundary-crossing close and next bar are purged
 
     def test_eleventh_wave_first_valid_signal_uses_exact_prior20_tr_window(self):
         bars = self.make_segment()
