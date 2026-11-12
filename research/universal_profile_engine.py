@@ -41,7 +41,7 @@ def stat(xs):
     d=sum(x["outcome"]=="D" for x in xs); dec=w+l
     return {"n":len(xs),"w":w,"l":l,"d":d,"wr":100*w/dec if dec else None,"net":w*PAYOUT-l}
 
-def build_candidate_events(c, segments, d1, d2):
+def build_candidate_events(c, segments, d1, d2, include_raw=False):
     h=int(c["expiry_bars"]); side=c["side"]
     raw=[]; bg=[]; purged=0
     min_index=int(c.get("min_signal_index",60))
@@ -132,7 +132,7 @@ def build_candidate_events(c, segments, d1, d2):
                     accepted.append(x); next_ok=x["index"]+h
     event_keys={(x["segment"],x["index"]) for x in raw}
     bg=[x for x in bg if (x["segment"],x["index"]) not in event_keys]
-    return accepted,bg,purged
+    return (accepted,bg,purged,raw) if include_raw else (accepted,bg,purged)
 
 def profile_candidate(c, accepted, bg, purged, d1, d2):
     lines=["## "+c["id"]+" — "+c["name"],"",
