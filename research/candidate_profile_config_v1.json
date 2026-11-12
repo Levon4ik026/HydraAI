@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "dataset": {
+    "expected_m1_rows": 1061819,
+    "expected_m5_rows": 209936,
+    "source_sha256": "4a084d3af598342e2b55e52bb79558825797c64410b875ff8e83ec019972decd"
+  },
+  "split_boundaries_utc": {
+    "train_end": "2025-09-17T00:00:00+00:00",
+    "validation_end": "2026-04-14T00:00:00+00:00"
+  },
+  "candidates": [
+    {
+      "id": "HYD-CAND-001",
+      "name": "RSI14>=70 bearish M5 reversal PUT, 5m",
+      "event_type": "rsi_bearish_level",
+      "side": "PUT",
+      "expiry_bars": 1,
+      "nonoverlap": false,
+      "expected": {
+        "TRAIN": {
+          "n": 735,
+          "w": 401,
+          "l": 323,
+          "d": 11
+        },
+        "VALIDATION": {
+          "n": 192,
+          "w": 110,
+          "l": 80,
+          "d": 2
+        },
+        "TEST": {
+          "n": 218,
+          "w": 124,
+          "l": 93,
+          "d": 1
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": [
+        {
+          "name": "EMA-UP x ATR-HIGH",
+          "conditions": {
+            "ema20_50_bias": "UP",
+            "atr_vol_band": "HIGH_GT67"
+          }
+        }
+      ]
+    },
+    {
+      "id": "HYD-CAND-008",
+      "name": "Previous completed UTC week low sweep/reclaim inverse PUT, 30m",
+      "event_type": "previous_week_low_sweep_reclaim_bullish",
+      "side": "PUT",
+      "expiry_bars": 6,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 227,
+          "w": 130,
+          "l": 97,
+          "d": 0
+        },
+        "VALIDATION": {
+          "n": 45,
+          "w": 25,
+          "l": 20,
+          "d": 0
+        },
+        "TEST": {
+          "n": 76,
+          "w": 47,
+          "l": 29,
+          "d": 0
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
+    }
+  ]
+}
