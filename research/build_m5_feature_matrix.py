@@ -147,7 +147,7 @@ def build_rows(segments: list[list[Bar]]) -> Iterable[dict]:
                         if i >= k and a is not None and a > 0 else None)
             e_gap = ((e20[i] - e50[i]) / a
                      if a and e20[i] is not None and e50[i] is not None else None)
-            bias = ("UP" if e20[i] > e50[i] else "DOWN" if e20[i] < e50[i] else "FLAT"
+            bias = (("UP" if e20[i] > e50[i] else "DOWN" if e20[i] < e50[i] else "FLAT")
                     if e20[i] is not None and e50[i] is not None else "")
             adx = ind[i]["adx"]
             adx_band = ("LOW_LT20" if adx < 20 else "MID_20_30" if adx < 30 else "HIGH_GE30") if adx is not None else ""
@@ -196,7 +196,8 @@ def main():
     m1 = read_m1(args.data)
     segments = make_m5(m1)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    first = next(build_rows(segments), None)
+    rows_iter = iter(build_rows(segments))
+    first = next(rows_iter, None)
     if first is None:
         raise SystemExit("No complete M5 bars produced")
     columns = list(first.keys())
@@ -209,11 +210,7 @@ def main():
                 writer.writeheader()
                 writer.writerow({k: safe(v) for k, v in first.items()})
                 row_count = 1
-                for row in build_rows(segments):
-                    # The first row is emitted again by the iterator; skip exactly once.
-                    if row_count == 1:
-                        row_count += 1
-                        continue
+                for row in rows_iter:
                     writer.writerow({k: safe(v) for k, v in row.items()})
                     row_count += 1
     # Correct row count from actual matrix cardinality; fail if generator changed.
