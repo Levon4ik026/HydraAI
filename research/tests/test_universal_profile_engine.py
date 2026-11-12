@@ -73,6 +73,7 @@ class UniversalProfileEngineTests(unittest.TestCase):
             ("ema20_bearish_cross", "CALL"),
             ("donchian50_bullish_breakout", "PUT"),
             ("bullish_abnormal_impulse", "PUT"),
+            ("up_shock_second_bar_reversal", "PUT"),
         ]
         for event_type, side in cases:
             bars = self.make_segment()
@@ -91,6 +92,9 @@ class UniversalProfileEngineTests(unittest.TestCase):
                 bars[i].update(open=1.1000, high=1.1030, low=1.0990, close=1.1020)
             elif event_type == "bullish_abnormal_impulse":
                 bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1030)
+            elif event_type == "up_shock_second_bar_reversal":
+                bars[i-1].update(open=1.1000, high=1.1050, low=1.1000, close=1.1040)
+                bars[i].update(open=1.1030, high=1.1035, low=1.1015, close=1.1020)
             candidate = {"event_type": event_type, "side": side,
                          "expiry_bars": 1, "nonoverlap": False}
             accepted, _, purged = build_candidate_events(candidate, {0: bars}, d1, d2)
