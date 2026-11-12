@@ -28,7 +28,15 @@ runs:
         if not p.exists(): raise SystemExit("Dukascopy CSV missing")
         with p.open(newline="",encoding="utf-8-sig") as f:
             r=csv.DictReader(f); rows=list(r)
-        if len(rows)<100000 or not {"timestamp","open","high","low","close"}.issubset(r.fieldnames or []):
-            raise SystemExit("Raw CSV validation failed")
-        print(f"Verified {len(rows):,} M1 rows; cache_hit=${{ steps.cache.outputs.cache-hit }}")
+        if len(rows) != 1_061_819 or not {"timestamp","open","high","low","close"}.issubset(r.fieldnames or []):
+            raise SystemExit(f"Frozen EURUSD snapshot mismatch: expected 1,061,819 rows, got {len(rows):,}")
+        import hashlib
+        digest=hashlib.sha256(p.read_bytes()).hexdigest()
+        manifest=Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.manifest.txt")
+        manifest.write_text(
+            "dataset_id=EURUSD_M1_BID_DUKASCOPY_2024-01-01_to_2026-11-09_snapshot_v1\\n"
+            f"rows={len(rows)}\\nsha256={digest}\\n",
+            encoding="utf-8"
+        )
+        print(f"Verified frozen snapshot: rows={len(rows):,}; sha256={digest}; cache_hit=${{ steps.cache.outputs.cache-hit }}")
         PY
