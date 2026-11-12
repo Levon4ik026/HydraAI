@@ -51,7 +51,8 @@
             "atr_vol_band": "HIGH_GT67"
           }
         }
-      ]
+      ],
+      "split_scheme": "fixed"
     },
     {
       "id": "HYD-CAND-008",
@@ -86,7 +87,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "fixed"
     },
     {
       "id": "HYD-CAND-003",
@@ -121,7 +123,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-006",
@@ -156,7 +159,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-007",
@@ -191,7 +195,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-010",
@@ -226,7 +231,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-012",
@@ -261,7 +267,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-013",
@@ -296,7 +303,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-011",
@@ -331,7 +339,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "observed_utc_date_quantiles_60_80"
     },
     {
       "id": "HYD-CAND-009",
@@ -366,7 +375,8 @@
         "atr_vol_band",
         "momentum6_band"
       ],
-      "predeclared_combinations": []
+      "predeclared_combinations": [],
+      "split_scheme": "fixed"
     }
   ]
 }
