@@ -101,6 +101,26 @@ class UniversalProfileEngineTests(unittest.TestCase):
             self.assertEqual([x["index"] for x in accepted], [i], event_type)
             self.assertEqual(purged, 0, event_type)
 
+    def test_candidate_specific_split_settlement_open_vs_close(self):
+        start = datetime(2025, 9, 16, 18, 25, tzinfo=timezone.utc)
+        bars = self.make_segment(start=start)
+        i = 65  # signal candle opens 23:50 UTC; H=1 settlement candle opens 23:55.
+        bars[i]["rsi14"] = 75.0
+        bars[i]["open"] = 1.1000
+        bars[i]["close"] = 1.0990
+        d1 = datetime(2025, 9, 17, tzinfo=timezone.utc)
+        d2 = datetime(2026, 4, 14, tzinfo=timezone.utc)
+        base = {"event_type": "rsi_bearish_level", "side": "PUT",
+                "expiry_bars": 1, "nonoverlap": False}
+        open_mode, _, purged_open = build_candidate_events(
+            {**base, "split_settlement": "bar_open"}, {0: bars}, d1, d2)
+        close_mode, _, purged_close = build_candidate_events(
+            {**base, "split_settlement": "bar_close"}, {0: bars}, d1, d2)
+        self.assertTrue(any(x["index"] == i for x in open_mode))
+        self.assertFalse(any(x["index"] == i for x in close_mode))
+        self.assertEqual(purged_open, 0)
+        self.assertEqual(purged_close, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
