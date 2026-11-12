@@ -7,6 +7,7 @@ on:
       - "research/build_m5_feature_matrix.py"
       - "research/reproduce_m5_bb_williams_adx.py"
       - "research/universal_profile_engine.py"
+      - "research/universal_profile_parity_audit.py"
       - "research/candidate_profile_config_v1.json"
       - ".github/workflows/research-feature-matrix.yml"
       - ".github/actions/prepare-eurusd-data/action.yml"
@@ -40,6 +41,19 @@ jobs:
         with:
           name: hydra-universal-candidate-profiles-v1
           path: research-artifacts/universal-candidate-profiles.md
+          if-no-files-found: error
+      - name: Run legacy timestamp parity audit for blocked cohorts
+        run: |
+          python research/universal_profile_parity_audit.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v1.json \
+            --out research-artifacts/universal-profile-parity-audit.md
+      - name: Upload legacy parity audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-universal-profile-parity-audit-v1
+          path: research-artifacts/universal-profile-parity-audit.md
           if-no-files-found: error
       - name: Upload shared matrix and manifest
         uses: actions/upload-artifact@v4
