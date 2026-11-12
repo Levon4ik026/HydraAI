@@ -121,6 +121,18 @@ class UniversalProfileEngineTests(unittest.TestCase):
         self.assertEqual(purged_open, 0)
         self.assertEqual(purged_close, 1)
 
+    def test_eleventh_wave_first_valid_signal_uses_exact_prior20_tr_window(self):
+        bars = self.make_segment()
+        i = 20
+        bars[i].update(open=1.1000, high=1.1040, low=1.0990, close=1.1030)
+        candidate = {"event_type": "bullish_abnormal_impulse", "side": "PUT",
+                     "expiry_bars": 1, "nonoverlap": False,
+                     "min_signal_index": 20, "tail_guard": 4}
+        d1 = datetime(2025, 9, 17, tzinfo=timezone.utc)
+        d2 = datetime(2026, 4, 14, tzinfo=timezone.utc)
+        accepted, _, _ = build_candidate_events(candidate, {0: bars}, d1, d2)
+        self.assertTrue(any(x["index"] == i for x in accepted))
+
 
 if __name__ == "__main__":
     unittest.main()
