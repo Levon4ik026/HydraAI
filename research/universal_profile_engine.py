@@ -60,7 +60,9 @@ def build_candidate_events(c, segments, d1, d2):
                 purged+=1; continue
             delta=settle_bar["close"]-entry["open"]
             base={"time":sig["timestamp"],"period":p,"segment":sid,"index":i,"state":sig}
-            bg.append({**base,"outcome":win_loss(delta,side)})
+            required_level=c.get("background_requires_level")
+            if not required_level or sig.get(required_level) not in (None, ""):
+                bg.append({**base,"outcome":win_loss(delta,side)})
             event=False
             if c["event_type"]=="rsi_bearish_level":
                 event=sig["rsi14"] is not None and sig["rsi14"]>=70 and sig["close"]<sig["open"]
