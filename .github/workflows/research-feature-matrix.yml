@@ -6,6 +6,8 @@ on:
     paths:
       - "research/build_m5_feature_matrix.py"
       - "research/reproduce_m5_bb_williams_adx.py"
+      - "research/universal_profile_engine.py"
+      - "research/candidate_profile_config_v1.json"
       - ".github/workflows/research-feature-matrix.yml"
       - ".github/actions/prepare-eurusd-data/action.yml"
 permissions:
