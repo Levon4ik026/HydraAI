@@ -125,7 +125,7 @@ def profile_candidate(c, accepted, bg, purged, d1, d2):
     lines=["## "+c["id"]+" — "+c["name"],"",
       f"- Frozen event: {c['event_type']}; side={c['side']}; expiry={c['expiry_bars']*5}m; non-overlap={c['nonoverlap']}.",
       f"- Candidate-specific chronological splits: TRAIN < {d1.date()}; VALIDATION {d1.date()} through {d2.date()-timedelta(days=1)}; TEST >= {d2.date()}.",
-      f"- Split scheme: {c.get(\"split_scheme\", \"fixed\")}; boundary-crossing outcomes purged: {purged}.",
+      f"- Split scheme: {c.get('split_scheme', 'fixed')}; boundary-crossing outcomes purged: {purged}.",
       "- Features are measured at the completed signal-bar close; entry is the next M5 open.",
       "- Background is all eligible M5 bars excluding raw candidate trigger timestamps; descriptive and overlapping, not matched non-overlap controls.","",
       "| Split | Actual n | W/L/D | WR | Net u | Expected n (W/L/D) | Gate |",
@@ -209,7 +209,7 @@ def main():
             d1=datetime.combine(observed_days[int(0.60*len(observed_days))],datetime.min.time(),tzinfo=timezone.utc)
             d2=datetime.combine(observed_days[int(0.80*len(observed_days))],datetime.min.time(),tzinfo=timezone.utc)
         else:
-            raise SystemExit(f"Unknown split scheme for {c[chr(105)+chr(100)]}: {scheme}")
+            raise SystemExit(f"Unknown split scheme for {c['id']}: {scheme}")
         accepted,bg,purged=build_candidate_events(c,segments,d1,d2)
         report += profile_candidate(c,accepted,bg,purged,d1,d2)
     a.out.parent.mkdir(parents=True,exist_ok=True)
