@@ -332,6 +332,41 @@
         "momentum6_band"
       ],
       "predeclared_combinations": []
+    },
+    {
+      "id": "HYD-CAND-009",
+      "name": "Previous completed UTC week low sweep/reclaim inverse PUT, 60m",
+      "event_type": "previous_week_low_sweep_reclaim_bullish",
+      "side": "PUT",
+      "expiry_bars": 12,
+      "nonoverlap": true,
+      "expected": {
+        "TRAIN": {
+          "n": 175,
+          "w": 89,
+          "l": 85,
+          "d": 1
+        },
+        "VALIDATION": {
+          "n": 37,
+          "w": 21,
+          "l": 16,
+          "d": 0
+        },
+        "TEST": {
+          "n": 63,
+          "w": 39,
+          "l": 23,
+          "d": 1
+        }
+      },
+      "profile_dimensions": [
+        "ema20_50_bias",
+        "adx_band",
+        "atr_vol_band",
+        "momentum6_band"
+      ],
+      "predeclared_combinations": []
     }
   ]
 }
