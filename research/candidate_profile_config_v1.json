@@ -90,7 +90,8 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "fixed",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "background_requires_level": "previous_observed_utc_week_low"
     },
     {
       "id": "HYD-CAND-003",
@@ -164,7 +165,8 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "background_requires_level": "previous_observed_utc_day_high"
     },
     {
       "id": "HYD-CAND-007",
@@ -201,7 +203,8 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "background_requires_level": "previous_observed_utc_day_high"
     },
     {
       "id": "HYD-CAND-010",
@@ -238,7 +241,8 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "observed_utc_date_quantiles_60_80",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "background_requires_level": "previous_observed_utc_day_low"
     },
     {
       "id": "HYD-CAND-012",
@@ -386,7 +390,8 @@
       ],
       "predeclared_combinations": [],
       "split_scheme": "fixed",
-      "split_settlement": "bar_close"
+      "split_settlement": "bar_close",
+      "background_requires_level": "previous_observed_utc_week_low"
     }
   ]
 }
