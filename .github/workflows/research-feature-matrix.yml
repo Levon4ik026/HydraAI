@@ -1,0 +1,36 @@
+name: Hydra shared EURUSD M5 feature matrix
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/build_m5_feature_matrix.py"
+      - "research/reproduce_m5_bb_williams_adx.py"
+      - ".github/workflows/research-feature-matrix.yml"
+      - ".github/actions/prepare-eurusd-data/action.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: ./.github/actions/prepare-eurusd-data
+      - name: Build causal M5 feature matrix
+        run: |
+          python research/build_m5_feature_matrix.py \
+            --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv \
+            --out research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+      - name: Upload shared matrix and manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-eurusd-m5-causal-feature-matrix-v1
+          path: |
+            research-artifacts/eurusd-m5-causal-features-v1.csv.gz
+            research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+          if-no-files-found: error
