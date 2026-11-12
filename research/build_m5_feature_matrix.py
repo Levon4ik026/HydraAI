@@ -192,8 +192,21 @@ def main():
     ap.add_argument("--data", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True, help="gzip CSV output")
     ap.add_argument("--manifest", type=Path, required=True)
+    ap.add_argument("--source-manifest", type=Path)
     args = ap.parse_args()
     m1 = read_m1(args.data)
+    source_manifest_path = args.source_manifest or args.data.with_suffix(".manifest.txt")
+    source_manifest = {}
+    if source_manifest_path.exists():
+        for line in source_manifest_path.read_text(encoding="utf-8").splitlines():
+            if "=" in line:
+                key, value = line.split("=", 1)
+                source_manifest[key] = value
+    raw_hash = sha256(args.data)
+    if source_manifest.get("sha256") and source_manifest["sha256"] != raw_hash:
+        raise SystemExit("Raw M1 source manifest SHA-256 mismatch")
+    if source_manifest.get("rows") and int(source_manifest["rows"]) != len(m1):
+        raise SystemExit("Raw M1 source manifest row-count mismatch")
     segments = make_m5(m1)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     rows_iter = iter(build_rows(segments))
@@ -219,8 +232,13 @@ def main():
         raise SystemExit(f"Matrix row mismatch: wrote={row_count}, expected={expected}")
     manifest = {
         "feature_version": FEATURE_VERSION,
+        "dataset_id": source_manifest.get("dataset_id", "unregistered_source"),
         "source_file": args.data.name,
-        "source_sha256": sha256(args.data),
+        "source_sha256": raw_hash,
+        "m1_first_timestamp_utc": m1[0].timestamp.isoformat(),
+        "m1_last_timestamp_utc": m1[-1].timestamp.isoformat(),
+        "m5_first_timestamp_utc": segments[0][0].timestamp.isoformat(),
+        "m5_last_timestamp_utc": segments[-1][-1].timestamp.isoformat(),
         "m1_valid_rows": len(m1),
         "m5_complete_rows": expected,
         "gap_separated_segments": len(segments),
