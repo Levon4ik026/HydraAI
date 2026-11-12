@@ -8,6 +8,7 @@ on:
       - "research/reproduce_m5_bb_williams_adx.py"
       - "research/universal_profile_engine.py"
       - "research/universal_profile_parity_audit.py"
+      - "research/matched_control_block_bootstrap.py"
       - "research/candidate_profile_config_v1.json"
       - "research/candidate_profile_config_v2.json"
       - ".github/workflows/research-feature-matrix.yml"
@@ -68,6 +69,19 @@ jobs:
         with:
           name: hydra-universal-candidate-profiles-v2
           path: research-artifacts/universal-candidate-profiles-v2.md
+          if-no-files-found: error
+      - name: Run matched controls and calendar-day block bootstrap
+        run: |
+          python research/matched_control_block_bootstrap.py \\
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \\
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \\
+            --config research/candidate_profile_config_v2.json \\
+            --out research-artifacts/matched-control-block-bootstrap-v2.md
+      - name: Upload matched-control bootstrap report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-matched-control-block-bootstrap-v2
+          path: research-artifacts/matched-control-block-bootstrap-v2.md
           if-no-files-found: error
       - name: Upload shared matrix and manifest
         uses: actions/upload-artifact@v4
