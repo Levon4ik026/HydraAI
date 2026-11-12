@@ -16,7 +16,7 @@
 
 | ID | Candidate | Signal / family | Direction | Expiry | Best reported result | Status |
 |---|---|---|---|---:|---|---|
-| HYD-CAND-001 | RSI14-70 bearish reversal | M5 RSI(14) >= 70 and bearish signal candle | PUT | 5m | TEST 57.14% (n=218); VALIDATION 57.89% (n=192) | Candidate — priority |
+| HYD-CAND-001 | RSI14-70 bearish reversal | M5 RSI(14) >= 70 and bearish signal candle | PUT | 5m | EMA-UP × ATR-HIGH VALIDATION 60.98% (n=123), +10.56 pp vs background | Candidate — situation profiled; independent confirmation required |
 | HYD-CAND-002 | MIXED efficiency regime | Market filter/classifier based on price-movement efficiency over the previous 15 candles; exact entry logic not recovered | Unknown | 10m | 64.77% (57W/31L/1D, n=89) | Candidate — archival, incomplete |
 | HYD-CAND-006 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 10m | VALIDATION 58.37% (n=258), TEST 49.62% (n=267) | Archived exploratory — unstable |
 | HYD-CAND-007 | Previous-day high sweep/reclaim inverse | Previous observed UTC day high swept, M5 bearish candle closes back below | CALL (inverse) | 30m | VALIDATION 58.85% (n=193), TEST 48.17% (n=192) | Archived exploratory — unstable |
@@ -31,7 +31,7 @@
 
 ## HYD-CAND-001 — RSI14-70 bearish reversal, PUT, 5m
 
-- **Status:** Candidate; not confirmed.
+- **Status:** Candidate — preliminary market situation profiled; not confirmed.
 - **Discovery experiment:** clean-slate expanded strategy screen.
 - **Data:** Dukascopy EUR/USD M1 BID, 2024-01-01 through 2026-11-08; 1,061,814 valid M1 rows; complete M5 bars derived from this feed (209,933 bars). Source is not identical to Pocket Option quotes.
 - **Signal definition:** on a closed M5 candle, RSI(14) >= 70 AND the candle is bearish (`close < open`) → PUT. This is a level condition, not an RSI cross-back below 70. Entry at the next M5 candle open; expiry at the close of the fifth subsequent M5 candle (5 minutes).
@@ -48,8 +48,12 @@
 - **Split dates:** TRAIN before 2025-09-17; VALIDATION 2025-09-17 through 2026-04-13; TEST from 2026-04-14 onward. Boundary-crossing outcomes were purged.
 - **Why retained:** validation and test both exceed the 57% discovery target, with positive assumed-payout net results; train is lower at 55.39%, so this is not yet robustly established.
 - **Known limitations:** multiple strategy/expiry combinations were screened; no matched control cohort yet; no block bootstrap yet; assumed fixed payout; Dukascopy BID differs from Pocket Option feed; no platform spread/latency execution model. RSI candidate metrics are not affected by the separate MACD initialization defect identified in the expanded script.
-- **Next research step:** continue candidate discovery first, as requested. Later characterize this candidate's own market situation and compare it against matched controls/analogs without tuning on TEST.
-- **Report:** `hydra-expanded-strategy-discovery` artifact from workflow run `42722101824`.
+- **Preliminary associated market state:** EMA20 > EMA50 (short-term bullish trend) AND elevated volatility, with ATR(14)/close above the 67th percentile of its preceding 120 completed M5 bars. The percentile history excludes the current signal candle. This describes an upward-trending, high-volatility market state; it is not a universal filter for the candidate.
+- **Preliminary associated market situation:** within that state, a completed bearish M5 candle closes while RSI(14) remains >=70; the candidate takes PUT at the next M5 open and settles at the close of the following M5 candle (5m expiry). In plain language: a bearish reversal candle appears while the broader short-term structure is still bullish and volatility is elevated, after RSI has reached an overbought level. This exact combination is a candidate situation hypothesis, not yet an independently confirmed causal explanation.
+- **Situation-validation audit (2026-11-12):** workflow run [43191265461](https://github.com/Levon4ik026/HydraAI/actions/runs/43191265461), artifact `hydra-cand001-dependence-validation`; commit `5b820d345bc5e8ce9681ac5c80f38bec5f65e41d`. Validation cohort reproduced exactly: 123 trades, 75/48/0, WR 60.98%, +21.00u at assumed 92%. Same-state eligible-bar background: 6,081 observations, PUT-equivalent rate 50.42%; observed lift +10.56 pp. Paired non-wrapping calendar-block bootstrap (20,000 replicates; zero-event days included) gave lift 95% intervals: 1d [+3.14,+18.28] pp; 3d [+3.57,+18.37]; 5d [+3.77,+18.07]; 7d [+3.76,+17.77]; 10d [+3.28,+17.69]. P(lift>0) 99.7–99.8% across block sizes. All eight validation months positive; best month contributed 19.6% of net.
+- **Critical qualification:** the profile was discovered after examining candidate results, so selection/multiple-testing bias remains. Background is an all-eligible-bar descriptive comparator, not a matched non-overlapping control-trade schedule. Bootstrap captures calendar clustering but does not correct selection bias, platform quote/spread/latency differences, or payout variation. Dukascopy BID is a historical proxy, not Pocket Option execution. The profile is preliminary and must be frozen before a genuinely prospective independent test.
+- **Next research step:** preserve the signal and situation thresholds unchanged; later run a prospective period after 2026-11-08 and a matched/non-overlapping control design. Do not tune filters or month conditions on the inspected TEST.
+- **Report:** `hydra-expanded-strategy-discovery` artifact from workflow run `42722101824`; situation audit run `43191265461`.
 - **Workflow:** https://github.com/Levon4ik026/HydraAI/actions/runs/42722101824
 - **Screen code:** https://github.com/Levon4ik026/HydraAI/blob/hydra/research-validation/research/expanded_strategy_screen.py
 - **Discovery commit:** `1b0a4a11b209791833594d8c10ffecf4426d4c07`
