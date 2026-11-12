@@ -90,10 +90,13 @@ def build_candidate_events(c, segments, d1, d2):
                        and sig["close"]>sig["open"])
             elif c["event_type"]=="bullish_abnormal_impulse":
                 prior_tr=[]
-                for j in range(max(1,i-20),i):
-                    prev_close=bars[j-1]["close"]
+                for j in range(max(0,i-20),i):
                     x=bars[j]
-                    prior_tr.append(max(x["high"]-x["low"],abs(x["high"]-prev_close),abs(x["low"]-prev_close)))
+                    if j==0:
+                        prior_tr.append(x["high"]-x["low"])
+                    else:
+                        prev_close=bars[j-1]["close"]
+                        prior_tr.append(max(x["high"]-x["low"],abs(x["high"]-prev_close),abs(x["low"]-prev_close)))
                 rng=sig["high"]-sig["low"]
                 body=abs(sig["close"]-sig["open"])/rng if rng else 0.0
                 close_loc=(sig["close"]-sig["low"])/rng if rng else 0.0
