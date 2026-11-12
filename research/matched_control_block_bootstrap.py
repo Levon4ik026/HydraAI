@@ -41,21 +41,24 @@ def match_controls(c,accepted,background):
     for row in background:
         t=row["time"]; pools[(row["segment"],row["period"],t.weekday(),t.hour)].append(row)
     for rows in pools.values(): rows.sort(key=lambda x:(x["time"],x["index"]))
-    used=set(); selected_by_pool=defaultdict(list); pairs=[]; window=timedelta(days=MATCH_WINDOW_DAYS)
+    used=set(); selected_by_pool=defaultdict(list); selected_by_segment_split=defaultdict(list); pairs=[]; window=timedelta(days=MATCH_WINDOW_DAYS)
+    event_indexes=defaultdict(list)
+    for event in accepted: event_indexes[(event["segment"],event["period"])].append(event["index"])
     for event in sorted(accepted,key=lambda x:(x["period"],x["time"],x["segment"],x["index"])):
         t=event["time"]; key=(event["segment"],event["period"],t.weekday(),t.hour)
         best=None
         for control in pools.get(key,()):
             delta=abs(control["time"]-t)
             if delta>window or abs(control["index"]-event["index"])<h: continue
+            if any(abs(control["index"]-idx)<h for idx in event_indexes[(event["segment"],event["period"])]): continue
             ck=(control["segment"],control["period"],control["index"])
             if ck in used: continue
-            if c["nonoverlap"] and any(abs(control["index"]-idx)<h for idx in selected_by_pool[key]): continue
+            if c["nonoverlap"] and any(abs(control["index"]-idx)<h for idx in selected_by_segment_split[(control["segment"],control["period"])]): continue
             rank=(delta,control["time"],control["index"])
             if best is None or rank<best[0]: best=(rank,control)
         if best is not None:
             control=best[1]; used.add((control["segment"],control["period"],control["index"]))
-            selected_by_pool[key].append(control["index"]); pairs.append((event,control))
+            selected_by_pool[key].append(control["index"]); selected_by_segment_split[(control["segment"],control["period"])].append(control["index"]); pairs.append((event,control))
     return pairs
 
 def bootstrap_ci(pairs,dates,seed):
