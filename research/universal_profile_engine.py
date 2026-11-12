@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed declarative profile engine over Hydra's shared M5 matrix."""
 from __future__ import annotations
-import argparse, csv, gzip, json
+import argparse, csv, gzip, json, hashlib
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -117,6 +117,13 @@ def profile_candidate(c, accepted, bg, purged):
               "- TEST has prior exposure and is not pristine. Independent prospective validation is still required.",""]
     return lines
 
+def file_sha256(path):
+    h=hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda:f.read(1024*1024),b""):
+            h.update(chunk)
+    return h.hexdigest()
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--matrix",type=Path,required=True)
@@ -126,12 +133,20 @@ def main():
     a=ap.parse_args()
     m=json.loads(a.manifest.read_text(encoding="utf-8")); cfg=json.loads(a.config.read_text(encoding="utf-8"))
     if m["feature_version"]!="hydra_m5_causal_features_v1": raise SystemExit("Unsupported feature matrix version")
+    actual_matrix_hash=file_sha256(a.matrix)
+    if actual_matrix_hash != m["matrix_sha256"]:
+        raise SystemExit(f"Feature matrix SHA-256 mismatch: {actual_matrix_hash} != {m['matrix_sha256']}")
     checks={"m1_valid_rows":"expected_m1_rows","m5_complete_rows":"expected_m5_rows","source_sha256":"source_sha256"}
     for actual,expected in checks.items():
         if m[actual]!=cfg["dataset"][expected]:
             raise SystemExit(f"Dataset identity mismatch {actual}: {m[actual]} != {cfg['dataset'][expected]}")
     d1=parse_dt(cfg["split_boundaries_utc"]["train_end"]); d2=parse_dt(cfg["split_boundaries_utc"]["validation_end"])
     segments=read_matrix(a.matrix)
+    matrix_rows=sum(len(x) for x in segments.values())
+    if matrix_rows != m["matrix_rows"]:
+        raise SystemExit(f"Feature matrix row-count mismatch: {matrix_rows} != {m['matrix_rows']}")
+    if len(segments) != m["gap_separated_segments"]:
+        raise SystemExit(f"Segment-count mismatch: {len(segments)} != {m['gap_separated_segments']}")
     report=["# Hydra universal market-situation profile engine — research-only","",
       f"- Source SHA-256: {m['source_sha256']}; M1={m['m1_valid_rows']:,}; M5={m['m5_complete_rows']:,}; segments={m['gap_separated_segments']:,}.",
       f"- Matrix SHA-256: {m['matrix_sha256']}; rows={m['matrix_rows']:,}.",
