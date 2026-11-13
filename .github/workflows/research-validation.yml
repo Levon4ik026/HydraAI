@@ -175,6 +175,43 @@ jobs:
           if len(rows) < 100_000:
               raise SystemExit("Insufficient downloaded history; refusing to run a purported long-history test")
           PY
+      - name: Capture immutable long-history dataset manifest
+        run: |
+          python - <<'PY'
+          import csv
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          path = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          digest = hashlib.sha256()
+          with path.open("rb") as f:
+              for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                  digest.update(chunk)
+
+          first = last = None
+          rows = 0
+          with path.open(newline="", encoding="utf-8-sig") as f:
+              for row in csv.DictReader(f):
+                  ts = datetime.fromtimestamp(int(row["timestamp"]) / 1000, tz=timezone.utc)
+                  first = ts if first is None else first
+                  last = ts
+                  rows += 1
+
+          manifest = {
+              "source": "Dukascopy EURUSD M1 BID",
+              "download_path": path.as_posix(),
+              "captured_at_utc": datetime.now(timezone.utc).isoformat(),
+              "sha256": digest.hexdigest(),
+              "valid_m1_rows": rows,
+              "first_utc": first.isoformat() if first else None,
+              "last_utc": last.isoformat() if last else None,
+          }
+          out = Path("research/LONG_HISTORY_DATASET_MANIFEST.json")
+          out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(manifest, indent=2))
+          PY
       - name: Run standalone strategy screen on multi-year history
         run: python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_STANDALONE_SCREEN.md
       - name: Run exact inverse audit on multi-year history
@@ -198,4 +235,5 @@ jobs:
             research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
             research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
             research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
+            research/LONG_HISTORY_DATASET_MANIFEST.json
           if-no-files-found: error
