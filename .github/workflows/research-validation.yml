@@ -181,6 +181,7 @@ jobs:
           import csv
           import hashlib
           import json
+          import math
           from datetime import datetime, timezone
           from pathlib import Path
 
@@ -190,23 +191,37 @@ jobs:
               for chunk in iter(lambda: f.read(1024 * 1024), b""):
                   digest.update(chunk)
 
-          first = last = None
-          rows = 0
+          parsed = {}
+          raw_rows = invalid_rows = duplicate_rows = 0
           with path.open(newline="", encoding="utf-8-sig") as f:
               for row in csv.DictReader(f):
-                  ts = datetime.fromtimestamp(int(row["timestamp"]) / 1000, tz=timezone.utc)
-                  first = ts if first is None else first
-                  last = ts
-                  rows += 1
+                  raw_rows += 1
+                  try:
+                      ts = datetime.fromtimestamp(int(float(row["timestamp"])) / 1000.0, tz=timezone.utc)
+                      o, h, low, c = (float(row[k]) for k in ("open", "high", "low", "close"))
+                      if not all(math.isfinite(x) and x > 0 for x in (o, h, low, c)):
+                          raise ValueError("non-finite or non-positive OHLC")
+                      if h < max(o, low, c) or low > min(o, c):
+                          raise ValueError("invalid OHLC ordering")
+                  except (KeyError, ValueError, TypeError, OverflowError):
+                      invalid_rows += 1
+                      continue
+                  if ts in parsed:
+                      duplicate_rows += 1
+                  parsed[ts] = (o, h, low, c)
 
+          times = sorted(parsed)
           manifest = {
               "source": "Dukascopy EURUSD M1 BID",
               "download_path": path.as_posix(),
               "captured_at_utc": datetime.now(timezone.utc).isoformat(),
               "sha256": digest.hexdigest(),
-              "valid_m1_rows": rows,
-              "first_utc": first.isoformat() if first else None,
-              "last_utc": last.isoformat() if last else None,
+              "raw_csv_rows": raw_rows,
+              "valid_unique_m1_rows": len(parsed),
+              "invalid_rows": invalid_rows,
+              "duplicate_timestamp_rows": duplicate_rows,
+              "first_utc": times[0].isoformat() if times else None,
+              "last_utc": times[-1].isoformat() if times else None,
           }
           out = Path("research/LONG_HISTORY_DATASET_MANIFEST.json")
           out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
