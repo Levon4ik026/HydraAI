@@ -1,7 +1,7 @@
 # HydraAI — three-candidate prospective forward validation
 
-- Captured UTC: 2026-11-14T11:31:15.564496+00:00
-- Branch / code commit: hydra/research-validation / 3da70b03549b6e874d28cd067b9262e63f4b071e
+- Captured UTC: 2026-11-14T11:45:52.467308+00:00
+- Branch / code commit: hydra/research-validation / b99b8a3989fdae741821c2a62a80171fbb88c96f
 - Forward cohort: 2026-11-10 through requested UTC date 2026-11-13
 - Actual forward M1 range: 2026-11-10T00:00:00+00:00 — 2026-11-13T21:59:00+00:00
 - Forward M1 rows: 5,625; observed UTC dates: 4
@@ -27,11 +27,14 @@
 
 ## Candidate results
 
-| Candidate | Side / expiry | N | W/L/D | WR excl. draws | Net at 92% | Max DD | Longest L streak | Active days | Trades / active day |
-|---|---|---:|---|---:|---:|---:|---:|---:|---:|
-| HYD-CAND-001 | PUT / 5m | 0 | 0/0/0 | n/a | +0.00u | 0.00u | 0 | 0 | 0.00 |
-| HYD-CAND-008 | PUT / 30m | 1 | 0/1/0 | 0.00% | -1.00u | 1.00u | 1 | 1 | 1.00 |
-| HYD-CAND-010 | CALL / 60m | 6 | 3/3/0 | 50.00% | -0.24u | 1.16u | 1 | 3 | 2.00 |
+| Candidate | Side / expiry | N | W/L/D | Decisive WR [95% Wilson] | Wins / all | Net @92% | ROI | PF | Max DD | Longest L streak | Raw signals | Trade freq / M5 | WAIT |
+|---|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| HYD-CAND-001 | PUT / 5m | 0 | 0/0/0 | n/a n/a | n/a | +0.00u | n/a | n/a | 0.00u | 0 | 0 | 0.000% | 100.000% |
+| HYD-CAND-008 | PUT / 30m | 1 | 0/1/0 | 0.00% [0.00, 79.35]% | 0.00% | -1.00u | -100.00% | 0.00 | 1.00u | 1 | 1 | 0.090% | 99.910% |
+| HYD-CAND-010 | CALL / 60m | 6 | 3/3/0 | 50.00% [18.76, 81.24]% | 50.00% | -0.24u | -4.00% | 0.92 | 1.16u | 1 | 8 | 0.538% | 99.462% |
+
+- Wilson 95% intervals use decisive outcomes (W+L) and assume independent outcomes; serial clustering makes them descriptive, especially at small N.
+- Trade frequency is accepted non-overlapping trades divided by complete forward M5 bars; WAIT is its complement. Raw trigger events are shown separately.
 
 ### Profit concentration
 
@@ -108,8 +111,8 @@
 
 ## Reproducibility
 
-- Workflow run ID: 43590385328
-- Workflow URL: https://github.com/Levon4ik026/HydraAI/actions/runs/43590385328
+- Workflow run ID: 43591545956
+- Workflow URL: https://github.com/Levon4ik026/HydraAI/actions/runs/43591545956
 - Machine-readable manifest: manifest.json.
 - Trade-level outcomes: trades.csv.
 - Validated warm-up, forward-only, combined M1 files, and causal M5 matrix are retained in the workflow artifact.
