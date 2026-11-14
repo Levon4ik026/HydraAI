@@ -296,12 +296,28 @@ def stability_rows(trades: list[dict], observed_days: set[date], granularity: st
     return output
 
 
+def wilson_95_interval(wins: int, decisive: int) -> list[float] | None:
+    if decisive <= 0:
+        return None
+    z = 1.959963984540054
+    p = wins / decisive
+    denominator = 1.0 + z * z / decisive
+    center = (p + z * z / (2.0 * decisive)) / denominator
+    half = z * math.sqrt(
+        p * (1.0 - p) / decisive + z * z / (4.0 * decisive * decisive)
+    ) / denominator
+    return [round(100.0 * (center - half), 4), round(100.0 * (center + half), 4)]
+
+
 def summarize_metrics(trades: list[dict], observed_days: set[date] | None = None) -> dict:
     ordered = sorted(trades, key=lambda row: (row["entry_time"], row["signal_time"]))
     wins = sum(row["outcome"] == "W" for row in ordered)
     losses = sum(row["outcome"] == "L" for row in ordered)
     draws = sum(row["outcome"] == "D" for row in ordered)
+    total = len(ordered)
     decisive = wins + losses
+    net_92 = wins * 0.92 - losses
+    profit_factor = (wins * 0.92 / losses) if losses else (float("inf") if wins else None)
     equity = peak = max_drawdown = 0.0
     streak = longest_streak = 0
     for trade in ordered:
@@ -317,19 +333,23 @@ def summarize_metrics(trades: list[dict], observed_days: set[date] | None = None
     observed_days = observed_days or set()
     active_days = len({trade["entry_time"].date() for trade in ordered})
     return {
-        "n": len(ordered), "w": wins, "l": losses, "d": draws, "decisive": decisive,
+        "n": total, "w": wins, "l": losses, "d": draws, "decisive": decisive,
         "wr_pct": round(100.0 * wins / decisive, 4) if decisive else None,
-        "net_92_units": round(wins * 0.92 - losses, 8),
+        "wilson_95_pct": wilson_95_interval(wins, decisive),
+        "wins_all_pct": round(100.0 * wins / total, 4) if total else None,
+        "net_92_units": round(net_92, 8),
+        "roi_92_pct": round(100.0 * net_92 / total, 4) if total else None,
+        "profit_factor_92": round(profit_factor, 8) if profit_factor is not None and math.isfinite(profit_factor) else profit_factor,
         "max_drawdown_92_units": round(max_drawdown, 8),
         "longest_losing_streak": longest_streak,
         "active_days": active_days, "observed_forward_days": len(observed_days),
-        "trades_per_active_day": round(len(ordered) / active_days, 4) if active_days else 0.0,
+        "trades_per_active_day": round(total / active_days, 4) if active_days else 0.0,
         "payout_sensitivity": {f"{p:.2f}": round(wins * p - losses, 8) for p in PAYOUT_GRID},
         "daily_profit_concentration": period_concentration(ordered, "day"),
         "weekly_profit_concentration": period_concentration(ordered, "week"),
         "weekly_stability": stability_rows(ordered, observed_days, "week"),
         "monthly_stability": stability_rows(ordered, observed_days, "month"),
-        "sample_status": "DESCRIPTIVE_ONLY_INSUFFICIENT_N" if len(ordered) < MIN_TRADES
+        "sample_status": "DESCRIPTIVE_ONLY_INSUFFICIENT_N" if total < MIN_TRADES
                          else "MINIMUM_N_REACHED_NOT_PROOF_OF_EDGE",
     }
 
@@ -406,6 +426,16 @@ def fmt_wr(value) -> str:
     return "n/a" if value is None else f"{value:.2f}%"
 
 
+def fmt_wilson(value) -> str:
+    return "n/a" if value is None else f"[{value[0]:.2f}, {value[1]:.2f}]%"
+
+
+def fmt_pf(value) -> str:
+    if value is None:
+        return "n/a"
+    return "inf" if math.isinf(value) else f"{value:.2f}"
+
+
 def fmt_concentration(value: dict) -> str:
     if value["share_pct"] is None:
         return "n/a (no positive period net P&L)"
@@ -440,17 +470,28 @@ def build_report(manifest: dict, results: list[dict]) -> str:
         "- Warm-up rows initialize causal indicators and prior observed completed UTC day/week levels only. No warm-up signal or outcome is scored.",
         "- Signals use completed M5 bars; entry is the immediately next M5 open; settlement is the expiry bar close. Trades crossing the forward-start boundary, a missing M5 bucket, or a continuity-segment boundary are not accepted.",
         "", "## Candidate results", "",
-        "| Candidate | Side / expiry | N | W/L/D | WR excl. draws | Net at 92% | Max DD | Longest L streak | Active days | Trades / active day |",
-        "|---|---|---:|---|---:|---:|---:|---:|---:|---:|",
+        "| Candidate | Side / expiry | N | W/L/D | Decisive WR [95% Wilson] | Wins / all | Net @92% | ROI | PF | Max DD | Longest L streak | Raw signals | Trade freq / M5 | WAIT |",
+        "|---|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
+    forward_m5_bars = int(manifest.get("forward_m5_bars", 0))
     for result in results:
         m = result["metrics"]
+        trade_frequency = 100.0 * m["n"] / forward_m5_bars if forward_m5_bars else None
+        wait_share = 100.0 - trade_frequency if trade_frequency is not None else None
+        frequency_text = "n/a" if trade_frequency is None else f"{trade_frequency:.3f}%"
+        wait_text = "n/a" if wait_share is None else f"{wait_share:.3f}%"
         lines.append(
             f"| {result['candidate_id']} | {result['side']} / {result['expiry_minutes']}m | {m['n']} "
-            f"| {m['w']}/{m['l']}/{m['d']} | {fmt_wr(m['wr_pct'])} | {m['net_92_units']:+.2f}u "
-            f"| {m['max_drawdown_92_units']:.2f}u | {m['longest_losing_streak']} | {m['active_days']} "
-            f"| {m['trades_per_active_day']:.2f} |"
+            f"| {m['w']}/{m['l']}/{m['d']} | {fmt_wr(m['wr_pct'])} {fmt_wilson(m['wilson_95_pct'])} "
+            f"| {fmt_wr(m['wins_all_pct'])} | {m['net_92_units']:+.2f}u | {fmt_wr(m['roi_92_pct'])} "
+            f"| {fmt_pf(m['profit_factor_92'])} | {m['max_drawdown_92_units']:.2f}u "
+            f"| {m['longest_losing_streak']} | {result['raw_forward_events']} | {frequency_text} | {wait_text} |"
         )
+    lines += [
+        "",
+        "- Wilson 95% intervals use decisive outcomes (W+L) and assume independent outcomes; serial clustering makes them descriptive, especially at small N.",
+        "- Trade frequency is accepted non-overlapping trades divided by complete forward M5 bars; WAIT is its complement. Raw trigger events are shown separately.",
+    ]
 
     lines += ["", "### Profit concentration", "",
               "| Candidate | Top UTC day | Top UTC week |", "|---|---|---|"]
