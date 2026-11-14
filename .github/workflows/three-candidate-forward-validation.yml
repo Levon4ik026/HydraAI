@@ -47,8 +47,8 @@ jobs:
           while end.weekday() >= 5:
               end -= timedelta(days=1)
           download_to = end + timedelta(days=1)
-print(f"forward_end={end.isoformat()}")
-print(f"download_to={download_to.isoformat()}")
+          print(f"forward_end={end.isoformat()}")
+          print(f"download_to={download_to.isoformat()}")
           PY
 
       - name: Download warm-up and prospective EURUSD M1 BID observations
