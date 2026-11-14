@@ -231,7 +231,7 @@
       "side": "CALL"
     }
   ],
-  "captured_at_utc": "2026-11-14T11:45:52.467308+00:00",
+  "captured_at_utc": "2026-11-14T11:46:12.411064+00:00",
   "combined_csv_sha256": "dd77f80f446a7561445e8f71e373f6fe71b0f921bc8ede87538d319027006cf1",
   "data": {
     "duplicate_timestamp_rows": 0,
@@ -262,7 +262,7 @@
   "forward_csv_sha256": "c2032d38d4692afbd19fd225341e22c2101a466bd1f9f158482e4542e7804e02",
   "forward_m5_bars": 1115,
   "forward_start_utc": "2026-11-10",
-  "git_sha": "b99b8a3989fdae741821c2a62a80171fbb88c96f",
+  "git_sha": "2f910096fac2b725ae93bea6e0d07160b5357156",
   "incomplete_m5_buckets": 29,
   "matrix": {
     "causality": {
@@ -304,6 +304,6 @@
   "script_sha256": "2bed70bb46859cf1e4cf01c70c560a27cc632ad3f2e08ec7447fbb92df8b9b19",
   "warmup_csv_sha256": "81dae08ab585846ee3f83f86321077487822e59a6d430fc945c278fd771556df",
   "warmup_start_utc": "2026-11-02",
-  "workflow_run_id": "43591545956",
-  "workflow_run_url": "https://github.com/Levon4ik026/HydraAI/actions/runs/43591545956"
+  "workflow_run_id": "43591570012",
+  "workflow_run_url": "https://github.com/Levon4ik026/HydraAI/actions/runs/43591570012"
 }
