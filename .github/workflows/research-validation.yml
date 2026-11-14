@@ -1,0 +1,254 @@
+name: Research validation tests
+
+on:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/**"
+      - ".github/workflows/research-validation.yml"
+  pull_request:
+    branches: [hydra/research-validation, hydra/stabilization]
+
+jobs:
+  research-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run existing project tests
+        run: python -m unittest discover -s tests -v
+      - name: Run research tests
+        run: python -m unittest discover -s research/tests -v
+
+      - name: Run direction-separated winner-loser audit
+        run: python research/win_loss_feature_audit.py --data eurusd_history_extended.csv --out research/WIN_LOSS_FEATURE_AUDIT.md
+      - name: Run train-only interaction screen
+        run: python research/interaction_screen.py --data eurusd_history_extended.csv --out research/INTERACTION_SCREEN.md
+      - name: Run paired day-cluster bootstrap
+        run: python research/day_cluster_bootstrap.py --data eurusd_history_extended.csv --out research/CLUSTER_BOOTSTRAP.md
+      - name: Run causal loss-context audit
+        run: python research/loss_context_audit.py --data eurusd_history_extended.csv --out research/LOSS_CONTEXT_AUDIT.md
+      - name: Run causal sequence-state audit
+        run: python research/sequence_state_audit.py --data eurusd_history_extended.csv --out research/SEQUENCE_STATE_AUDIT.md
+      - name: Run causal market-regime audit
+        run: python research/market_regime_audit.py --data eurusd_history_extended.csv --out research/MARKET_REGIME_AUDIT.md
+      - name: Run joint matched signal vs market baseline audit
+        run: python research/joint_matched_baseline.py --data eurusd_history_extended.csv --out research/JOINT_MATCHED_BASELINE.md
+      - name: Upload joint matched baseline audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-joint-matched-baseline
+          path: research/JOINT_MATCHED_BASELINE.md
+          if-no-files-found: error
+      - name: Run signal vs same-regime market baseline audit
+        run: python research/signal_market_baseline.py --data eurusd_history_extended.csv --out research/SIGNAL_MARKET_BASELINE.md
+      - name: Upload signal market baseline audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-signal-market-baseline
+          path: research/SIGNAL_MARKET_BASELINE.md
+          if-no-files-found: error
+      - name: Run long-horizon M5 expiry audit
+        run: python research/long_horizon_audit.py --data eurusd_history_extended.csv --out research/LONG_HORIZON_AUDIT.md
+      - name: Upload long-horizon audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-long-horizon-audit
+          path: research/LONG_HORIZON_AUDIT.md
+          if-no-files-found: error
+      - name: Run intratrade path and paired expiry audit
+        run: python research/intratrade_path_audit.py --data eurusd_history_extended.csv --out research/INTRATRADE_PATH_AUDIT.md
+      - name: Upload intratrade path audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-intratrade-path-audit
+          path: research/INTRATRADE_PATH_AUDIT.md
+          if-no-files-found: error
+      - name: Run 20-minute causal edge audit
+        run: python research/20m_causal_edge_audit.py --data eurusd_history_extended.csv --out research/20M_CAUSAL_EDGE_AUDIT.md
+      - name: Upload 20-minute causal edge audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-20m-causal-edge-audit
+          path: research/20M_CAUSAL_EDGE_AUDIT.md
+          if-no-files-found: error
+      - name: Run causal swing-sweep and rejection audit
+        run: python research/swing_sweep_rejection_audit.py --data eurusd_history_extended.csv --out research/SWING_SWEEP_REJECTION_AUDIT.md
+      - name: Upload swing-sweep rejection audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-swing-sweep-rejection-audit
+          path: research/SWING_SWEEP_REJECTION_AUDIT.md
+          if-no-files-found: error
+      - name: Upload market-regime audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-market-regime-audit
+          path: research/MARKET_REGIME_AUDIT.md
+          if-no-files-found: error
+      - name: Upload sequence-state audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-sequence-state-audit
+          path: research/SEQUENCE_STATE_AUDIT.md
+          if-no-files-found: error
+      - name: Upload loss-context audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-loss-context-audit
+          path: research/LOSS_CONTEXT_AUDIT.md
+          if-no-files-found: error
+      - name: Upload day-cluster bootstrap
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-day-cluster-bootstrap
+          path: research/CLUSTER_BOOTSTRAP.md
+          if-no-files-found: error
+      - name: Upload winner-loser audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-win-loss-feature-audit
+          path: research/WIN_LOSS_FEATURE_AUDIT.md
+          if-no-files-found: error
+      - name: Upload interaction screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: call-put-train-only-interaction-screen
+          path: research/INTERACTION_SCREEN.md
+          if-no-files-found: error
+      - name: Upload standalone strategy-family screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-standalone-strategy-family-screen
+          path: research/STANDALONE_STRATEGY_SCREEN.md
+          if-no-files-found: error
+      - name: Run train-only exact reversal audit
+        run: python research/reversal_strategy_audit.py --data eurusd_history_extended.csv --out research/REVERSAL_STRATEGY_AUDIT.md
+      - name: Upload exact reversal audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-exact-reversal-audit
+          path: research/REVERSAL_STRATEGY_AUDIT.md
+          if-no-files-found: error
+      - name: Run causal regime and day diagnostic for frozen reversals
+        run: python research/reversal_regime_diagnostic.py --data eurusd_history_extended.csv --out research/REVERSAL_REGIME_DIAGNOSTIC.md
+      - name: Upload reversal regime diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-reversal-regime-diagnostic
+          path: research/REVERSAL_REGIME_DIAGNOSTIC.md
+          if-no-files-found: error
+
+  long-history-reversal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Download multi-year EURUSD M1 BID history from Dukascopy
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+      - name: Verify long-history dataset
+        run: |
+          python - <<'PY'
+          import csv
+          from datetime import datetime, timezone
+          from pathlib import Path
+          path = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          if not path.exists():
+              raise SystemExit(f"Missing downloaded dataset: {path}")
+          with path.open(newline="", encoding="utf-8-sig") as f:
+              reader = csv.DictReader(f)
+              rows = list(reader)
+              fields = reader.fieldnames or []
+          required = {"timestamp", "open", "high", "low", "close"}
+          if not required.issubset(fields) or not rows:
+              raise SystemExit(f"Unexpected CSV format: {fields}")
+          stamps = [datetime.fromtimestamp(int(r["timestamp"]) / 1000, tz=timezone.utc) for r in rows]
+          print(f"ROWS={len(rows)} FIRST_UTC={min(stamps).isoformat()} LAST_UTC={max(stamps).isoformat()}")
+          if len(rows) < 100_000:
+              raise SystemExit("Insufficient downloaded history; refusing to run a purported long-history test")
+          PY
+      - name: Capture immutable long-history dataset manifest
+        run: |
+          python - <<'PY'
+          import csv
+          import hashlib
+          import json
+          import math
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          path = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          digest = hashlib.sha256()
+          with path.open("rb") as f:
+              for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                  digest.update(chunk)
+
+          parsed = {}
+          raw_rows = invalid_rows = duplicate_rows = 0
+          with path.open(newline="", encoding="utf-8-sig") as f:
+              for row in csv.DictReader(f):
+                  raw_rows += 1
+                  try:
+                      ts = datetime.fromtimestamp(int(float(row["timestamp"])) / 1000.0, tz=timezone.utc)
+                      o, h, low, c = (float(row[k]) for k in ("open", "high", "low", "close"))
+                      if not all(math.isfinite(x) and x > 0 for x in (o, h, low, c)):
+                          raise ValueError("non-finite or non-positive OHLC")
+                      if h < max(o, low, c) or low > min(o, c):
+                          raise ValueError("invalid OHLC ordering")
+                  except (KeyError, ValueError, TypeError, OverflowError):
+                      invalid_rows += 1
+                      continue
+                  if ts in parsed:
+                      duplicate_rows += 1
+                  parsed[ts] = (o, h, low, c)
+
+          times = sorted(parsed)
+          manifest = {
+              "source": "Dukascopy EURUSD M1 BID",
+              "download_path": path.as_posix(),
+              "captured_at_utc": datetime.now(timezone.utc).isoformat(),
+              "sha256": digest.hexdigest(),
+              "raw_csv_rows": raw_rows,
+              "valid_unique_m1_rows": len(parsed),
+              "invalid_rows": invalid_rows,
+              "duplicate_timestamp_rows": duplicate_rows,
+              "first_utc": times[0].isoformat() if times else None,
+              "last_utc": times[-1].isoformat() if times else None,
+          }
+          out = Path("research/LONG_HISTORY_DATASET_MANIFEST.json")
+          out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(manifest, indent=2))
+          PY
+      - name: Run standalone strategy screen on multi-year history
+        run: python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_STANDALONE_SCREEN.md
+      - name: Run exact inverse audit on multi-year history
+        run: python research/reversal_strategy_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_AUDIT.md
+      - name: Run prior-only regime and daily diagnostic
+        run: python research/reversal_regime_diagnostic.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_REGIME.md
+      - name: Run quarterly and payout-stress robustness audit
+        run: python research/reversal_robustness_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
+      - name: Run day-cluster bootstrap on frozen reversals
+        run: python research/reversal_day_cluster_bootstrap.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
+      - name: Run TRAIN-frozen multi-feature context screen for reversals
+        run: python research/multifeature_reversal_context.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
+      - name: Upload multi-year reversal research
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-multi-year-reversal-research
+          path: |
+            research/LONG_HISTORY_STANDALONE_SCREEN.md
+            research/LONG_HISTORY_REVERSAL_AUDIT.md
+            research/LONG_HISTORY_REVERSAL_REGIME.md
+            research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
+            research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
+            research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
+            research/LONG_HISTORY_DATASET_MANIFEST.json
+          if-no-files-found: error

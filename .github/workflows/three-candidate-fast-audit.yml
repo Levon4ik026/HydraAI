@@ -1,0 +1,57 @@
+name: Hydra three-candidate focused validation
+
+on:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - ".github/workflows/three-candidate-fast-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  focused-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: ./.github/actions/prepare-eurusd-data
+      - name: Build causal M5 matrix from frozen snapshot
+        run: |
+          python research/build_m5_feature_matrix.py \
+            --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv \
+            --out research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+      - name: Run profiles for exactly three frozen candidates
+        run: |
+          python research/universal_profile_engine.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config .github/hydra-research/three-candidates-v2.json \
+            --out research-artifacts/three-candidate-profiles-v2.md
+      - name: Run date-matched controls and block bootstrap for exactly three candidates
+        run: |
+          python research/matched_control_block_bootstrap_v4.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config .github/hydra-research/three-candidates-v2.json \
+            --out research-artifacts/three-candidate-matched-control-v4.md
+      - name: Run dependence-aware validation of predeclared CAND-001 profile
+        run: |
+          python research/cand001_dependence_validation.py \
+            --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv \
+            --out research-artifacts/cand001-dependence-validation.md \
+            --reps 20000
+      - name: Upload focused research outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-three-candidate-focused-validation
+          path: |
+            research-artifacts/three-candidate-profiles-v2.md
+            research-artifacts/three-candidate-matched-control-v4.md
+            research-artifacts/cand001-dependence-validation.md
+            research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+          if-no-files-found: error

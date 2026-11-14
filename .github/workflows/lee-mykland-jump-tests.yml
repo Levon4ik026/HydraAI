@@ -1,0 +1,19 @@
+name: Lee-Mykland jump detector tests
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/lee_mykland_jump.py"
+      - "research/tests/test_lee_mykland_jump.py"
+      - ".github/workflows/lee-mykland-jump-tests.yml"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run detector unit tests
+        run: python -m unittest research.tests.test_lee_mykland_jump -v

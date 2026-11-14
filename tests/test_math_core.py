@@ -44,6 +44,41 @@ class MathCoreTests(unittest.TestCase):
         self.assertEqual(trades[0].exit_time, trades[1].signal_time)
         self.assertGreater(trades[1].entry_time, trades[0].exit_time)
 
+    def test_backtest_rejects_duplicate_or_reversed_timestamps(self):
+        base = [
+            {"timestamp": T0 + timedelta(minutes=i), "open": 1.0, "close": 1.1,
+             "signal": 1 if i == 0 else 0}
+            for i in range(4)
+        ]
+        duplicate = [dict(row) for row in base]
+        duplicate[2]["timestamp"] = duplicate[1]["timestamp"]
+        reversed_rows = [dict(row) for row in base]
+        reversed_rows[2]["timestamp"] = T0 - timedelta(minutes=1)
+        for malformed in (duplicate, reversed_rows):
+            with self.subTest(rows=malformed):
+                with self.assertRaisesRegex(ValueError, "strictly increasing"):
+                    backtest_non_overlapping(malformed, 1)
+
+    def test_backtest_rejects_nonfinite_or_nonpositive_prices(self):
+        for bad in (float("nan"), float("inf"), 0.0, -1.0):
+            rows = [
+                {"timestamp": T0 + timedelta(minutes=i), "open": 1.0, "close": 1.1,
+                 "signal": 1 if i == 0 else 0}
+                for i in range(3)
+            ]
+            rows[1]["open"] = bad
+            with self.subTest(price=bad):
+                with self.assertRaisesRegex(ValueError, "open must be finite and positive"):
+                    backtest_non_overlapping(rows, 1)
+
+    def test_horizon_must_be_positive_integer(self):
+        rows = [{"timestamp": T0 + timedelta(minutes=i), "open": 1.0, "close": 1.1,
+                 "signal": 0} for i in range(3)]
+        for horizon in (0, -1, 1.5, True):
+            with self.subTest(horizon=horizon):
+                with self.assertRaises(ValueError):
+                    backtest_non_overlapping(rows, horizon)
+
     def test_actual_payout_override(self):
         rows = [{"timestamp": T0+timedelta(minutes=i), "open": 1.0, "close": 1.1, "signal": 1 if i == 0 else 0} for i in range(3)]
         entry = T0 + timedelta(minutes=1)

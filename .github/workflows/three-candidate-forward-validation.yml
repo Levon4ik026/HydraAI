@@ -1,0 +1,93 @@
+name: Hydra three-candidate prospective forward validation
+
+on:
+  push:
+    branches:
+      - hydra/research-validation
+    paths:
+      - "research_forward/**"
+      - ".github/workflows/three-candidate-forward-validation.yml"
+      - "research-artifacts/forward-validation-run-trigger.txt"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: three-candidate-forward-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  forward-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run forward-pipeline unit tests
+        run: python -m unittest discover -s research_forward -p "test_*.py" -v
+
+      - name: Determine latest completed UTC weekday
+        id: dates
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from datetime import datetime, timedelta, timezone
+          end = datetime.now(timezone.utc).date() - timedelta(days=1)
+          while end.weekday() >= 5:
+              end -= timedelta(days=1)
+          download_to = end + timedelta(days=1)
+          print(f"forward_end={end.isoformat()}")
+          print(f"download_to={download_to.isoformat()}")
+          PY
+
+      - name: Download warm-up and prospective EURUSD M1 BID observations
+        shell: bash
+        run: |
+          mkdir -p download
+          npx --yes dukascopy-node -i eurusd -from 2026-11-02 -to "${{ steps.dates.outputs.download_to }}" -t m1 -f csv -v
+          test -s "download/eurusd-m1-bid-2026-11-02-${{ steps.dates.outputs.download_to }}.csv"
+
+      - name: Build forward-only cohort, causal matrix, manifest and report
+        run: |
+          python research_forward/three_candidate_forward_validation.py \
+            --data "download/eurusd-m1-bid-2026-11-02-${{ steps.dates.outputs.download_to }}.csv" \
+            --config ".github/hydra-research/three-candidates-v2.json" \
+            --protocol "research-artifacts/three-candidate-forward-validation-protocol-v1.md" \
+            --warmup-start 2026-11-02 \
+            --forward-start 2026-11-10 \
+            --forward-end "${{ steps.dates.outputs.forward_end }}" \
+            --out-dir "research-artifacts/forward-validation"
+
+      - name: Upload reproducibility artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-three-candidate-forward-validation-${{ github.run_id }}
+          path: research-artifacts/forward-validation/*
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish report, manifest and trade ledger on research branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research-artifacts/forward-validation/report.md \
+                  research-artifacts/forward-validation/manifest.json \
+                  research-artifacts/forward-validation/trades.csv
+          if git diff --cached --quiet; then
+            echo "Forward report unchanged; no commit required."
+          else
+            git commit -m "research: publish three-candidate forward validation"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

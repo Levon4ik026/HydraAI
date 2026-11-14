@@ -1,0 +1,310 @@
+name: Long-history frozen strategy validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/long_history_validation.py"
+      - "research/standalone_strategy_screen.py"
+      - "research/hydra_time_machine.py"
+      - "research/test_hydra_time_machine.py"
+      - "research/causal_regime_20m_audit.py"
+      - "research/ai_intelligence_engine_audit.py"
+      - "research/ai_filter_robustness_audit.py"
+      - "research/nonoverlap_baseline_audit.py"
+      - "research/predeclared_interaction_screen.py"
+      - "research/sweep_morphology_audit.py"
+      - "research/post_sweep_path_audit.py"
+      - "research/time_round_level_context_audit.py"
+      - "research/ny_session_mechanism_audit.py"
+      - "research/ny_put_locked_candidate_audit.py"
+      - "research/ny_put_time_bucket_audit.py"
+      - "research/ny_put_matched_control_audit.py"
+      - "research/ny_put_random_match_sensitivity.py"
+      - "research/ny_put_sensitivity_loss_audit.py"
+      - "research/level_dwell_experiment.py"
+      - "research/m1_move_occurrence_direction_audit.py"
+      - "research/m1_two_stage_direction_audit.py"
+      - "research/m1_two_stage_robustness_audit.py"
+      - "research/m1_two_stage_regime_block_audit.py"
+      - ".github/workflows/long-history-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  long-history-backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Download EURUSD M1 BID history in quarterly chunks with monthly fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p download
+          download_chunk() {
+            local start="$1" end="$2"
+            local file="download/eurusd-m1-bid-${start}-${end}.csv"
+            local attempt
+            for attempt in 1 2; do
+              rm -f "$file"
+              echo "Downloading $start through $end (attempt $attempt/2)"
+              if npx --yes dukascopy-node@latest -i eurusd -from "$start" -to "$end" -t m1 -f csv -v; then
+                test -s "$file"
+                return 0
+              fi
+              echo "Dukascopy request failed for $start through $end; retrying after a short pause."
+              sleep 5
+            done
+            return 1
+          }
+          for year in 2024 2025 2026; do
+            for month in 01 04 07 10; do
+              start="$year-$month-01"
+              if [[ "$year-$month" > "2026-10" ]]; then continue; fi
+              case "$month" in
+                01) end="$year-03-31" ;;
+                04) end="$year-06-30" ;;
+                07) end="$year-09-30" ;;
+                10) end="$year-12-31" ;;
+              esac
+              if [[ "$end" > "2026-11-08" ]]; then end="2026-11-08"; fi
+              if download_chunk "$start" "$end"; then
+                continue
+              fi
+              echo "Quarterly download timed out; falling back to individual calendar months."
+              rm -f "download/eurusd-m1-bid-${start}-${end}.csv"
+              cursor="$start"
+              while [[ "$cursor" < "$end" || "$cursor" == "$end" ]]; do
+                month_end="$(date -u -d "$cursor +1 month -1 day" +%F)"
+                if [[ "$month_end" > "$end" ]]; then month_end="$end"; fi
+                download_chunk "$cursor" "$month_end"
+                cursor="$(date -u -d "$month_end +1 day" +%F)"
+              done
+            done
+          done
+      - name: Merge and verify downloaded history
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv
+          files = sorted(Path("download").glob("eurusd-m1-bid-*.csv"))
+          if not files:
+              raise SystemExit("No Dukascopy CSV chunks found")
+          target = Path("download/eurusd-m1-bid-2024-01-01-merged.csv")
+          rows = 0
+          with target.open("w", newline="", encoding="utf-8") as out:
+              writer = None
+              for path in files:
+                  with path.open(newline="", encoding="utf-8") as src:
+                      reader = csv.reader(src)
+                      header = next(reader, None)
+                      if not header:
+                          continue
+                      if writer is None:
+                          writer = csv.writer(out)
+                          writer.writerow(header)
+                      for row in reader:
+                          if row:
+                              writer.writerow(row)
+                              rows += 1
+          if rows < 100000:
+              raise SystemExit(f"Unexpectedly few rows after merge: {rows}")
+          print(f"Merged {len(files)} chunks, {rows} data rows into {target}")
+          print(f"Chunks: {[p.name for p in files]}")
+          PY
+          DATA_FILE="download/eurusd-m1-bid-2024-01-01-merged.csv"
+          test -s "$DATA_FILE"
+          echo "DATA_FILE=$DATA_FILE" >> "$GITHUB_ENV"
+      - name: Run standalone strategy-family screen
+        run: python research/standalone_strategy_screen.py --data "$DATA_FILE" --out research/STANDALONE_STRATEGY_SCREEN.md
+      - name: Upload standalone strategy-family screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-standalone-strategy-screen
+          path: research/STANDALONE_STRATEGY_SCREEN.md
+          if-no-files-found: error
+      - name: Run HYDRA Time Machine walk-forward research
+        run: |
+          python -m pip install --upgrade numpy
+          python research/hydra_time_machine.py --data "$DATA_FILE" --out research/HYDRA_TIME_MACHINE_REPORT.md
+          python -m unittest discover -s research -p "test_hydra_time_machine.py" -v
+      - name: Upload HYDRA Time Machine report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-time-machine-report
+          path: research/HYDRA_TIME_MACHINE_REPORT.md
+          if-no-files-found: error
+      - name: Run frozen long-history backtest
+        run: python research/long_history_validation.py --data "$DATA_FILE" --out research/LONG_HISTORY_VALIDATION.md
+      - name: Run causal 20-minute regime audit
+        run: python research/causal_regime_20m_audit.py --data "$DATA_FILE" --out research/CAUSAL_REGIME_20M_AUDIT.md
+      - name: Run non-overlapping strategy and simple-baseline audit
+        run: python research/nonoverlap_baseline_audit.py --data "$DATA_FILE" --out research/NONOVERLAP_BASELINE_AUDIT.md
+      - name: Run predeclared interaction screen
+        run: python research/predeclared_interaction_screen.py --data "$DATA_FILE" --out research/PREDECLARED_INTERACTION_SCREEN.md
+      - name: Run causal sweep morphology audit
+        run: python research/sweep_morphology_audit.py --data "$DATA_FILE" --out research/SWEEP_MORPHOLOGY_AUDIT.md
+      - name: Run post-sweep price path audit
+        run: python research/post_sweep_path_audit.py --data "$DATA_FILE" --out research/POST_SWEEP_PATH_AUDIT.md
+      - name: Run time and round-level context audit
+        run: python research/time_round_level_context_audit.py --data "$DATA_FILE" --out research/TIME_ROUND_LEVEL_AUDIT.md
+      - name: Run DST-aware New York session mechanism audit
+        run: python research/ny_session_mechanism_audit.py --data "$DATA_FILE" --out research/NY_SESSION_MECHANISM_AUDIT.md
+      - name: Run locked New York PUT candidate robustness audit
+        run: python research/ny_put_locked_candidate_audit.py --data "$DATA_FILE" --out research/NY_PUT_LOCKED_CANDIDATE_AUDIT.md
+      - name: Run locked New York PUT time-of-day robustness audit
+        run: python research/ny_put_time_bucket_audit.py --data "$DATA_FILE" --out research/NY_PUT_TIME_BUCKET_AUDIT.md
+      - name: Run locked New York PUT matched-control audit
+        run: python research/ny_put_matched_control_audit.py --data "$DATA_FILE" --out research/NY_PUT_MATCHED_CONTROL_AUDIT.md
+      - name: Run NY PUT random matched-control sensitivity
+        run: python research/ny_put_random_match_sensitivity.py --data "$DATA_FILE" --out research/NY_PUT_RANDOM_MATCH_SENSITIVITY.md
+      - name: Run locked NY PUT sensitivity and loss anatomy audit
+        run: python research/ny_put_sensitivity_loss_audit.py --data "$DATA_FILE" --out research/NY_PUT_SENSITIVITY_LOSS_AUDIT.md
+      - name: Run causal M1 level-dwell experiment
+        run: python research/level_dwell_experiment.py --data "$DATA_FILE" --out research/LEVEL_DWELL_EXPERIMENT.md
+      - name: Upload level-dwell experiment
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-level-dwell-experiment
+          path: research/LEVEL_DWELL_EXPERIMENT.md
+          if-no-files-found: error
+      - name: Install ML research dependencies
+        run: python -m pip install --upgrade numpy scikit-learn
+      - name: Run causal M1 move-occurrence and direction audit
+        run: python research/m1_move_occurrence_direction_audit.py --data "$DATA_FILE" --out research/M1_MOVE_OCCURRENCE_DIRECTION_AUDIT.md
+      - name: Upload M1 move-occurrence and direction audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-m1-move-occurrence-direction-audit
+          path: research/M1_MOVE_OCCURRENCE_DIRECTION_AUDIT.md
+          if-no-files-found: error
+
+      - name: Run two-stage event-gate and conditional-direction audit
+        run: python research/m1_two_stage_direction_audit.py --data "$DATA_FILE" --out research/M1_TWO_STAGE_DIRECTION_AUDIT.md
+      - name: Upload two-stage event-gate and conditional-direction audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-m1-two-stage-direction-audit
+          path: research/M1_TWO_STAGE_DIRECTION_AUDIT.md
+          if-no-files-found: error
+
+      - name: Run predeclared two-stage robustness audit
+        run: python research/m1_two_stage_robustness_audit.py --data "$DATA_FILE" --out research/M1_TWO_STAGE_ROBUSTNESS_AUDIT.md
+      - name: Upload two-stage robustness audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-m1-two-stage-robustness-audit
+          path: research/M1_TWO_STAGE_ROBUSTNESS_AUDIT.md
+          if-no-files-found: error
+      - name: Run M1 regime and contiguous-day block robustness audit
+        run: python research/m1_two_stage_regime_block_audit.py --data "$DATA_FILE" --out research/M1_TWO_STAGE_REGIME_BLOCK_AUDIT.md
+      - name: Upload M1 regime and contiguous-day block audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-m1-regime-block-audit
+          path: research/M1_TWO_STAGE_REGIME_BLOCK_AUDIT.md
+          if-no-files-found: error
+
+      - name: Run chronological AI Intelligence Engine audit
+        run: python research/ai_intelligence_engine_audit.py --data "$DATA_FILE" --out research/AI_INTELLIGENCE_ENGINE_AUDIT.md
+      - name: Run AI filter robustness diagnostics
+        run: python research/ai_filter_robustness_audit.py --data "$DATA_FILE" --out research/AI_FILTER_ROBUSTNESS.md
+      - name: Upload time and round-level context audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-time-round-level-context-audit
+          path: research/TIME_ROUND_LEVEL_AUDIT.md
+          if-no-files-found: error
+      - name: Upload New York PUT time-bucket audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-put-time-bucket-audit
+          path: research/NY_PUT_TIME_BUCKET_AUDIT.md
+          if-no-files-found: error
+      - name: Upload New York PUT matched-control audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-put-matched-control-audit
+          path: research/NY_PUT_MATCHED_CONTROL_AUDIT.md
+          if-no-files-found: error
+      - name: Upload NY PUT random matched-control sensitivity
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-put-random-match-sensitivity
+          path: research/NY_PUT_RANDOM_MATCH_SENSITIVITY.md
+          if-no-files-found: error
+      - name: Upload NY PUT sensitivity and loss anatomy audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-put-sensitivity-loss-audit
+          path: research/NY_PUT_SENSITIVITY_LOSS_AUDIT.md
+          if-no-files-found: error
+      - name: Upload locked New York PUT candidate audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-put-locked-candidate-audit
+          path: research/NY_PUT_LOCKED_CANDIDATE_AUDIT.md
+          if-no-files-found: error
+      - name: Upload New York session mechanism audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-session-mechanism-audit
+          path: research/NY_SESSION_MECHANISM_AUDIT.md
+          if-no-files-found: error
+      - name: Upload post-sweep path audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-post-sweep-path-audit
+          path: research/POST_SWEEP_PATH_AUDIT.md
+          if-no-files-found: error
+      - name: Upload sweep morphology audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-sweep-morphology-audit
+          path: research/SWEEP_MORPHOLOGY_AUDIT.md
+          if-no-files-found: error
+      - name: Upload predeclared interaction screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-predeclared-interaction-screen
+          path: research/PREDECLARED_INTERACTION_SCREEN.md
+          if-no-files-found: error
+      - name: Upload AI filter robustness diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ai-filter-robustness
+          path: research/AI_FILTER_ROBUSTNESS.md
+          if-no-files-found: error
+      - name: Upload AI Intelligence Engine audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ai-intelligence-engine-audit
+          path: research/AI_INTELLIGENCE_ENGINE_AUDIT.md
+          if-no-files-found: error
+      - name: Upload causal regime audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-causal-regime-20m-audit
+          path: research/CAUSAL_REGIME_20M_AUDIT.md
+          if-no-files-found: error
+      - name: Upload non-overlapping baseline audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-nonoverlap-baseline-audit
+          path: research/NONOVERLAP_BASELINE_AUDIT.md
+          if-no-files-found: error
+      - name: Upload long-history report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-long-history-validation
+          path: research/LONG_HISTORY_VALIDATION.md
+          if-no-files-found: error
