@@ -116,7 +116,12 @@ class MetricsTests(unittest.TestCase):
         )
         self.assertEqual((metrics["w"], metrics["l"], metrics["d"]), (1, 2, 1))
         self.assertAlmostEqual(metrics["wr_pct"], 100.0 / 3.0, places=3)
+        self.assertAlmostEqual(metrics["wilson_95_pct"][0], 6.15, places=2)
+        self.assertAlmostEqual(metrics["wilson_95_pct"][1], 79.23, places=2)
+        self.assertAlmostEqual(metrics["wins_all_pct"], 25.0, places=4)
         self.assertAlmostEqual(metrics["net_92_units"], -1.08, places=8)
+        self.assertAlmostEqual(metrics["roi_92_pct"], -27.0, places=4)
+        self.assertAlmostEqual(metrics["profit_factor_92"], 0.46, places=8)
         self.assertAlmostEqual(metrics["max_drawdown_92_units"], 2.0, places=8)
         self.assertEqual(metrics["longest_losing_streak"], 2)
         self.assertEqual(metrics["active_days"], 2)
@@ -124,6 +129,14 @@ class MetricsTests(unittest.TestCase):
         self.assertAlmostEqual(metrics["payout_sensitivity"]["0.50"], -1.5, places=8)
         self.assertEqual(metrics["sample_status"], "DESCRIPTIVE_ONLY_INSUFFICIENT_N")
         self.assertEqual(metrics["weekly_stability"][0]["n"], 4)
+
+    def test_empty_metrics_have_no_undefined_ratios(self):
+        metrics = forward.summarize_metrics([], set())
+        self.assertIsNone(metrics["wr_pct"])
+        self.assertIsNone(metrics["wilson_95_pct"])
+        self.assertIsNone(metrics["wins_all_pct"])
+        self.assertIsNone(metrics["roi_92_pct"])
+        self.assertIsNone(metrics["profit_factor_92"])
 
 
 class ForwardBoundaryTests(unittest.TestCase):
