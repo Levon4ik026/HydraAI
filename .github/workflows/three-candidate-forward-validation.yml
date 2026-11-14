@@ -46,20 +46,22 @@ jobs:
           end = datetime.now(timezone.utc).date() - timedelta(days=1)
           while end.weekday() >= 5:
               end -= timedelta(days=1)
-          print(f"forward_end={end.isoformat()}")
+          download_to = end + timedelta(days=1)
+print(f"forward_end={end.isoformat()}")
+print(f"download_to={download_to.isoformat()}")
           PY
 
       - name: Download warm-up and prospective EURUSD M1 BID observations
         shell: bash
         run: |
           mkdir -p download
-          npx --yes dukascopy-node -i eurusd -from 2026-11-02 -to "${{ steps.dates.outputs.forward_end }}" -t m1 -f csv -v
-          test -s "download/eurusd-m1-bid-2026-11-02-${{ steps.dates.outputs.forward_end }}.csv"
+          npx --yes dukascopy-node -i eurusd -from 2026-11-02 -to "${{ steps.dates.outputs.download_to }}" -t m1 -f csv -v
+          test -s "download/eurusd-m1-bid-2026-11-02-${{ steps.dates.outputs.download_to }}.csv"
 
       - name: Build forward-only cohort, causal matrix, manifest and report
         run: |
           python research_forward/three_candidate_forward_validation.py \
-            --data "download/eurusd-m1-bid-2026-11-02-${{ steps.dates.outputs.forward_end }}.csv" \
+            --data "download/eurusd-m1-bid-2026-11-02-${{ steps.dates.outputs.download_to }}.csv" \
             --config ".github/hydra-research/three-candidates-v2.json" \
             --protocol "research-artifacts/three-candidate-forward-validation-protocol-v1.md" \
             --warmup-start 2026-11-02 \
