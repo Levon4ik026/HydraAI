@@ -155,7 +155,7 @@ def ny_session_events(bars, by_ts):
     events, eligible, excluded, raw_signals = [], 0, 0, 0
     for i in range(13, len(weekly)):
         cur, prior = weekly[i], weekly[i-13:i]
-        next_start = cur["start"] + timedelta(days=7)
+        next_start = local_time(cur["start"].astimezone(NY).date() + timedelta(days=7), 18, 0, NY)
         if minute_window(by_ts, next_start, 60) is None:
             excluded += 1
             continue
