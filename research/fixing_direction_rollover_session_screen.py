@@ -211,7 +211,7 @@ def choose_expiry(info, by_ts, d1, d2):
     return selected, grid
 
 
-def build_report(candidates, data_meta, protocol_path, script_path, out_dir):
+def build_report(candidates, by_ts, data_meta, protocol_path, script_path, out_dir):
     first = __import__("datetime").datetime.fromisoformat(data_meta["first_utc"])
     last = __import__("datetime").datetime.fromisoformat(data_meta["last_utc"])
     span_days = (last.date() - first.date()).days
@@ -242,7 +242,7 @@ def build_report(candidates, data_meta, protocol_path, script_path, out_dir):
     result_manifest = []
     for cid, info in candidates.items():
         info["candidate_id"] = cid
-        selected, grid = choose_expiry(info, candidates["_by_ts"], d1, d2)
+        selected, grid = choose_expiry(info, by_ts, d1, d2)
         if selected is None:
             status = "NO_TRAIN_VARIANT_PASS"
             overall = stats([])
@@ -253,7 +253,7 @@ def build_report(candidates, data_meta, protocol_path, script_path, out_dir):
             bootstrap = day_cluster_bootstrap([])
             side_stats = {"CALL": stats([]), "PUT": stats([])}
         else:
-            rows = records_for_expiry(cid, info, candidates["_by_ts"], selected)
+            rows = records_for_expiry(cid, info, by_ts, selected)
             all_selected_trades.extend(rows)
             overall = stats(rows)
             control = stats(rows, "control_outcome")
@@ -380,8 +380,7 @@ def main():
     candidates = {}
     candidates.update(fixing_events(bars, by_ts))
     candidates.update(ny_session_events(bars, by_ts))
-    candidates["_by_ts"] = by_ts
-    manifest = build_report(candidates, meta, args.protocol, Path(__file__), args.out_dir)
+    manifest = build_report(candidates, by_ts, meta, args.protocol, Path(__file__), args.out_dir)
     print(
         f"Direct fixing/session screen complete: valid M1={meta['valid_unique_rows']:,}; "
         f"candidates={len(manifest['candidate_results'])}; preliminary leads={len(manifest['preliminary_leads'])}; "
