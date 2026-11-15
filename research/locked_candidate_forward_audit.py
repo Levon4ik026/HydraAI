@@ -165,10 +165,11 @@ def main():
             prob = 100*positives/BOOTSTRAPS
         ci = "n/a" if lo is None else f"[{lo:+.2f}, {hi:+.2f}]u"
         prob_txt = "n/a" if prob is None else f"{prob:.1f}%"
+        wr_txt = "n/a" if s["wr"] is None else f"{s['wr']:.2f}%"
+        roi_txt = "n/a" if s["roi"] is None else f"{s['roi']:+.2f}%"
+        pf_txt = "inf" if s["pf"] == float("inf") else f"{s['pf']:.3f}"
         lines.append(f"| {name} | {s['n']} ({s['w']}/{s['l']}/{s['d']}) | "
-                     f"{'n/a' if s['wr'] is None else f'{s['wr']:.2f}%'} | "
-                     f"{s['net']:+.2f}u | {'n/a' if s['roi'] is None else f'{s['roi']:+.2f}%'} | "
-                     f"{'inf' if s['pf'] == float('inf') else f'{s['pf']:.3f}'} | "
+                     f"{wr_txt} | {s['net']:+.2f}u | {roi_txt} | {pf_txt} | "
                      f"{s['max_dd']:.2f}u | {s['max_loss_streak']} | "
                      f"{raw_counts[name]} | {active}/{len(all_days)} | {ci} | {prob_txt} |")
 
@@ -179,9 +180,10 @@ def main():
         inv = [(day, "L" if res == "W" else "W" if res == "L" else "D")
                for day, res, *_ in rows[name]]
         s = stats(inv)
+        wr_txt = "n/a" if s["wr"] is None else f"{s['wr']:.2f}%"
+        pf_txt = "inf" if s["pf"] == float("inf") else f"{s['pf']:.3f}"
         lines.append(f"| {name} reversed | {s['n']} ({s['w']}/{s['l']}/{s['d']}) | "
-                     f"{'n/a' if s['wr'] is None else f'{s['wr']:.2f}%'} | "
-                     f"{s['net']:+.2f}u | {'inf' if s['pf'] == float('inf') else f'{s['pf']:.3f}'} |")
+                     f"{wr_txt} | {s['net']:+.2f}u | {pf_txt} |")
 
     lines += ["", "## Daily forward ledger", "",
               "| Signal UTC day | Candidate | Side | Signal time UTC | Entry time UTC | Outcome |",
