@@ -74,8 +74,9 @@ def main():
     if not data: raise SystemExit("No valid data")
     ss=[x for x in (session(data,t) for t in starts(next(iter(data)),next(reversed(data)))) if x]
     rows=[]; puts=[]; raw=0
-    for i in range(LOOKBACK,len(ss)):
-        prev=ss[i-LOOKBACK:i]; cur=ss[i-1]; entry=ss[i]["start"]
+    for i in range(LOOKBACK+1,len(ss)):
+        # Exclude the just-completed shock session from its 20-session baseline.
+        prev=ss[i-LOOKBACK-1:i-1]; cur=ss[i-1]; entry=ss[i]["start"]
         threshold=statistics.mean(abs(x["ret"]) for x in prev)
         if cur["ret"]<=-threshold:
             raw+=1
