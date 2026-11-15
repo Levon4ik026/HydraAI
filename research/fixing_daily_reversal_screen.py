@@ -443,15 +443,17 @@ def build_report(candidates, data_meta, protocol_path, script_path, out_dir):
             f"{val_txt} | {test_txt} | {status} |"
         )
         control = stats(records, "control_outcome")
+        side_stats = {side: stats([r for r in records if r["side"] == side]) for side in ("CALL", "PUT")}
         bootstrap = day_cluster_bootstrap(records)
         lines += [
             "", f"### {cid} — {info['label']}", "",
             f"- Exact rule: {info['rule']}",
             f"- Market regime: {info['market_regime']}",
             f"- Eligible windows: {info['eligible_windows']:,}; raw triggers: {info['raw_signal_events']:,}; accepted trades: {overall['n']:,}; excluded windows/trades: {info['excluded_windows']:,}.",
-            f"- Signal share: {(100*overall['n']/info['eligible_windows'] if info['eligible_windows'] else 0):.3f}%; WAIT share: {(100*(1-overall['n']/info['eligible_windows']) if info['eligible_windows'] else 0):.3f}%.",
+            f"- Signal share: {(100*info['raw_signal_events']/info['eligible_windows'] if info['eligible_windows'] else 0):.3f}%; WAIT share: {(100*(1-info['raw_signal_events']/info['eligible_windows']) if info['eligible_windows'] else 100):.3f}%; accepted trades after outcome availability: {overall['n']}.",
             f"- Overall: N={overall['n']}, W/L/D={overall['w']}/{overall['l']}/{overall['d']}, decisive WR={fmt_pct(overall['wr_pct'])}, Wilson 95%={overall['wilson_95_pct']}, net={fmt_units(overall['net_units'])}, ROI={fmt_pct(overall['roi_pct'])}, expectancy={fmt_units(overall['expectancy_units'])}/trade, PF={overall['profit_factor']}, max DD={overall['max_drawdown_units']:.2f}u, longest loss streak={overall['longest_losing_streak']}.",
             f"- Matched continuation control on same timestamps: N={control['n']}, W/L/D={control['w']}/{control['l']}/{control['d']}, WR={fmt_pct(control['wr_pct'])}, net={fmt_units(control['net_units'])}.",
+            f"- Candidate side split: CALL N={side_stats['CALL']['n']} W/L/D={side_stats['CALL']['w']}/{side_stats['CALL']['l']}/{side_stats['CALL']['d']} WR={fmt_pct(side_stats['CALL']['wr_pct'])} net={fmt_units(side_stats['CALL']['net_units'])}; PUT N={side_stats['PUT']['n']} W/L/D={side_stats['PUT']['w']}/{side_stats['PUT']['l']}/{side_stats['PUT']['d']} WR={fmt_pct(side_stats['PUT']['wr_pct'])} net={fmt_units(side_stats['PUT']['net_units'])}.",
             f"- Day-cluster bootstrap ({BOOTSTRAP_REPS:,} reps, seed {BOOTSTRAP_SEED}): {bootstrap}.",
             f"- Split purges: TRAIN={purged['TRAIN']}, VALIDATION={purged['VALIDATION']}.", "",
             "| Split | N | W/L/D | WR | Wilson 95% | Net @92% | ROI | PF | Max DD | Max loss streak |",
@@ -478,7 +480,7 @@ def build_report(candidates, data_meta, protocol_path, script_path, out_dir):
             "candidate_id": cid, "rule": info["rule"], "market_regime": info["market_regime"],
             "expiry_minutes": info["expiry_minutes"], "eligible_windows": info["eligible_windows"],
             "raw_signal_events": info["raw_signal_events"], "excluded_windows": info["excluded_windows"],
-            "overall": overall, "matched_continuation_control": control, "splits": split_stats,
+            "overall": overall, "matched_continuation_control": control, "side_stats": side_stats, "splits": split_stats,
             "purged": purged, "bootstrap": bootstrap, "status": status,
         })
     trades_path = out_dir / "trades.csv"
