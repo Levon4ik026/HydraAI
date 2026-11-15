@@ -262,7 +262,7 @@ def main():
         val=per["VALIDATION"]
         if val["n"]<30 or val["active_days"]<10:
             status="INSUFFICIENT_VALIDATION_SAMPLE"
-        elif val["wr_pct"] is not None and val["wr_pct"]>=57 and val["net_units"]>0 and isinstance(val["profit_factor"],float) and val["profit_factor"]>1:
+        elif val["wr_pct"] is not None and val["wr_pct"]>=57 and val["net_units"]>0 and (val["profit_factor"]=="inf" or (isinstance(val["profit_factor"],float) and val["profit_factor"]>1)):
             status="PRELIMINARILY_PROMISING_NOT_CONFIRMED"
         elif val["net_units"]>0 and val["wr_pct"] is not None and val["wr_pct"]>52.083:
             status="POSITIVE_BUT_BELOW_57_WR_SCREEN"
