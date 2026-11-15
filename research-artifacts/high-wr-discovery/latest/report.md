@@ -1,6 +1,6 @@
 # HydraAI — fifth-wave high-WR candidate screen
 
-- Captured UTC: 2026-11-15T08:31:32.696144+00:00
+- Captured UTC: 2026-11-15T11:13:37.257587+00:00
 - Branch: hydra/research-validation
 - Source: Dukascopy EURUSD M1 BID; 1,068,881 valid unique M1 rows; 211,337 complete M5 bars; 2668 continuity segments.
 - Coverage: 2024-01-01T22:00:00+00:00 — 2026-11-13T21:59:00+00:00

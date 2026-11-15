@@ -1,6 +1,6 @@
 # HydraAI high-WR discovery worklog
 
-- Latest screen: 2026-11-15T08:31:32.696144+00:00
+- Latest screen: 2026-11-15T11:13:37.257587+00:00
 - Branch: hydra/research-validation
 - Candidate batch eligibility: 5/5; batch_ready=True
 - Dedupe check: no exact match found in the existing prior-period sweep/reclaim, indicator, abnormal-impulse or three-candidate forward definitions. Three fix-window variants are related by one published mechanism and are not independent evidence.
@@ -34,7 +34,3 @@
 - Fixed rules: {"id": "HYD-NEW-005", "name": "M5 volatility-squeeze breakout", "family": "Volatility compression/expansion", "zone": "UTC", "fix": null, "side_rule": "breakout direction after a 12-bar range falls in the bottom 20% of the preceding 96 rolling 12-bar ranges", "expiry_min": 15}
 - Validation N=573; W/L/D=278/290/5; WR=48.944%; net@92=-34.24u; status=SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET.
 - New prospective N since 2026-11-15: 0.
-## Dedupe cross-check (2026-11-15)
-
-- Also reviewed the existing standalone strategy-family screen (false range breaks, momentum range breaks, mean reversion, engulfing, rejection pin bars), the DST-aware New York session mechanism audit, the time/round-level context audit (including descriptive Tokyo/Frankfurt/London fix windows), and the M1 level-dwell experiment.
-- No exact entry-rule duplicate was found for the three pre-fix 60-minute fade rules or the fixed London 08:00 CALL. The fixing and London-open ideas are adjacent to prior descriptive time-of-day/session analyses; the squeeze breakout is adjacent to momentum-break screens. These relationships are disclosed and reduce independence; they are not claimed as wholly unrelated research families.
