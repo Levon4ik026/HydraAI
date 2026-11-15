@@ -1,12 +1,12 @@
 # HydraAI — fifth-wave high-WR candidate screen
 
-- Captured UTC: 2026-11-15T08:28:59.102444+00:00
+- Captured UTC: 2026-11-15T08:31:32.696144+00:00
 - Branch: hydra/research-validation
 - Source: Dukascopy EURUSD M1 BID; 1,068,881 valid unique M1 rows; 211,337 complete M5 bars; 2668 continuity segments.
 - Coverage: 2024-01-01T22:00:00+00:00 — 2026-11-13T21:59:00+00:00
 - M1 gaps: 3644 intervals; 438799 missing minutes; largest 2944 minutes.
 - Invalid rows: 0; duplicate rows: 0; conflicting duplicate timestamps: 0; incomplete M5 buckets: 3373.
-- Raw CSV SHA-256: 32ab8005153803e0554c4f248b4f77763c1aa5325982bc95087c719a3e849e50; candidate config SHA-256: f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3; script SHA-256: 48605cfba0babece62ed4ea294fdcfe7f38f34be34d03c9b5e07bdaf382ac201.
+- Raw CSV SHA-256: 32ab8005153803e0554c4f248b4f77763c1aa5325982bc95087c719a3e849e50; candidate config SHA-256: f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3; script SHA-256: 6fb3f858865ae6e9ad893592307678e5a7885581fa20731ea75d4c093eae5415.
 - Chronological split by observed UTC dates: TRAIN before 2025-09-21; VALIDATION 2025-09-21–2026-04-18; TEST from 2026-04-19.
 - Important: historical TEST is not pristine; the repository has prior broad strategy exploration on overlapping history. Validation is a screening set, not independent proof.
 - Signals use completed M5 candles and next M5 open entry. Outcomes settle at the close of the M5 bar corresponding to the fixed expiry. Trades never bridge incomplete M5 buckets or continuity gaps.

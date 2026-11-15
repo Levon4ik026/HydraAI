@@ -1,5 +1,5 @@
 {
-  "captured_at_utc": "2026-11-15T08:28:59.102444+00:00",
+  "captured_at_utc": "2026-11-15T08:31:32.696144+00:00",
   "branch": "hydra/research-validation",
   "dataset": {
     "source": "Dukascopy EURUSD M1 BID",
@@ -50,7 +50,7 @@
   },
   "forward_start_utc": "2026-11-15T00:00:00+00:00",
   "candidate_config_sha256": "f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3",
-  "script_sha256": "48605cfba0babece62ed4ea294fdcfe7f38f34be34d03c9b5e07bdaf382ac201",
+  "script_sha256": "6fb3f858865ae6e9ad893592307678e5a7885581fa20731ea75d4c093eae5415",
   "batch_eligible_count": 5,
   "batch_size": 5,
   "batch_ready": true,

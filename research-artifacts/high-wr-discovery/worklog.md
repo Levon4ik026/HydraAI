@@ -1,6 +1,6 @@
 # HydraAI high-WR discovery worklog
 
-- Latest screen: 2026-11-15T08:28:59.102444+00:00
+- Latest screen: 2026-11-15T08:31:32.696144+00:00
 - Branch: hydra/research-validation
 - Candidate batch eligibility: 5/5; batch_ready=True
 - Dedupe check: no exact match found in the existing prior-period sweep/reclaim, indicator, abnormal-impulse or three-candidate forward definitions. Three fix-window variants are related by one published mechanism and are not independent evidence.
