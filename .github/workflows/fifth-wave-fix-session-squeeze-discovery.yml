@@ -1,0 +1,105 @@
+name: Fifth-wave fix, session and squeeze discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/fifth_wave_fix_session_squeeze_screen.py"
+      - ".github/workflows/fifth-wave-fix-session-squeeze-discovery.yml"
+      - "research/high_wr_discovery_trigger.txt"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hydra-fifth-wave-discovery
+  cancel-in-progress: false
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hydra/research-validation
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Compile research screen
+        run: python -m py_compile research/fifth_wave_fix_session_squeeze_screen.py research/reproduce_m5_bb_williams_adx.py
+
+      - name: Download EURUSD M1 BID history
+        shell: bash
+        run: |
+          set -euo pipefail
+          FROM_DATE="2024-01-01"
+          END_DATE="$(date -u -d 'yesterday' +%Y-%m-%d)"
+          echo "END_DATE=$END_DATE" >> "$GITHUB_ENV"
+          npx --yes dukascopy-node -i eurusd -from "$FROM_DATE" -to "$END_DATE" -t m1 -f csv -v
+          test -s "download/eurusd-m1-bid-$FROM_DATE-$END_DATE.csv"
+
+      - name: Verify downloaded data
+        run: |
+          python - <<'PY'
+          import csv, os
+          from pathlib import Path
+          p=Path(f"download/eurusd-m1-bid-2024-01-01-{os.environ['END_DATE']}.csv")
+          with p.open(newline="", encoding="utf-8-sig") as f:
+              r=csv.DictReader(f)
+              rows=sum(1 for _ in r)
+              required={"timestamp","open","high","low","close"}
+              if not required.issubset(r.fieldnames or []):
+                  raise SystemExit(f"Unexpected CSV header: {r.fieldnames}")
+          if rows < 100000:
+              raise SystemExit(f"Insufficient rows: {rows}")
+          print(f"Verified {rows:,} EURUSD M1 rows in {p}")
+          PY
+
+      - name: Run fifth-wave candidate screen
+        run: |
+          python research/fifth_wave_fix_session_squeeze_screen.py \
+            --data "download/eurusd-m1-bid-2024-01-01-$END_DATE.csv" \
+            --report research-artifacts/high-wr-discovery/latest/report.md \
+            --manifest research-artifacts/high-wr-discovery/latest/manifest.json \
+            --trades research-artifacts/high-wr-discovery/latest/trades.csv \
+            --worklog research-artifacts/high-wr-discovery/worklog.md \
+            --forward-start 2026-11-15T00:00:00Z
+
+      - name: Publish report and manifest on research branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research-artifacts/high-wr-discovery/latest/report.md \
+                  research-artifacts/high-wr-discovery/latest/manifest.json \
+                  research-artifacts/high-wr-discovery/worklog.md
+          if git diff --cached --quiet; then
+            echo "No report changes to commit."
+          else
+            git commit -m "research: publish fifth-wave EURUSD candidate screen"
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+
+      - name: Upload reproducibility bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-fifth-wave-discovery
+          path: |
+            research-artifacts/high-wr-discovery/latest/report.md
+            research-artifacts/high-wr-discovery/latest/manifest.json
+            research-artifacts/high-wr-discovery/latest/trades.csv
+            research-artifacts/high-wr-discovery/worklog.md
+          if-no-files-found: warn
+          retention-days: 30
