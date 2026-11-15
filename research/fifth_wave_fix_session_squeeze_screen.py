@@ -29,7 +29,7 @@ def load_m1(path: Path):
     parsed={}; conflicted=set()
     raw_rows=invalid=duplicates=out_of_range=0
     start=datetime(2024,1,1,tzinfo=timezone.utc)
-    end=datetime(2026,11,15,tzinfo=timezone.utc)
+    end=datetime.now(timezone.utc)+timedelta(days=1)
     with path.open("r",encoding="utf-8-sig",newline="") as f:
         rd=csv.DictReader(f)
         required={"timestamp","open","high","low","close"}
