@@ -1,12 +1,12 @@
 # EUR/USD direct fixing and rollover-excluded session discovery
 
-- Captured UTC: 2026-11-15T08:10:01.418715+00:00
+- Captured UTC: 2026-11-15T08:12:25.053493+00:00
 - Branch: hydra/research-validation
 - Source: Dukascopy EUR/USD M1 BID; coverage 2024-01-01T22:00:00+00:00 — 2026-11-13T21:59:00+00:00
 - Raw M1 rows: 1,068,881; valid unique: 1,068,881; invalid: 0; duplicate timestamps: 0
 - Gaps: 3,644 intervals; 438,799 missing minutes; largest missing interval 2,944 minutes; continuity segments 3,645
 - Raw CSV SHA-256: 32ab8005153803e0554c4f248b4f77763c1aa5325982bc95087c719a3e849e50
-- Script SHA-256: 30e0bc7d1da261a5949124d7d8193998aafad40ee91aad4a99ea93504d9260ba
+- Script SHA-256: 405c605565dbfbefb82642d3269dc3b0b6a98e5641c1e23ec3eaa7d8a742cdf4
 - Protocol SHA-256: bf769c340b0d8ae15c14e452dbdf107833081377b0989428d396a9d63a9089f4
 - Calendar split: TRAIN before 2025-09-20; VALIDATION 2025-09-20–2026-04-16; TEST from 2026-04-17
 - Historical TEST is from a source period previously inspected by other HydraAI screens; it is exploratory, not pristine independent confirmation.
@@ -308,8 +308,8 @@
 
 - Exact rule: Completed Sunday 18:00–Friday 17:00 New York week absolute log return >=0.75x mean absolute return of preceding 13 valid weeks (current excluded); fade at next Sunday 18:00 NY open.
 - Market regime: large completed rollover-excluded NY trading-week move
-- Eligible windows: 103; raw triggers: 53; excluded/quality-rejected windows: 41.
-- Signal share: 51.456%; WAIT share: 48.544%.
+- Eligible windows: 105; raw triggers: 54; excluded/quality-rejected windows: 39.
+- Signal share: 51.429%; WAIT share: 48.571%.
 - TRAIN expiry selection: no eligible expiry using Wilson lower bound; no VALIDATION/TEST metric was used for selection.
 
 | Expiry | TRAIN N | W/L/D | WR | Net @92% | Wilson lower | Eligible for selection |

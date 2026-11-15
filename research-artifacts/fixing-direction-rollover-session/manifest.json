@@ -1271,8 +1271,8 @@
         "wr_95_pct": null
       },
       "candidate_id": "NY18-WEEKLY-SHOCK-FADE",
-      "eligible_windows": 103,
-      "excluded_windows": 41,
+      "eligible_windows": 105,
+      "excluded_windows": 39,
       "market_regime": "large completed rollover-excluded NY trading-week move",
       "matched_control": {
         "active_days": 0,
@@ -1313,7 +1313,7 @@
         "VALIDATION": 0
       },
       "quality_rejected_sessions": 13,
-      "raw_signal_events": 53,
+      "raw_signal_events": 54,
       "rule": "Completed Sunday 18:00\u2013Friday 17:00 New York week absolute log return >=0.75x mean absolute return of preceding 13 valid weeks (current excluded); fade at next Sunday 18:00 NY open.",
       "selected_expiry_minutes": null,
       "side_stats": {
@@ -1560,7 +1560,7 @@
       ]
     }
   ],
-  "captured_at_utc": "2026-11-15T08:10:03.833436+00:00",
+  "captured_at_utc": "2026-11-15T08:12:26.680077+00:00",
   "data": {
     "continuity_segments": 3645,
     "duplicate_timestamp_rows": 0,
@@ -1587,7 +1587,7 @@
   "preliminary_leads": [],
   "protocol": "research-artifacts/fixing-direction-rollover-session-protocol-v1.md",
   "protocol_sha256": "bf769c340b0d8ae15c14e452dbdf107833081377b0989428d396a9d63a9089f4",
-  "script_sha256": "30e0bc7d1da261a5949124d7d8193998aafad40ee91aad4a99ea93504d9260ba",
+  "script_sha256": "405c605565dbfbefb82642d3269dc3b0b6a98e5641c1e23ec3eaa7d8a742cdf4",
   "selection_metric": "max TRAIN Wilson lower bound subject to TRAIN N>=30, net>0, decisive WR>break-even",
   "split_boundaries": {
     "train_end_exclusive": "2025-09-20",
