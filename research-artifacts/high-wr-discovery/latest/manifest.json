@@ -1,0 +1,2661 @@
+{
+  "captured_at_utc": "2026-11-15T08:26:20.572738+00:00",
+  "branch": "hydra/research-validation",
+  "dataset": {
+    "source": "Dukascopy EURUSD M1 BID",
+    "first_utc": "2024-01-01T22:00:00+00:00",
+    "last_utc": "2026-11-13T21:59:00+00:00",
+    "m1_integrity": {
+      "raw_rows": 1068881,
+      "valid_unique_rows": 1068881,
+      "invalid_rows": 0,
+      "duplicate_rows": 0,
+      "conflicting_duplicate_timestamps": 0,
+      "out_of_range_rows": 0
+    },
+    "m1_gaps": {
+      "gap_intervals": 3644,
+      "missing_minutes": 438799,
+      "largest_missing_interval_minutes": 2944
+    },
+    "complete_m5_bars": 211337,
+    "incomplete_m5_buckets": 3373,
+    "continuity_segments": 2668,
+    "raw_csv_sha256": "32ab8005153803e0554c4f248b4f77763c1aa5325982bc95087c719a3e849e50"
+  },
+  "split": {
+    "train_before_utc_date": "2025-09-21",
+    "validation_before_utc_date": "2026-04-19",
+    "train_ratio_target": 0.6,
+    "validation_ratio_target": 0.2,
+    "test_is_historically_exposed_not_pristine": true
+  },
+  "payout": {
+    "scenario": 0.92,
+    "win_units": 0.92,
+    "loss_units": -1,
+    "draw_units": 0,
+    "breakeven_decisive_wr_pct": 52.0833,
+    "sensitivity_grid": [
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.85,
+      0.9,
+      0.92,
+      0.95,
+      1.0
+    ]
+  },
+  "forward_start_utc": "2026-11-15T00:00:00+00:00",
+  "candidate_config_sha256": "f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3",
+  "script_sha256": "48605cfba0babece62ed4ea294fdcfe7f38f34be34d03c9b5e07bdaf382ac201",
+  "batch_eligible_count": 5,
+  "batch_size": 5,
+  "batch_ready": true,
+  "candidate_results": {
+    "HYD-NEW-001": {
+      "candidate": {
+        "id": "HYD-NEW-001",
+        "name": "Tokyo fix post-reversal",
+        "family": "FX fixing reversal",
+        "zone": "Asia/Tokyo",
+        "fix": "09:55",
+        "side_rule": "fade the EURUSD return over the 60 minutes ending at the fix",
+        "expiry_min": 15
+      },
+      "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
+      "batch_eligible": true,
+      "raw_events": 685,
+      "accepted_trades": 685,
+      "overlap_suppressed": 0,
+      "boundary_purged": 0,
+      "periods": {
+        "TRAIN": {
+          "n": 408,
+          "w": 230,
+          "l": 174,
+          "d": 4,
+          "decisive": 404,
+          "wr_pct": 56.931,
+          "wilson_95_pct": [
+            52.059,
+            61.672
+          ],
+          "net_units": 37.6,
+          "expectancy_units_per_trade": 0.09216,
+          "roi_pct": 9.216,
+          "profit_factor": 1.2161,
+          "max_drawdown_units": 17.76,
+          "longest_losing_streak": 5,
+          "active_days": 408,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3217,
+          "wait_share_pct": 99.6783,
+          "payout_sensitivity": {
+            "0.5": -59.0,
+            "0.6": -36.0,
+            "0.7": -13.0,
+            "0.8": 10.0,
+            "0.85": 21.5,
+            "0.9": 33.0,
+            "0.92": 37.6,
+            "0.95": 44.5,
+            "1.0": 56.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2024-01",
+              "n": 17,
+              "w": 8,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 47.059,
+              "net_92_units": -1.64
+            },
+            {
+              "month_utc": "2024-02",
+              "n": 16,
+              "w": 10,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 62.5,
+              "net_92_units": 3.2
+            },
+            {
+              "month_utc": "2024-03",
+              "n": 19,
+              "w": 13,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 68.421,
+              "net_92_units": 5.96
+            },
+            {
+              "month_utc": "2024-04",
+              "n": 21,
+              "w": 16,
+              "l": 5,
+              "d": 0,
+              "wr_pct": 76.19,
+              "net_92_units": 9.72
+            },
+            {
+              "month_utc": "2024-05",
+              "n": 17,
+              "w": 12,
+              "l": 5,
+              "d": 0,
+              "wr_pct": 70.588,
+              "net_92_units": 6.04
+            },
+            {
+              "month_utc": "2024-06",
+              "n": 19,
+              "w": 10,
+              "l": 8,
+              "d": 1,
+              "wr_pct": 55.556,
+              "net_92_units": 1.2
+            },
+            {
+              "month_utc": "2024-07",
+              "n": 21,
+              "w": 11,
+              "l": 9,
+              "d": 1,
+              "wr_pct": 55.0,
+              "net_92_units": 1.12
+            },
+            {
+              "month_utc": "2024-08",
+              "n": 20,
+              "w": 11,
+              "l": 8,
+              "d": 1,
+              "wr_pct": 57.895,
+              "net_92_units": 2.12
+            },
+            {
+              "month_utc": "2024-09",
+              "n": 20,
+              "w": 13,
+              "l": 7,
+              "d": 0,
+              "wr_pct": 65.0,
+              "net_92_units": 4.96
+            },
+            {
+              "month_utc": "2024-10",
+              "n": 19,
+              "w": 11,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 57.895,
+              "net_92_units": 2.12
+            },
+            {
+              "month_utc": "2024-11",
+              "n": 20,
+              "w": 10,
+              "l": 9,
+              "d": 1,
+              "wr_pct": 52.632,
+              "net_92_units": 0.2
+            },
+            {
+              "month_utc": "2024-12",
+              "n": 17,
+              "w": 8,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 47.059,
+              "net_92_units": -1.64
+            },
+            {
+              "month_utc": "2025-01",
+              "n": 21,
+              "w": 11,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 52.381,
+              "net_92_units": 0.12
+            },
+            {
+              "month_utc": "2025-02",
+              "n": 19,
+              "w": 6,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 31.579,
+              "net_92_units": -7.48
+            },
+            {
+              "month_utc": "2025-03",
+              "n": 20,
+              "w": 9,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 45.0,
+              "net_92_units": -2.72
+            },
+            {
+              "month_utc": "2025-04",
+              "n": 22,
+              "w": 10,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2025-05",
+              "n": 22,
+              "w": 12,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 54.545,
+              "net_92_units": 1.04
+            },
+            {
+              "month_utc": "2025-06",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2025-07",
+              "n": 23,
+              "w": 15,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 65.217,
+              "net_92_units": 5.8
+            },
+            {
+              "month_utc": "2025-08",
+              "n": 19,
+              "w": 12,
+              "l": 7,
+              "d": 0,
+              "wr_pct": 63.158,
+              "net_92_units": 4.04
+            },
+            {
+              "month_utc": "2025-09",
+              "n": 15,
+              "w": 9,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 60.0,
+              "net_92_units": 2.28
+            }
+          ]
+        },
+        "VALIDATION": {
+          "n": 135,
+          "w": 65,
+          "l": 69,
+          "d": 1,
+          "decisive": 134,
+          "wr_pct": 48.507,
+          "wilson_95_pct": [
+            40.206,
+            56.892
+          ],
+          "net_units": -9.2,
+          "expectancy_units_per_trade": -0.06815,
+          "roi_pct": -6.815,
+          "profit_factor": 0.8667,
+          "max_drawdown_units": 22.2,
+          "longest_losing_streak": 8,
+          "active_days": 135,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3209,
+          "wait_share_pct": 99.6791,
+          "payout_sensitivity": {
+            "0.5": -36.5,
+            "0.6": -30.0,
+            "0.7": -23.5,
+            "0.8": -17.0,
+            "0.85": -13.75,
+            "0.9": -10.5,
+            "0.92": -9.2,
+            "0.95": -7.25,
+            "1.0": -4.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2025-09",
+              "n": 7,
+              "w": 5,
+              "l": 2,
+              "d": 0,
+              "wr_pct": 71.429,
+              "net_92_units": 2.6
+            },
+            {
+              "month_utc": "2025-10",
+              "n": 22,
+              "w": 7,
+              "l": 15,
+              "d": 0,
+              "wr_pct": 31.818,
+              "net_92_units": -8.56
+            },
+            {
+              "month_utc": "2025-11",
+              "n": 17,
+              "w": 6,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 35.294,
+              "net_92_units": -5.48
+            },
+            {
+              "month_utc": "2025-12",
+              "n": 15,
+              "w": 7,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 46.667,
+              "net_92_units": -1.56
+            },
+            {
+              "month_utc": "2026-01",
+              "n": 19,
+              "w": 10,
+              "l": 8,
+              "d": 1,
+              "wr_pct": 55.556,
+              "net_92_units": 1.2
+            },
+            {
+              "month_utc": "2026-02",
+              "n": 20,
+              "w": 7,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 35.0,
+              "net_92_units": -6.56
+            },
+            {
+              "month_utc": "2026-03",
+              "n": 22,
+              "w": 14,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 63.636,
+              "net_92_units": 4.88
+            },
+            {
+              "month_utc": "2026-04",
+              "n": 13,
+              "w": 9,
+              "l": 4,
+              "d": 0,
+              "wr_pct": 69.231,
+              "net_92_units": 4.28
+            }
+          ]
+        },
+        "TEST": {
+          "n": 142,
+          "w": 64,
+          "l": 76,
+          "d": 2,
+          "decisive": 140,
+          "wr_pct": 45.714,
+          "wilson_95_pct": [
+            37.687,
+            53.97
+          ],
+          "net_units": -17.12,
+          "expectancy_units_per_trade": -0.12056,
+          "roi_pct": -12.056,
+          "profit_factor": 0.7747,
+          "max_drawdown_units": 23.92,
+          "longest_losing_streak": 9,
+          "active_days": 142,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3344,
+          "wait_share_pct": 99.6656,
+          "payout_sensitivity": {
+            "0.5": -44.0,
+            "0.6": -37.6,
+            "0.7": -31.2,
+            "0.8": -24.8,
+            "0.85": -21.6,
+            "0.9": -18.4,
+            "0.92": -17.12,
+            "0.95": -15.2,
+            "1.0": -12.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2026-04",
+              "n": 9,
+              "w": 3,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 33.333,
+              "net_92_units": -3.24
+            },
+            {
+              "month_utc": "2026-05",
+              "n": 21,
+              "w": 10,
+              "l": 10,
+              "d": 1,
+              "wr_pct": 50.0,
+              "net_92_units": -0.8
+            },
+            {
+              "month_utc": "2026-06",
+              "n": 22,
+              "w": 8,
+              "l": 14,
+              "d": 0,
+              "wr_pct": 36.364,
+              "net_92_units": -6.64
+            },
+            {
+              "month_utc": "2026-07",
+              "n": 23,
+              "w": 6,
+              "l": 17,
+              "d": 0,
+              "wr_pct": 26.087,
+              "net_92_units": -11.48
+            },
+            {
+              "month_utc": "2026-08",
+              "n": 19,
+              "w": 16,
+              "l": 2,
+              "d": 1,
+              "wr_pct": 88.889,
+              "net_92_units": 12.72
+            },
+            {
+              "month_utc": "2026-09",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2026-10",
+              "n": 21,
+              "w": 8,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 38.095,
+              "net_92_units": -5.64
+            },
+            {
+              "month_utc": "2026-11",
+              "n": 5,
+              "w": 0,
+              "l": 5,
+              "d": 0,
+              "wr_pct": 0.0,
+              "net_92_units": -5.0
+            }
+          ]
+        }
+      },
+      "forward_since_2026_11_15": {
+        "n": 0,
+        "w": 0,
+        "l": 0,
+        "d": 0,
+        "decisive": 0,
+        "wr_pct": null,
+        "wilson_95_pct": null,
+        "net_units": 0.0,
+        "expectancy_units_per_trade": null,
+        "roi_pct": null,
+        "profit_factor": null,
+        "max_drawdown_units": 0.0,
+        "longest_losing_streak": 0,
+        "active_days": 0,
+        "trades_per_active_day": 0
+      },
+      "matched_same_timestamp_baselines_validation": {
+        "CALL": {
+          "n": 135,
+          "w": 80,
+          "l": 54,
+          "d": 1,
+          "decisive": 134,
+          "wr_pct": 59.701,
+          "wilson_95_pct": [
+            51.238,
+            67.624
+          ],
+          "net_units": 19.6,
+          "expectancy_units_per_trade": 0.14519,
+          "roi_pct": 14.519,
+          "profit_factor": 1.363,
+          "max_drawdown_units": 10.24,
+          "longest_losing_streak": 10,
+          "active_days": 135,
+          "trades_per_active_day": 1.0
+        },
+        "PUT": {
+          "n": 135,
+          "w": 54,
+          "l": 80,
+          "d": 1,
+          "decisive": 134,
+          "wr_pct": 40.299,
+          "wilson_95_pct": [
+            32.376,
+            48.762
+          ],
+          "net_units": -30.32,
+          "expectancy_units_per_trade": -0.22459,
+          "roi_pct": -22.459,
+          "profit_factor": 0.621,
+          "max_drawdown_units": 32.08,
+          "longest_losing_streak": 12,
+          "active_days": 135,
+          "trades_per_active_day": 1.0
+        }
+      },
+      "validation_5day_block_bootstrap_wr_95_pct": [
+        39.55,
+        56.72
+      ]
+    },
+    "HYD-NEW-002": {
+      "candidate": {
+        "id": "HYD-NEW-002",
+        "name": "ECB fix post-reversal",
+        "family": "FX fixing reversal",
+        "zone": "Europe/Berlin",
+        "fix": "14:15",
+        "side_rule": "fade the EURUSD return over the 60 minutes ending at the fix",
+        "expiry_min": 15
+      },
+      "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
+      "batch_eligible": true,
+      "raw_events": 743,
+      "accepted_trades": 743,
+      "overlap_suppressed": 0,
+      "boundary_purged": 0,
+      "periods": {
+        "TRAIN": {
+          "n": 446,
+          "w": 234,
+          "l": 209,
+          "d": 3,
+          "decisive": 443,
+          "wr_pct": 52.822,
+          "wilson_95_pct": [
+            48.169,
+            57.426
+          ],
+          "net_units": 6.28,
+          "expectancy_units_per_trade": 0.01408,
+          "roi_pct": 1.408,
+          "profit_factor": 1.03,
+          "max_drawdown_units": 26.76,
+          "longest_losing_streak": 6,
+          "active_days": 446,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3517,
+          "wait_share_pct": 99.6483,
+          "payout_sensitivity": {
+            "0.5": -92.0,
+            "0.6": -68.6,
+            "0.7": -45.2,
+            "0.8": -21.8,
+            "0.85": -10.1,
+            "0.9": 1.6,
+            "0.92": 6.28,
+            "0.95": 13.3,
+            "1.0": 25.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2024-01",
+              "n": 22,
+              "w": 15,
+              "l": 7,
+              "d": 0,
+              "wr_pct": 68.182,
+              "net_92_units": 6.8
+            },
+            {
+              "month_utc": "2024-02",
+              "n": 21,
+              "w": 12,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 57.143,
+              "net_92_units": 2.04
+            },
+            {
+              "month_utc": "2024-03",
+              "n": 21,
+              "w": 11,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 52.381,
+              "net_92_units": 0.12
+            },
+            {
+              "month_utc": "2024-04",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2024-05",
+              "n": 23,
+              "w": 12,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 52.174,
+              "net_92_units": 0.04
+            },
+            {
+              "month_utc": "2024-06",
+              "n": 20,
+              "w": 9,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 45.0,
+              "net_92_units": -2.72
+            },
+            {
+              "month_utc": "2024-07",
+              "n": 23,
+              "w": 15,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 65.217,
+              "net_92_units": 5.8
+            },
+            {
+              "month_utc": "2024-08",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2024-09",
+              "n": 20,
+              "w": 7,
+              "l": 12,
+              "d": 1,
+              "wr_pct": 36.842,
+              "net_92_units": -5.56
+            },
+            {
+              "month_utc": "2024-10",
+              "n": 23,
+              "w": 10,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 43.478,
+              "net_92_units": -3.8
+            },
+            {
+              "month_utc": "2024-11",
+              "n": 21,
+              "w": 7,
+              "l": 13,
+              "d": 1,
+              "wr_pct": 35.0,
+              "net_92_units": -6.56
+            },
+            {
+              "month_utc": "2024-12",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2025-01",
+              "n": 22,
+              "w": 10,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2025-02",
+              "n": 20,
+              "w": 10,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.8
+            },
+            {
+              "month_utc": "2025-03",
+              "n": 21,
+              "w": 8,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 38.095,
+              "net_92_units": -5.64
+            },
+            {
+              "month_utc": "2025-04",
+              "n": 22,
+              "w": 10,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2025-05",
+              "n": 22,
+              "w": 14,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 63.636,
+              "net_92_units": 4.88
+            },
+            {
+              "month_utc": "2025-06",
+              "n": 21,
+              "w": 14,
+              "l": 6,
+              "d": 1,
+              "wr_pct": 70.0,
+              "net_92_units": 6.88
+            },
+            {
+              "month_utc": "2025-07",
+              "n": 23,
+              "w": 13,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 56.522,
+              "net_92_units": 1.96
+            },
+            {
+              "month_utc": "2025-08",
+              "n": 21,
+              "w": 10,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 47.619,
+              "net_92_units": -1.8
+            },
+            {
+              "month_utc": "2025-09",
+              "n": 15,
+              "w": 8,
+              "l": 7,
+              "d": 0,
+              "wr_pct": 53.333,
+              "net_92_units": 0.36
+            }
+          ]
+        },
+        "VALIDATION": {
+          "n": 147,
+          "w": 74,
+          "l": 72,
+          "d": 1,
+          "decisive": 146,
+          "wr_pct": 50.685,
+          "wilson_95_pct": [
+            42.662,
+            58.672
+          ],
+          "net_units": -3.92,
+          "expectancy_units_per_trade": -0.02667,
+          "roi_pct": -2.667,
+          "profit_factor": 0.9456,
+          "max_drawdown_units": 11.4,
+          "longest_losing_streak": 5,
+          "active_days": 147,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3494,
+          "wait_share_pct": 99.6506,
+          "payout_sensitivity": {
+            "0.5": -35.0,
+            "0.6": -27.6,
+            "0.7": -20.2,
+            "0.8": -12.8,
+            "0.85": -9.1,
+            "0.9": -5.4,
+            "0.92": -3.92,
+            "0.95": -1.7,
+            "1.0": 2.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2025-09",
+              "n": 7,
+              "w": 5,
+              "l": 2,
+              "d": 0,
+              "wr_pct": 71.429,
+              "net_92_units": 2.6
+            },
+            {
+              "month_utc": "2025-10",
+              "n": 23,
+              "w": 14,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 60.87,
+              "net_92_units": 3.88
+            },
+            {
+              "month_utc": "2025-11",
+              "n": 20,
+              "w": 5,
+              "l": 15,
+              "d": 0,
+              "wr_pct": 25.0,
+              "net_92_units": -10.4
+            },
+            {
+              "month_utc": "2025-12",
+              "n": 22,
+              "w": 16,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 72.727,
+              "net_92_units": 8.72
+            },
+            {
+              "month_utc": "2026-01",
+              "n": 21,
+              "w": 9,
+              "l": 11,
+              "d": 1,
+              "wr_pct": 45.0,
+              "net_92_units": -2.72
+            },
+            {
+              "month_utc": "2026-02",
+              "n": 20,
+              "w": 10,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.8
+            },
+            {
+              "month_utc": "2026-03",
+              "n": 22,
+              "w": 11,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.88
+            },
+            {
+              "month_utc": "2026-04",
+              "n": 12,
+              "w": 4,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 33.333,
+              "net_92_units": -4.32
+            }
+          ]
+        },
+        "TEST": {
+          "n": 150,
+          "w": 72,
+          "l": 75,
+          "d": 3,
+          "decisive": 147,
+          "wr_pct": 48.98,
+          "wilson_95_pct": [
+            41.028,
+            56.983
+          ],
+          "net_units": -8.76,
+          "expectancy_units_per_trade": -0.0584,
+          "roi_pct": -5.84,
+          "profit_factor": 0.8832,
+          "max_drawdown_units": 17.24,
+          "longest_losing_streak": 5,
+          "active_days": 150,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3533,
+          "wait_share_pct": 99.6467,
+          "payout_sensitivity": {
+            "0.5": -39.0,
+            "0.6": -31.8,
+            "0.7": -24.6,
+            "0.8": -17.4,
+            "0.85": -13.8,
+            "0.9": -10.2,
+            "0.92": -8.76,
+            "0.95": -6.6,
+            "1.0": -3.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2026-04",
+              "n": 9,
+              "w": 7,
+              "l": 2,
+              "d": 0,
+              "wr_pct": 77.778,
+              "net_92_units": 4.44
+            },
+            {
+              "month_utc": "2026-05",
+              "n": 21,
+              "w": 12,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 57.143,
+              "net_92_units": 2.04
+            },
+            {
+              "month_utc": "2026-06",
+              "n": 22,
+              "w": 7,
+              "l": 14,
+              "d": 1,
+              "wr_pct": 33.333,
+              "net_92_units": -7.56
+            },
+            {
+              "month_utc": "2026-07",
+              "n": 23,
+              "w": 10,
+              "l": 12,
+              "d": 1,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2026-08",
+              "n": 21,
+              "w": 8,
+              "l": 12,
+              "d": 1,
+              "wr_pct": 40.0,
+              "net_92_units": -4.64
+            },
+            {
+              "month_utc": "2026-09",
+              "n": 22,
+              "w": 14,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 63.636,
+              "net_92_units": 4.88
+            },
+            {
+              "month_utc": "2026-10",
+              "n": 22,
+              "w": 10,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2026-11",
+              "n": 10,
+              "w": 4,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 40.0,
+              "net_92_units": -2.32
+            }
+          ]
+        }
+      },
+      "forward_since_2026_11_15": {
+        "n": 0,
+        "w": 0,
+        "l": 0,
+        "d": 0,
+        "decisive": 0,
+        "wr_pct": null,
+        "wilson_95_pct": null,
+        "net_units": 0.0,
+        "expectancy_units_per_trade": null,
+        "roi_pct": null,
+        "profit_factor": null,
+        "max_drawdown_units": 0.0,
+        "longest_losing_streak": 0,
+        "active_days": 0,
+        "trades_per_active_day": 0
+      },
+      "matched_same_timestamp_baselines_validation": {
+        "CALL": {
+          "n": 147,
+          "w": 67,
+          "l": 79,
+          "d": 1,
+          "decisive": 146,
+          "wr_pct": 45.89,
+          "wilson_95_pct": [
+            38.016,
+            53.975
+          ],
+          "net_units": -17.36,
+          "expectancy_units_per_trade": -0.1181,
+          "roi_pct": -11.81,
+          "profit_factor": 0.7803,
+          "max_drawdown_units": 22.48,
+          "longest_losing_streak": 8,
+          "active_days": 147,
+          "trades_per_active_day": 1.0
+        },
+        "PUT": {
+          "n": 147,
+          "w": 79,
+          "l": 67,
+          "d": 1,
+          "decisive": 146,
+          "wr_pct": 54.11,
+          "wilson_95_pct": [
+            46.025,
+            61.984
+          ],
+          "net_units": 5.68,
+          "expectancy_units_per_trade": 0.03864,
+          "roi_pct": 3.864,
+          "profit_factor": 1.0848,
+          "max_drawdown_units": 12.2,
+          "longest_losing_streak": 4,
+          "active_days": 147,
+          "trades_per_active_day": 1.0
+        }
+      },
+      "validation_5day_block_bootstrap_wr_95_pct": [
+        43.24,
+        58.67
+      ]
+    },
+    "HYD-NEW-003": {
+      "candidate": {
+        "id": "HYD-NEW-003",
+        "name": "London fix post-reversal",
+        "family": "FX fixing reversal",
+        "zone": "Europe/London",
+        "fix": "16:00",
+        "side_rule": "fade the EURUSD return over the 60 minutes ending at the fix",
+        "expiry_min": 15
+      },
+      "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
+      "batch_eligible": true,
+      "raw_events": 743,
+      "accepted_trades": 742,
+      "overlap_suppressed": 0,
+      "boundary_purged": 0,
+      "periods": {
+        "TRAIN": {
+          "n": 444,
+          "w": 244,
+          "l": 196,
+          "d": 4,
+          "decisive": 440,
+          "wr_pct": 55.455,
+          "wilson_95_pct": [
+            50.783,
+            60.031
+          ],
+          "net_units": 28.48,
+          "expectancy_units_per_trade": 0.06414,
+          "roi_pct": 6.414,
+          "profit_factor": 1.1453,
+          "max_drawdown_units": 20.2,
+          "longest_losing_streak": 8,
+          "active_days": 444,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3501,
+          "wait_share_pct": 99.6499,
+          "payout_sensitivity": {
+            "0.5": -74.0,
+            "0.6": -49.6,
+            "0.7": -25.2,
+            "0.8": -0.8,
+            "0.85": 11.4,
+            "0.9": 23.6,
+            "0.92": 28.48,
+            "0.95": 35.8,
+            "1.0": 48.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2024-01",
+              "n": 22,
+              "w": 13,
+              "l": 8,
+              "d": 1,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2024-02",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2024-03",
+              "n": 20,
+              "w": 14,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 70.0,
+              "net_92_units": 6.88
+            },
+            {
+              "month_utc": "2024-04",
+              "n": 22,
+              "w": 9,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 40.909,
+              "net_92_units": -4.72
+            },
+            {
+              "month_utc": "2024-05",
+              "n": 23,
+              "w": 11,
+              "l": 11,
+              "d": 1,
+              "wr_pct": 50.0,
+              "net_92_units": -0.88
+            },
+            {
+              "month_utc": "2024-06",
+              "n": 19,
+              "w": 11,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 57.895,
+              "net_92_units": 2.12
+            },
+            {
+              "month_utc": "2024-07",
+              "n": 23,
+              "w": 10,
+              "l": 12,
+              "d": 1,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2024-08",
+              "n": 22,
+              "w": 10,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2024-09",
+              "n": 21,
+              "w": 9,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 42.857,
+              "net_92_units": -3.72
+            },
+            {
+              "month_utc": "2024-10",
+              "n": 23,
+              "w": 14,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 60.87,
+              "net_92_units": 3.88
+            },
+            {
+              "month_utc": "2024-11",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2024-12",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2025-01",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2025-02",
+              "n": 20,
+              "w": 10,
+              "l": 9,
+              "d": 1,
+              "wr_pct": 52.632,
+              "net_92_units": 0.2
+            },
+            {
+              "month_utc": "2025-03",
+              "n": 21,
+              "w": 16,
+              "l": 5,
+              "d": 0,
+              "wr_pct": 76.19,
+              "net_92_units": 9.72
+            },
+            {
+              "month_utc": "2025-04",
+              "n": 21,
+              "w": 14,
+              "l": 7,
+              "d": 0,
+              "wr_pct": 66.667,
+              "net_92_units": 5.88
+            },
+            {
+              "month_utc": "2025-05",
+              "n": 22,
+              "w": 14,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 63.636,
+              "net_92_units": 4.88
+            },
+            {
+              "month_utc": "2025-06",
+              "n": 21,
+              "w": 7,
+              "l": 14,
+              "d": 0,
+              "wr_pct": 33.333,
+              "net_92_units": -7.56
+            },
+            {
+              "month_utc": "2025-07",
+              "n": 23,
+              "w": 8,
+              "l": 15,
+              "d": 0,
+              "wr_pct": 34.783,
+              "net_92_units": -7.64
+            },
+            {
+              "month_utc": "2025-08",
+              "n": 21,
+              "w": 11,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 52.381,
+              "net_92_units": 0.12
+            },
+            {
+              "month_utc": "2025-09",
+              "n": 15,
+              "w": 11,
+              "l": 4,
+              "d": 0,
+              "wr_pct": 73.333,
+              "net_92_units": 6.12
+            }
+          ]
+        },
+        "VALIDATION": {
+          "n": 148,
+          "w": 74,
+          "l": 72,
+          "d": 2,
+          "decisive": 146,
+          "wr_pct": 50.685,
+          "wilson_95_pct": [
+            42.662,
+            58.672
+          ],
+          "net_units": -3.92,
+          "expectancy_units_per_trade": -0.02649,
+          "roi_pct": -2.649,
+          "profit_factor": 0.9456,
+          "max_drawdown_units": 17.84,
+          "longest_losing_streak": 7,
+          "active_days": 148,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3518,
+          "wait_share_pct": 99.6482,
+          "payout_sensitivity": {
+            "0.5": -35.0,
+            "0.6": -27.6,
+            "0.7": -20.2,
+            "0.8": -12.8,
+            "0.85": -9.1,
+            "0.9": -5.4,
+            "0.92": -3.92,
+            "0.95": -1.7,
+            "1.0": 2.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2025-09",
+              "n": 7,
+              "w": 3,
+              "l": 4,
+              "d": 0,
+              "wr_pct": 42.857,
+              "net_92_units": -1.24
+            },
+            {
+              "month_utc": "2025-10",
+              "n": 23,
+              "w": 13,
+              "l": 8,
+              "d": 2,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2025-11",
+              "n": 20,
+              "w": 11,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 55.0,
+              "net_92_units": 1.12
+            },
+            {
+              "month_utc": "2025-12",
+              "n": 22,
+              "w": 9,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 40.909,
+              "net_92_units": -4.72
+            },
+            {
+              "month_utc": "2026-01",
+              "n": 21,
+              "w": 10,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 47.619,
+              "net_92_units": -1.8
+            },
+            {
+              "month_utc": "2026-02",
+              "n": 20,
+              "w": 7,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 35.0,
+              "net_92_units": -6.56
+            },
+            {
+              "month_utc": "2026-03",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2026-04",
+              "n": 13,
+              "w": 8,
+              "l": 5,
+              "d": 0,
+              "wr_pct": 61.538,
+              "net_92_units": 2.36
+            }
+          ]
+        },
+        "TEST": {
+          "n": 150,
+          "w": 70,
+          "l": 80,
+          "d": 0,
+          "decisive": 150,
+          "wr_pct": 46.667,
+          "wilson_95_pct": [
+            38.866,
+            54.634
+          ],
+          "net_units": -15.6,
+          "expectancy_units_per_trade": -0.104,
+          "roi_pct": -10.4,
+          "profit_factor": 0.805,
+          "max_drawdown_units": 20.2,
+          "longest_losing_streak": 7,
+          "active_days": 150,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3533,
+          "wait_share_pct": 99.6467,
+          "payout_sensitivity": {
+            "0.5": -45.0,
+            "0.6": -38.0,
+            "0.7": -31.0,
+            "0.8": -24.0,
+            "0.85": -20.5,
+            "0.9": -17.0,
+            "0.92": -15.6,
+            "0.95": -13.5,
+            "1.0": -10.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2026-04",
+              "n": 9,
+              "w": 5,
+              "l": 4,
+              "d": 0,
+              "wr_pct": 55.556,
+              "net_92_units": 0.6
+            },
+            {
+              "month_utc": "2026-05",
+              "n": 21,
+              "w": 10,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 47.619,
+              "net_92_units": -1.8
+            },
+            {
+              "month_utc": "2026-06",
+              "n": 22,
+              "w": 12,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 54.545,
+              "net_92_units": 1.04
+            },
+            {
+              "month_utc": "2026-07",
+              "n": 23,
+              "w": 12,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 52.174,
+              "net_92_units": 0.04
+            },
+            {
+              "month_utc": "2026-08",
+              "n": 21,
+              "w": 9,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 42.857,
+              "net_92_units": -3.72
+            },
+            {
+              "month_utc": "2026-09",
+              "n": 22,
+              "w": 9,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 40.909,
+              "net_92_units": -4.72
+            },
+            {
+              "month_utc": "2026-10",
+              "n": 22,
+              "w": 9,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 40.909,
+              "net_92_units": -4.72
+            },
+            {
+              "month_utc": "2026-11",
+              "n": 10,
+              "w": 4,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 40.0,
+              "net_92_units": -2.32
+            }
+          ]
+        }
+      },
+      "forward_since_2026_11_15": {
+        "n": 0,
+        "w": 0,
+        "l": 0,
+        "d": 0,
+        "decisive": 0,
+        "wr_pct": null,
+        "wilson_95_pct": null,
+        "net_units": 0.0,
+        "expectancy_units_per_trade": null,
+        "roi_pct": null,
+        "profit_factor": null,
+        "max_drawdown_units": 0.0,
+        "longest_losing_streak": 0,
+        "active_days": 0,
+        "trades_per_active_day": 0
+      },
+      "matched_same_timestamp_baselines_validation": {
+        "CALL": {
+          "n": 148,
+          "w": 66,
+          "l": 80,
+          "d": 2,
+          "decisive": 146,
+          "wr_pct": 45.205,
+          "wilson_95_pct": [
+            37.359,
+            53.298
+          ],
+          "net_units": -19.28,
+          "expectancy_units_per_trade": -0.13027,
+          "roi_pct": -13.027,
+          "profit_factor": 0.759,
+          "max_drawdown_units": 21.28,
+          "longest_losing_streak": 9,
+          "active_days": 148,
+          "trades_per_active_day": 1.0
+        },
+        "PUT": {
+          "n": 148,
+          "w": 80,
+          "l": 66,
+          "d": 2,
+          "decisive": 146,
+          "wr_pct": 54.795,
+          "wilson_95_pct": [
+            46.702,
+            62.641
+          ],
+          "net_units": 7.6,
+          "expectancy_units_per_trade": 0.05135,
+          "roi_pct": 5.135,
+          "profit_factor": 1.1152,
+          "max_drawdown_units": 9.12,
+          "longest_losing_streak": 6,
+          "active_days": 148,
+          "trades_per_active_day": 1.0
+        }
+      },
+      "validation_5day_block_bootstrap_wr_95_pct": [
+        42.67,
+        59.06
+      ]
+    },
+    "HYD-NEW-004": {
+      "candidate": {
+        "id": "HYD-NEW-004",
+        "name": "London opening-hour drift",
+        "family": "Local-session seasonality",
+        "zone": "Europe/London",
+        "fix": "08:00",
+        "side_rule": "fixed CALL at the first M5 open at 08:00 London time",
+        "expiry_min": 30
+      },
+      "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
+      "batch_eligible": true,
+      "raw_events": 744,
+      "accepted_trades": 743,
+      "overlap_suppressed": 0,
+      "boundary_purged": 0,
+      "periods": {
+        "TRAIN": {
+          "n": 447,
+          "w": 236,
+          "l": 207,
+          "d": 4,
+          "decisive": 443,
+          "wr_pct": 53.273,
+          "wilson_95_pct": [
+            48.619,
+            57.871
+          ],
+          "net_units": 10.12,
+          "expectancy_units_per_trade": 0.02264,
+          "roi_pct": 2.264,
+          "profit_factor": 1.0489,
+          "max_drawdown_units": 15.16,
+          "longest_losing_streak": 8,
+          "active_days": 447,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3525,
+          "wait_share_pct": 99.6475,
+          "payout_sensitivity": {
+            "0.5": -89.0,
+            "0.6": -65.4,
+            "0.7": -41.8,
+            "0.8": -18.2,
+            "0.85": -6.4,
+            "0.9": 5.4,
+            "0.92": 10.12,
+            "0.95": 17.2,
+            "1.0": 29.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2024-01",
+              "n": 22,
+              "w": 12,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 54.545,
+              "net_92_units": 1.04
+            },
+            {
+              "month_utc": "2024-02",
+              "n": 21,
+              "w": 9,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 42.857,
+              "net_92_units": -3.72
+            },
+            {
+              "month_utc": "2024-03",
+              "n": 21,
+              "w": 11,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 52.381,
+              "net_92_units": 0.12
+            },
+            {
+              "month_utc": "2024-04",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2024-05",
+              "n": 23,
+              "w": 14,
+              "l": 8,
+              "d": 1,
+              "wr_pct": 63.636,
+              "net_92_units": 4.88
+            },
+            {
+              "month_utc": "2024-06",
+              "n": 20,
+              "w": 10,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.8
+            },
+            {
+              "month_utc": "2024-07",
+              "n": 23,
+              "w": 14,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 60.87,
+              "net_92_units": 3.88
+            },
+            {
+              "month_utc": "2024-08",
+              "n": 22,
+              "w": 11,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.88
+            },
+            {
+              "month_utc": "2024-09",
+              "n": 21,
+              "w": 9,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 42.857,
+              "net_92_units": -3.72
+            },
+            {
+              "month_utc": "2024-10",
+              "n": 23,
+              "w": 11,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 47.826,
+              "net_92_units": -1.88
+            },
+            {
+              "month_utc": "2024-11",
+              "n": 21,
+              "w": 9,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 42.857,
+              "net_92_units": -3.72
+            },
+            {
+              "month_utc": "2024-12",
+              "n": 21,
+              "w": 9,
+              "l": 11,
+              "d": 1,
+              "wr_pct": 45.0,
+              "net_92_units": -2.72
+            },
+            {
+              "month_utc": "2025-01",
+              "n": 22,
+              "w": 11,
+              "l": 10,
+              "d": 1,
+              "wr_pct": 52.381,
+              "net_92_units": 0.12
+            },
+            {
+              "month_utc": "2025-02",
+              "n": 20,
+              "w": 11,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 55.0,
+              "net_92_units": 1.12
+            },
+            {
+              "month_utc": "2025-03",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2025-04",
+              "n": 22,
+              "w": 13,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 59.091,
+              "net_92_units": 2.96
+            },
+            {
+              "month_utc": "2025-05",
+              "n": 22,
+              "w": 11,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.88
+            },
+            {
+              "month_utc": "2025-06",
+              "n": 21,
+              "w": 11,
+              "l": 9,
+              "d": 1,
+              "wr_pct": 55.0,
+              "net_92_units": 1.12
+            },
+            {
+              "month_utc": "2025-07",
+              "n": 23,
+              "w": 14,
+              "l": 9,
+              "d": 0,
+              "wr_pct": 60.87,
+              "net_92_units": 3.88
+            },
+            {
+              "month_utc": "2025-08",
+              "n": 21,
+              "w": 11,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 52.381,
+              "net_92_units": 0.12
+            },
+            {
+              "month_utc": "2025-09",
+              "n": 15,
+              "w": 9,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 60.0,
+              "net_92_units": 2.28
+            }
+          ]
+        },
+        "VALIDATION": {
+          "n": 146,
+          "w": 65,
+          "l": 80,
+          "d": 1,
+          "decisive": 145,
+          "wr_pct": 44.828,
+          "wilson_95_pct": [
+            36.97,
+            52.952
+          ],
+          "net_units": -20.2,
+          "expectancy_units_per_trade": -0.13836,
+          "roi_pct": -13.836,
+          "profit_factor": 0.7475,
+          "max_drawdown_units": 30.76,
+          "longest_losing_streak": 13,
+          "active_days": 146,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3471,
+          "wait_share_pct": 99.6529,
+          "payout_sensitivity": {
+            "0.5": -47.5,
+            "0.6": -41.0,
+            "0.7": -34.5,
+            "0.8": -28.0,
+            "0.85": -24.75,
+            "0.9": -21.5,
+            "0.92": -20.2,
+            "0.95": -18.25,
+            "1.0": -15.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2025-09",
+              "n": 7,
+              "w": 4,
+              "l": 3,
+              "d": 0,
+              "wr_pct": 57.143,
+              "net_92_units": 0.68
+            },
+            {
+              "month_utc": "2025-10",
+              "n": 23,
+              "w": 9,
+              "l": 14,
+              "d": 0,
+              "wr_pct": 39.13,
+              "net_92_units": -5.72
+            },
+            {
+              "month_utc": "2025-11",
+              "n": 20,
+              "w": 13,
+              "l": 7,
+              "d": 0,
+              "wr_pct": 65.0,
+              "net_92_units": 4.96
+            },
+            {
+              "month_utc": "2025-12",
+              "n": 21,
+              "w": 13,
+              "l": 8,
+              "d": 0,
+              "wr_pct": 61.905,
+              "net_92_units": 3.96
+            },
+            {
+              "month_utc": "2026-01",
+              "n": 21,
+              "w": 6,
+              "l": 15,
+              "d": 0,
+              "wr_pct": 28.571,
+              "net_92_units": -9.48
+            },
+            {
+              "month_utc": "2026-02",
+              "n": 20,
+              "w": 8,
+              "l": 11,
+              "d": 1,
+              "wr_pct": 42.105,
+              "net_92_units": -3.64
+            },
+            {
+              "month_utc": "2026-03",
+              "n": 22,
+              "w": 6,
+              "l": 16,
+              "d": 0,
+              "wr_pct": 27.273,
+              "net_92_units": -10.48
+            },
+            {
+              "month_utc": "2026-04",
+              "n": 12,
+              "w": 6,
+              "l": 6,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.48
+            }
+          ]
+        },
+        "TEST": {
+          "n": 150,
+          "w": 81,
+          "l": 68,
+          "d": 1,
+          "decisive": 149,
+          "wr_pct": 54.362,
+          "wilson_95_pct": [
+            46.355,
+            62.15
+          ],
+          "net_units": 6.52,
+          "expectancy_units_per_trade": 0.04347,
+          "roi_pct": 4.347,
+          "profit_factor": 1.0959,
+          "max_drawdown_units": 11.6,
+          "longest_losing_streak": 5,
+          "active_days": 150,
+          "trades_per_active_day": 1.0,
+          "signal_frequency_pct": 0.3533,
+          "wait_share_pct": 99.6467,
+          "payout_sensitivity": {
+            "0.5": -27.5,
+            "0.6": -19.4,
+            "0.7": -11.3,
+            "0.8": -3.2,
+            "0.85": 0.85,
+            "0.9": 4.9,
+            "0.92": 6.52,
+            "0.95": 8.95,
+            "1.0": 13.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2026-04",
+              "n": 9,
+              "w": 7,
+              "l": 2,
+              "d": 0,
+              "wr_pct": 77.778,
+              "net_92_units": 4.44
+            },
+            {
+              "month_utc": "2026-05",
+              "n": 21,
+              "w": 8,
+              "l": 13,
+              "d": 0,
+              "wr_pct": 38.095,
+              "net_92_units": -5.64
+            },
+            {
+              "month_utc": "2026-06",
+              "n": 22,
+              "w": 10,
+              "l": 12,
+              "d": 0,
+              "wr_pct": 45.455,
+              "net_92_units": -2.8
+            },
+            {
+              "month_utc": "2026-07",
+              "n": 23,
+              "w": 13,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 56.522,
+              "net_92_units": 1.96
+            },
+            {
+              "month_utc": "2026-08",
+              "n": 21,
+              "w": 12,
+              "l": 8,
+              "d": 1,
+              "wr_pct": 60.0,
+              "net_92_units": 3.04
+            },
+            {
+              "month_utc": "2026-09",
+              "n": 22,
+              "w": 11,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 50.0,
+              "net_92_units": -0.88
+            },
+            {
+              "month_utc": "2026-10",
+              "n": 22,
+              "w": 12,
+              "l": 10,
+              "d": 0,
+              "wr_pct": 54.545,
+              "net_92_units": 1.04
+            },
+            {
+              "month_utc": "2026-11",
+              "n": 10,
+              "w": 8,
+              "l": 2,
+              "d": 0,
+              "wr_pct": 80.0,
+              "net_92_units": 5.36
+            }
+          ]
+        }
+      },
+      "forward_since_2026_11_15": {
+        "n": 0,
+        "w": 0,
+        "l": 0,
+        "d": 0,
+        "decisive": 0,
+        "wr_pct": null,
+        "wilson_95_pct": null,
+        "net_units": 0.0,
+        "expectancy_units_per_trade": null,
+        "roi_pct": null,
+        "profit_factor": null,
+        "max_drawdown_units": 0.0,
+        "longest_losing_streak": 0,
+        "active_days": 0,
+        "trades_per_active_day": 0
+      },
+      "matched_same_timestamp_baselines_validation": {
+        "CALL": {
+          "n": 146,
+          "w": 65,
+          "l": 80,
+          "d": 1,
+          "decisive": 145,
+          "wr_pct": 44.828,
+          "wilson_95_pct": [
+            36.97,
+            52.952
+          ],
+          "net_units": -20.2,
+          "expectancy_units_per_trade": -0.13836,
+          "roi_pct": -13.836,
+          "profit_factor": 0.7475,
+          "max_drawdown_units": 30.76,
+          "longest_losing_streak": 13,
+          "active_days": 146,
+          "trades_per_active_day": 1.0
+        },
+        "PUT": {
+          "n": 146,
+          "w": 80,
+          "l": 65,
+          "d": 1,
+          "decisive": 145,
+          "wr_pct": 55.172,
+          "wilson_95_pct": [
+            47.048,
+            63.03
+          ],
+          "net_units": 8.6,
+          "expectancy_units_per_trade": 0.0589,
+          "roi_pct": 5.89,
+          "profit_factor": 1.1323,
+          "max_drawdown_units": 18.12,
+          "longest_losing_streak": 7,
+          "active_days": 146,
+          "trades_per_active_day": 1.0
+        }
+      },
+      "validation_5day_block_bootstrap_wr_95_pct": [
+        34.9,
+        55.03
+      ]
+    },
+    "HYD-NEW-005": {
+      "candidate": {
+        "id": "HYD-NEW-005",
+        "name": "M5 volatility-squeeze breakout",
+        "family": "Volatility compression/expansion",
+        "zone": "UTC",
+        "fix": null,
+        "side_rule": "breakout direction after a 12-bar range falls in the bottom 20% of the preceding 96 rolling 12-bar ranges",
+        "expiry_min": 15
+      },
+      "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
+      "batch_eligible": true,
+      "raw_events": 4156,
+      "accepted_trades": 2978,
+      "overlap_suppressed": 1178,
+      "boundary_purged": 0,
+      "periods": {
+        "TRAIN": {
+          "n": 1831,
+          "w": 856,
+          "l": 957,
+          "d": 18,
+          "decisive": 1813,
+          "wr_pct": 47.215,
+          "wilson_95_pct": [
+            44.925,
+            49.516
+          ],
+          "net_units": -169.48,
+          "expectancy_units_per_trade": -0.09256,
+          "roi_pct": -9.256,
+          "profit_factor": 0.8229,
+          "max_drawdown_units": 188.0,
+          "longest_losing_streak": 10,
+          "active_days": 430,
+          "trades_per_active_day": 4.258,
+          "signal_frequency_pct": 1.4439,
+          "wait_share_pct": 98.5561,
+          "payout_sensitivity": {
+            "0.5": -529.0,
+            "0.6": -443.4,
+            "0.7": -357.8,
+            "0.8": -272.2,
+            "0.85": -229.4,
+            "0.9": -186.6,
+            "0.92": -169.48,
+            "0.95": -143.8,
+            "1.0": -101.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2024-01",
+              "n": 89,
+              "w": 48,
+              "l": 41,
+              "d": 0,
+              "wr_pct": 53.933,
+              "net_92_units": 3.16
+            },
+            {
+              "month_utc": "2024-02",
+              "n": 84,
+              "w": 34,
+              "l": 50,
+              "d": 0,
+              "wr_pct": 40.476,
+              "net_92_units": -18.72
+            },
+            {
+              "month_utc": "2024-03",
+              "n": 61,
+              "w": 28,
+              "l": 31,
+              "d": 2,
+              "wr_pct": 47.458,
+              "net_92_units": -5.24
+            },
+            {
+              "month_utc": "2024-04",
+              "n": 77,
+              "w": 31,
+              "l": 45,
+              "d": 1,
+              "wr_pct": 40.789,
+              "net_92_units": -16.48
+            },
+            {
+              "month_utc": "2024-05",
+              "n": 84,
+              "w": 31,
+              "l": 53,
+              "d": 0,
+              "wr_pct": 36.905,
+              "net_92_units": -24.48
+            },
+            {
+              "month_utc": "2024-06",
+              "n": 68,
+              "w": 23,
+              "l": 44,
+              "d": 1,
+              "wr_pct": 34.328,
+              "net_92_units": -22.84
+            },
+            {
+              "month_utc": "2024-07",
+              "n": 76,
+              "w": 39,
+              "l": 37,
+              "d": 0,
+              "wr_pct": 51.316,
+              "net_92_units": -1.12
+            },
+            {
+              "month_utc": "2024-08",
+              "n": 83,
+              "w": 38,
+              "l": 43,
+              "d": 2,
+              "wr_pct": 46.914,
+              "net_92_units": -8.04
+            },
+            {
+              "month_utc": "2024-09",
+              "n": 78,
+              "w": 35,
+              "l": 41,
+              "d": 2,
+              "wr_pct": 46.053,
+              "net_92_units": -8.8
+            },
+            {
+              "month_utc": "2024-10",
+              "n": 102,
+              "w": 52,
+              "l": 50,
+              "d": 0,
+              "wr_pct": 50.98,
+              "net_92_units": -2.16
+            },
+            {
+              "month_utc": "2024-11",
+              "n": 113,
+              "w": 65,
+              "l": 48,
+              "d": 0,
+              "wr_pct": 57.522,
+              "net_92_units": 11.8
+            },
+            {
+              "month_utc": "2024-12",
+              "n": 64,
+              "w": 28,
+              "l": 36,
+              "d": 0,
+              "wr_pct": 43.75,
+              "net_92_units": -10.24
+            },
+            {
+              "month_utc": "2025-01",
+              "n": 101,
+              "w": 50,
+              "l": 48,
+              "d": 3,
+              "wr_pct": 51.02,
+              "net_92_units": -2.0
+            },
+            {
+              "month_utc": "2025-02",
+              "n": 76,
+              "w": 35,
+              "l": 40,
+              "d": 1,
+              "wr_pct": 46.667,
+              "net_92_units": -7.8
+            },
+            {
+              "month_utc": "2025-03",
+              "n": 91,
+              "w": 38,
+              "l": 52,
+              "d": 1,
+              "wr_pct": 42.222,
+              "net_92_units": -17.04
+            },
+            {
+              "month_utc": "2025-04",
+              "n": 107,
+              "w": 55,
+              "l": 52,
+              "d": 0,
+              "wr_pct": 51.402,
+              "net_92_units": -1.4
+            },
+            {
+              "month_utc": "2025-05",
+              "n": 132,
+              "w": 52,
+              "l": 78,
+              "d": 2,
+              "wr_pct": 40.0,
+              "net_92_units": -30.16
+            },
+            {
+              "month_utc": "2025-06",
+              "n": 113,
+              "w": 55,
+              "l": 58,
+              "d": 0,
+              "wr_pct": 48.673,
+              "net_92_units": -7.4
+            },
+            {
+              "month_utc": "2025-07",
+              "n": 102,
+              "w": 49,
+              "l": 52,
+              "d": 1,
+              "wr_pct": 48.515,
+              "net_92_units": -6.92
+            },
+            {
+              "month_utc": "2025-08",
+              "n": 82,
+              "w": 42,
+              "l": 38,
+              "d": 2,
+              "wr_pct": 52.5,
+              "net_92_units": 0.64
+            },
+            {
+              "month_utc": "2025-09",
+              "n": 48,
+              "w": 28,
+              "l": 20,
+              "d": 0,
+              "wr_pct": 58.333,
+              "net_92_units": 5.76
+            }
+          ]
+        },
+        "VALIDATION": {
+          "n": 573,
+          "w": 278,
+          "l": 290,
+          "d": 5,
+          "decisive": 568,
+          "wr_pct": 48.944,
+          "wilson_95_pct": [
+            44.854,
+            53.048
+          ],
+          "net_units": -34.24,
+          "expectancy_units_per_trade": -0.05976,
+          "roi_pct": -5.976,
+          "profit_factor": 0.8819,
+          "max_drawdown_units": 41.0,
+          "longest_losing_streak": 9,
+          "active_days": 146,
+          "trades_per_active_day": 3.925,
+          "signal_frequency_pct": 1.3621,
+          "wait_share_pct": 98.6379,
+          "payout_sensitivity": {
+            "0.5": -151.0,
+            "0.6": -123.2,
+            "0.7": -95.4,
+            "0.8": -67.6,
+            "0.85": -53.7,
+            "0.9": -39.8,
+            "0.92": -34.24,
+            "0.95": -25.9,
+            "1.0": -12.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2025-09",
+              "n": 24,
+              "w": 13,
+              "l": 11,
+              "d": 0,
+              "wr_pct": 54.167,
+              "net_92_units": 0.96
+            },
+            {
+              "month_utc": "2025-10",
+              "n": 104,
+              "w": 49,
+              "l": 53,
+              "d": 2,
+              "wr_pct": 48.039,
+              "net_92_units": -7.92
+            },
+            {
+              "month_utc": "2025-11",
+              "n": 78,
+              "w": 38,
+              "l": 39,
+              "d": 1,
+              "wr_pct": 49.351,
+              "net_92_units": -4.04
+            },
+            {
+              "month_utc": "2025-12",
+              "n": 77,
+              "w": 39,
+              "l": 36,
+              "d": 2,
+              "wr_pct": 52.0,
+              "net_92_units": -0.12
+            },
+            {
+              "month_utc": "2026-01",
+              "n": 73,
+              "w": 37,
+              "l": 36,
+              "d": 0,
+              "wr_pct": 50.685,
+              "net_92_units": -1.96
+            },
+            {
+              "month_utc": "2026-02",
+              "n": 85,
+              "w": 41,
+              "l": 44,
+              "d": 0,
+              "wr_pct": 48.235,
+              "net_92_units": -6.28
+            },
+            {
+              "month_utc": "2026-03",
+              "n": 95,
+              "w": 49,
+              "l": 46,
+              "d": 0,
+              "wr_pct": 51.579,
+              "net_92_units": -0.92
+            },
+            {
+              "month_utc": "2026-04",
+              "n": 37,
+              "w": 12,
+              "l": 25,
+              "d": 0,
+              "wr_pct": 32.432,
+              "net_92_units": -13.96
+            }
+          ]
+        },
+        "TEST": {
+          "n": 574,
+          "w": 264,
+          "l": 297,
+          "d": 13,
+          "decisive": 561,
+          "wr_pct": 47.059,
+          "wilson_95_pct": [
+            42.963,
+            51.195
+          ],
+          "net_units": -54.12,
+          "expectancy_units_per_trade": -0.09429,
+          "roi_pct": -9.429,
+          "profit_factor": 0.8178,
+          "max_drawdown_units": 57.2,
+          "longest_losing_streak": 11,
+          "active_days": 145,
+          "trades_per_active_day": 3.959,
+          "signal_frequency_pct": 1.3519,
+          "wait_share_pct": 98.6481,
+          "payout_sensitivity": {
+            "0.5": -165.0,
+            "0.6": -138.6,
+            "0.7": -112.2,
+            "0.8": -85.8,
+            "0.85": -72.6,
+            "0.9": -59.4,
+            "0.92": -54.12,
+            "0.95": -46.2,
+            "1.0": -33.0
+          },
+          "monthly": [
+            {
+              "month_utc": "2026-04",
+              "n": 21,
+              "w": 6,
+              "l": 15,
+              "d": 0,
+              "wr_pct": 28.571,
+              "net_92_units": -9.48
+            },
+            {
+              "month_utc": "2026-05",
+              "n": 85,
+              "w": 40,
+              "l": 43,
+              "d": 2,
+              "wr_pct": 48.193,
+              "net_92_units": -6.2
+            },
+            {
+              "month_utc": "2026-06",
+              "n": 83,
+              "w": 33,
+              "l": 49,
+              "d": 1,
+              "wr_pct": 40.244,
+              "net_92_units": -18.64
+            },
+            {
+              "month_utc": "2026-07",
+              "n": 81,
+              "w": 38,
+              "l": 41,
+              "d": 2,
+              "wr_pct": 48.101,
+              "net_92_units": -6.04
+            },
+            {
+              "month_utc": "2026-08",
+              "n": 60,
+              "w": 24,
+              "l": 34,
+              "d": 2,
+              "wr_pct": 41.379,
+              "net_92_units": -11.92
+            },
+            {
+              "month_utc": "2026-09",
+              "n": 78,
+              "w": 41,
+              "l": 35,
+              "d": 2,
+              "wr_pct": 53.947,
+              "net_92_units": 2.72
+            },
+            {
+              "month_utc": "2026-10",
+              "n": 122,
+              "w": 63,
+              "l": 56,
+              "d": 3,
+              "wr_pct": 52.941,
+              "net_92_units": 1.96
+            },
+            {
+              "month_utc": "2026-11",
+              "n": 44,
+              "w": 19,
+              "l": 24,
+              "d": 1,
+              "wr_pct": 44.186,
+              "net_92_units": -6.52
+            }
+          ]
+        }
+      },
+      "forward_since_2026_11_15": {
+        "n": 0,
+        "w": 0,
+        "l": 0,
+        "d": 0,
+        "decisive": 0,
+        "wr_pct": null,
+        "wilson_95_pct": null,
+        "net_units": 0.0,
+        "expectancy_units_per_trade": null,
+        "roi_pct": null,
+        "profit_factor": null,
+        "max_drawdown_units": 0.0,
+        "longest_losing_streak": 0,
+        "active_days": 0,
+        "trades_per_active_day": 0
+      },
+      "matched_same_timestamp_baselines_validation": {
+        "CALL": {
+          "n": 573,
+          "w": 280,
+          "l": 288,
+          "d": 5,
+          "decisive": 568,
+          "wr_pct": 49.296,
+          "wilson_95_pct": [
+            45.203,
+            53.398
+          ],
+          "net_units": -30.4,
+          "expectancy_units_per_trade": -0.05305,
+          "roi_pct": -5.305,
+          "profit_factor": 0.8944,
+          "max_drawdown_units": 49.6,
+          "longest_losing_streak": 10,
+          "active_days": 146,
+          "trades_per_active_day": 3.925
+        },
+        "PUT": {
+          "n": 573,
+          "w": 288,
+          "l": 280,
+          "d": 5,
+          "decisive": 568,
+          "wr_pct": 50.704,
+          "wilson_95_pct": [
+            46.602,
+            54.797
+          ],
+          "net_units": -15.04,
+          "expectancy_units_per_trade": -0.02625,
+          "roi_pct": -2.625,
+          "profit_factor": 0.9463,
+          "max_drawdown_units": 24.92,
+          "longest_losing_streak": 7,
+          "active_days": 146,
+          "trades_per_active_day": 3.925
+        }
+      },
+      "validation_5day_block_bootstrap_wr_95_pct": [
+        40.54,
+        57.14
+      ]
+    }
+  },
+  "execution_caveat": "Dukascopy BID is a research proxy, not Pocket Option executable pricing; spread, quote construction, actual payout, latency and settlement are not modeled.",
+  "interpretation": "Historical validation is a screening set, not independent confirmation. TEST has prior broad research exposure. New prospective evidence begins only at the forward-start timestamp."
+}
