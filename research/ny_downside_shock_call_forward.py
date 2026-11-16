@@ -6,6 +6,7 @@ from datetime import datetime,date,time,timedelta,timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 NY=ZoneInfo("America/New_York"); UTC=timezone.utc
+MIN_SOURCE_TS=datetime(2024,1,1,tzinfo=UTC)
 CUTOFF=datetime(2026,11,13,21,59,tzinfo=UTC)
 LOOKBACK=20; EXPIRY=30; PAYOUT=.92; REPS=5000; SEED=20261115
 
@@ -27,7 +28,9 @@ def load(path):
         if not tc or any(x not in cols for x in ("open","high","low","close")): raise ValueError("Expected timestamp/open/high/low/close columns")
         for row in r:
             try:
-                ts=parse_ts(row[tc]); o,h,l,c=[float(row[cols[k]]) for k in ("open","high","low","close")]
+                ts=parse_ts(row[tc])
+                if ts < MIN_SOURCE_TS: raise ValueError("timestamp predates requested Dukascopy range")
+                o,h,l,c=[float(row[cols[k]]) for k in ("open","high","low","close")]
                 if min(o,h,l,c)<=0 or not all(math.isfinite(x) for x in (o,h,l,c)) or h<max(o,c) or l>min(o,c): raise ValueError()
                 out[ts]=(o,h,l,c)
             except Exception: bad+=1
@@ -109,7 +112,7 @@ def main():
     roi="n/a" if s["roi"] is None else f'{s["roi"]:+.2f}%'
     prob="n/a" if pp is None else f"{pp:.1f}%"
     lines=["# NY downside-shock CALL — locked forward audit","",
-      f"Source: Dukascopy EURUSD M1 BID; valid unique rows={len(data):,}; invalid rows={bad:,}.",
+      f"Source: Dukascopy EURUSD M1 BID; valid unique rows={len(data):,}; invalid or pre-2024 rows excluded={bad:,}.",
       f"Coverage: {next(iter(data)).isoformat()} — {next(reversed(data)).isoformat()}.",
       f"Valid NY sessions={len(ss):,}; raw shock matches={raw:,}.",
       f"Frozen cutoff={CUTOFF.isoformat()} exclusive; only later entries scored.",
@@ -127,6 +130,6 @@ def main():
       f'- {"At least" if s["n"]>=100 else "Fewer than"} 100 forward CALL trades; minimum statistical review threshold=100.',
       "- Under 100 trades is insufficient; no parameter, direction, expiry, session or filter may be changed during monitoring.",
       "- Monitoring only. No production approval, real trades, OTC or automatic execution."]
-    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\\n".join(lines)+"\\n",encoding="utf-8")
+    a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text("\n".join(lines)+"\n",encoding="utf-8")
     print(f"NY CALL forward audit: M1={len(data)} sessions={len(ss)} raw={raw} scored={s['n']} cutoff={CUTOFF.isoformat()}")
 if __name__=="__main__": main()
