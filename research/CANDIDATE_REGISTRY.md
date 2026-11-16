@@ -25,7 +25,7 @@
 | HYD-CAND-010 | Previous-day low close breakout, inverse CALL, 60m | Previous observed completed UTC day low close breakout | CALL (inverse) | 60m | VALIDATION 57.71% (n=202); TEST 54.59% (n=198) | Exploratory candidate lead — consistency not yet established |
 | HYD-CAND-011 | Up-shock second-bar reversal | Prior >=2x median-TR upward shock; second bar reverses | PUT | 15m | VALIDATION 56.52% (n=490); TEST 52.04% (n=594) | Exploratory lead — split instability |
 
-| HYD-CAND-012 | Bearish EMA20/EMA50 cross, inverted CALL | Fresh EMA20 cross below EMA50 with close below EMA20; exact-event inverse | CALL (inverse) | 5m | VALIDATION 58.67% (n=229); TEST 54.26% (n=193); positive net all splits | Exploratory lead — inverse direction; not confirmed |
+| HYD-CAND-012 | Bearish EMA20/EMA50 cross, inverted CALL | Fresh EMA20 cross below EMA50 with close below EMA20; exact-event inverse | CALL (inverse) | 5m | VALIDATION 58.67% (n=229); TEST 54.26% (n=193); positive net all splits | Priority fifth candidate for DEMO shadow monitoring — prospective confirmation required |
 | HYD-CAND-013 | Bullish abnormal impulse continuation, inverted PUT | M5 range ≥2.0× prior 20-bar mean TR; body ≥60%; close in upper 25%; exact-event inverse | PUT (inverse) | 20m | VALIDATION 62.60% (n=380); TEST May 56.72% (n=69), October 58.67% (n=76) | Candidate — market-situation profiling required |
 | HYD-CAND-014 | NY downside-shock CALL | Completed NY session return ≤ −1.0× mean absolute return of prior 20 valid sessions; next NY session open | CALL | 30m | Historical exploratory split 67.74% (n=62); forward N=0 at latest audit | Exploratory — frozen forward monitoring only; not confirmed |
 ---
@@ -342,3 +342,8 @@ New candidates are appended here as separate cards. Do not begin market-situatio
 - **Promotion gate:** minimum 100 forward trades before statistical review; require positive net at 92% and decisive WR >52.0833%, with confidence intervals and dependence-aware uncertainty; then compare Pocket Option DEMO executable quotes, payout, timing and settlement. Do not change threshold, direction, expiry, session or filters.
 - **Data limitations:** Dukascopy EUR/USD M1 BID is not Pocket Option executable pricing; spread, platform quotes, latency and payout variation are not modeled. No real trades, OTC, or auto-trading.
 - **Protocol:** `research-artifacts/NY_DOWNSIDE_SHOCK_CALL_FORWARD_PREREG_V1.md`; forward report: `research-artifacts/ny-downside-shock-call-forward/report.md`.
+
+
+## DEMO watchlist note — 2026-11-17
+
+HYD-CAND-012 is selected as the fifth candidate for **DEMO shadow monitoring only**, alongside the existing four watchlist entries. Its signal definition and 5m expiry remain frozen. Historical figures are exploratory and subject to multiple-testing/selection bias; the TEST WR is 54.26%, below the 57% discovery target. This designation does not mean the candidate is confirmed. Record every eligible signal and its outcome prospectively using actual DEMO quotes and payout; do not place real-money trades or enable automatic execution.
