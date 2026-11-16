@@ -3,6 +3,13 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "30 10 * * *"
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/locked_candidate_forward_audit.py"
+      - "research/standalone_strategy_screen.py"
+      - "research/long_history_validation.py"
+      - ".github/workflows/locked-candidate-forward-audit.yml"
   pull_request:
     branches: [hydra/stabilization]
     paths:
