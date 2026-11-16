@@ -1,27 +1,27 @@
 {
-  "captured_at_utc": "2026-11-15T11:13:37.257587+00:00",
+  "captured_at_utc": "2026-11-16T07:27:50.495967+00:00",
   "branch": "hydra/research-validation",
   "dataset": {
     "source": "Dukascopy EURUSD M1 BID",
     "first_utc": "2024-01-01T22:00:00+00:00",
     "last_utc": "2026-11-13T21:59:00+00:00",
     "m1_integrity": {
-      "raw_rows": 1068881,
-      "valid_unique_rows": 1068881,
+      "raw_rows": 1068882,
+      "valid_unique_rows": 1068882,
       "invalid_rows": 0,
       "duplicate_rows": 0,
       "conflicting_duplicate_timestamps": 0,
       "out_of_range_rows": 0
     },
     "m1_gaps": {
-      "gap_intervals": 3644,
-      "missing_minutes": 438799,
+      "gap_intervals": 3643,
+      "missing_minutes": 438798,
       "largest_missing_interval_minutes": 2944
     },
-    "complete_m5_bars": 211337,
-    "incomplete_m5_buckets": 3373,
-    "continuity_segments": 2668,
-    "raw_csv_sha256": "32ab8005153803e0554c4f248b4f77763c1aa5325982bc95087c719a3e849e50"
+    "complete_m5_bars": 211338,
+    "incomplete_m5_buckets": 3372,
+    "continuity_segments": 2667,
+    "raw_csv_sha256": "ccb581f1abc029ffff9a271f90e4482cb0c529381df137214edf6070c2b97358"
   },
   "split": {
     "train_before_utc_date": "2025-09-21",
@@ -67,8 +67,8 @@
       },
       "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
       "batch_eligible": true,
-      "raw_events": 685,
-      "accepted_trades": 685,
+      "raw_events": 686,
+      "accepted_trades": 686,
       "overlap_suppressed": 0,
       "boundary_purged": 0,
       "periods": {
@@ -404,36 +404,36 @@
           ]
         },
         "TEST": {
-          "n": 142,
-          "w": 64,
+          "n": 143,
+          "w": 65,
           "l": 76,
           "d": 2,
-          "decisive": 140,
-          "wr_pct": 45.714,
+          "decisive": 141,
+          "wr_pct": 46.099,
           "wilson_95_pct": [
-            37.687,
-            53.97
+            38.084,
+            54.321
           ],
-          "net_units": -17.12,
-          "expectancy_units_per_trade": -0.12056,
-          "roi_pct": -12.056,
-          "profit_factor": 0.7747,
+          "net_units": -16.2,
+          "expectancy_units_per_trade": -0.11329,
+          "roi_pct": -11.329,
+          "profit_factor": 0.7868,
           "max_drawdown_units": 23.92,
           "longest_losing_streak": 9,
-          "active_days": 142,
+          "active_days": 143,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3344,
-          "wait_share_pct": 99.6656,
+          "signal_frequency_pct": 0.3368,
+          "wait_share_pct": 99.6632,
           "payout_sensitivity": {
-            "0.5": -44.0,
-            "0.6": -37.6,
-            "0.7": -31.2,
-            "0.8": -24.8,
-            "0.85": -21.6,
-            "0.9": -18.4,
-            "0.92": -17.12,
-            "0.95": -15.2,
-            "1.0": -12.0
+            "0.5": -43.5,
+            "0.6": -37.0,
+            "0.7": -30.5,
+            "0.8": -24.0,
+            "0.85": -20.75,
+            "0.9": -17.5,
+            "0.92": -16.2,
+            "0.95": -14.25,
+            "1.0": -11.0
           },
           "monthly": [
             {
@@ -501,12 +501,12 @@
             },
             {
               "month_utc": "2026-11",
-              "n": 5,
-              "w": 0,
+              "n": 6,
+              "w": 1,
               "l": 5,
               "d": 0,
-              "wr_pct": 0.0,
-              "net_92_units": -5.0
+              "wr_pct": 16.667,
+              "net_92_units": -4.08
             }
           ]
         }

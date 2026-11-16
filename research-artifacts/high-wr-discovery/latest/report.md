@@ -1,12 +1,12 @@
 # HydraAI — fifth-wave high-WR candidate screen
 
-- Captured UTC: 2026-11-15T11:13:37.257587+00:00
+- Captured UTC: 2026-11-16T07:27:50.495967+00:00
 - Branch: hydra/research-validation
-- Source: Dukascopy EURUSD M1 BID; 1,068,881 valid unique M1 rows; 211,337 complete M5 bars; 2668 continuity segments.
+- Source: Dukascopy EURUSD M1 BID; 1,068,882 valid unique M1 rows; 211,338 complete M5 bars; 2667 continuity segments.
 - Coverage: 2024-01-01T22:00:00+00:00 — 2026-11-13T21:59:00+00:00
-- M1 gaps: 3644 intervals; 438799 missing minutes; largest 2944 minutes.
-- Invalid rows: 0; duplicate rows: 0; conflicting duplicate timestamps: 0; incomplete M5 buckets: 3373.
-- Raw CSV SHA-256: 32ab8005153803e0554c4f248b4f77763c1aa5325982bc95087c719a3e849e50; candidate config SHA-256: f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3; script SHA-256: 6fb3f858865ae6e9ad893592307678e5a7885581fa20731ea75d4c093eae5415.
+- M1 gaps: 3643 intervals; 438798 missing minutes; largest 2944 minutes.
+- Invalid rows: 0; duplicate rows: 0; conflicting duplicate timestamps: 0; incomplete M5 buckets: 3372.
+- Raw CSV SHA-256: ccb581f1abc029ffff9a271f90e4482cb0c529381df137214edf6070c2b97358; candidate config SHA-256: f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3; script SHA-256: 6fb3f858865ae6e9ad893592307678e5a7885581fa20731ea75d4c093eae5415.
 - Chronological split by observed UTC dates: TRAIN before 2025-09-21; VALIDATION 2025-09-21–2026-04-18; TEST from 2026-04-19.
 - Important: historical TEST is not pristine; the repository has prior broad strategy exploration on overlapping history. Validation is a screening set, not independent proof.
 - Signals use completed M5 candles and next M5 open entry. Outcomes settle at the close of the M5 bar corresponding to the fixed expiry. Trades never bridge incomplete M5 buckets or continuity gaps.
@@ -30,9 +30,9 @@
 - Family / market state: FX fixing reversal; Fix-window order-flow / benchmark rebalancing; fade the pre-fix EURUSD move.
 - Exact entry rule: At each weekday 09:55 local time in Asia/Tokyo, use the 12 complete M5 bars from fix−60m through fix−5m. If the 60m EURUSD move is positive, enter PUT; if negative, enter CALL. Signal is known at the fix; enter at the M5 open exactly at the fix.
 - Direction / expiry: direction as above; 15 minutes.
-- Raw events / accepted trades: 685 / 685; overlap suppressed 0; split-boundary purged 0.
+- Raw events / accepted trades: 686 / 686; overlap suppressed 0; split-boundary purged 0.
 - VALIDATION: N=135, W/L/D=65/69/1, decisive WR=48.507%, net=-9.20u, expectancy=-0.06815u/trade, PF=0.8667, max DD=22.2u, longest loss streak=8, frequency=0.3209% of M5 bars, WAIT=99.6791%.
-- TRAIN: N=408, WR=56.931%, net=+37.60u. TEST (historically exposed): N=142, WR=45.714%, net=-17.12u.
+- TRAIN: N=408, WR=56.931%, net=+37.60u. TEST (historically exposed): N=143, WR=46.099%, net=-16.20u.
 - Same-timestamp baselines on VALIDATION: always CALL WR=59.701%, net=+19.60u; always PUT WR=40.299%, net=-30.32u; theoretical random-direction reference=50% decisive WR / −0.04u per trade at 92%.
 - VALIDATION payout sensitivity: 50%: -36.50u, 60%: -30.00u, 70%: -23.50u, 80%: -17.00u, 85%: -13.75u, 90%: -10.50u, 92%: -9.20u, 95%: -7.25u, 100%: -4.00u
 - VALIDATION monthly stability: 2025-09: n=7 WR=71.429% net=+2.60u; 2025-10: n=22 WR=31.818% net=-8.56u; 2025-11: n=17 WR=35.294% net=-5.48u; 2025-12: n=15 WR=46.667% net=-1.56u; 2026-01: n=19 WR=55.556% net=+1.20u; 2026-02: n=20 WR=35.0% net=-6.56u; 2026-03: n=22 WR=63.636% net=+4.88u; 2026-04: n=13 WR=69.231% net=+4.28u
