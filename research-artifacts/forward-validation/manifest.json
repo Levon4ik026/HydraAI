@@ -231,8 +231,8 @@
       "side": "CALL"
     }
   ],
-  "captured_at_utc": "2026-11-15T07:07:33.619605+00:00",
-  "combined_csv_sha256": "dd77f80f446a7561445e8f71e373f6fe71b0f921bc8ede87538d319027006cf1",
+  "captured_at_utc": "2026-11-16T08:08:17.929497+00:00",
+  "combined_csv_sha256": "c3f606122b6e18bb511e16e54e696b97bbe1f8a226a01d9aa9d9c7bb601eac75",
   "data": {
     "duplicate_timestamp_rows": 0,
     "forward_first_utc": "2026-11-10T00:00:00+00:00",
@@ -246,24 +246,24 @@
     "forward_rows": 5625,
     "invalid_rows": 0,
     "out_of_range_rows": 0,
-    "raw_download_rows": 14242,
-    "valid_unique_rows": 14242,
+    "raw_download_rows": 14243,
+    "valid_unique_rows": 14243,
     "warmup_first_utc": "2026-11-02T00:00:00+00:00",
     "warmup_last_utc": "2026-11-09T23:58:00+00:00",
     "warmup_m1_gaps": {
-      "gap_intervals": 18,
+      "gap_intervals": 17,
       "largest_missing_interval_minutes": 2880,
-      "missing_m1_minutes": 2902
+      "missing_m1_minutes": 2901
     },
-    "warmup_rows": 8617
+    "warmup_rows": 8618
   },
   "execution_caveat": "Dukascopy EURUSD BID is not Pocket Option executable pricing; spread, quote construction, platform payout, latency and settlement are not modeled.",
   "forward_continuity_segments": 13,
   "forward_csv_sha256": "c2032d38d4692afbd19fd225341e22c2101a466bd1f9f158482e4542e7804e02",
   "forward_m5_bars": 1115,
   "forward_start_utc": "2026-11-10",
-  "git_sha": "1d87a02ab76e4aa1aed033854db2ed8459eb1252",
-  "incomplete_m5_buckets": 29,
+  "git_sha": "115e32772c04a1e5b9f13200abe1bb845a8d0eb2",
+  "incomplete_m5_buckets": 28,
   "matrix": {
     "causality": {
       "atr_rank": "prior 120 completed M5 bars only; current signal bar excluded",
@@ -274,14 +274,14 @@
       "signal": "completed UTC-aligned M5 bar close"
     },
     "combined_m1_file": "combined-feature-input.csv",
-    "combined_m1_sha256": "dd77f80f446a7561445e8f71e373f6fe71b0f921bc8ede87538d319027006cf1",
+    "combined_m1_sha256": "c3f606122b6e18bb511e16e54e696b97bbe1f8a226a01d9aa9d9c7bb601eac75",
     "feature_version": "hydra_m5_causal_features_v1",
-    "gap_separated_segments": 27,
-    "m1_valid_rows": 14242,
-    "m5_complete_rows": 2827,
+    "gap_separated_segments": 26,
+    "m1_valid_rows": 14243,
+    "m5_complete_rows": 2828,
     "matrix_file": "causal-m5-feature-matrix.csv.gz",
-    "matrix_rows": 2827,
-    "matrix_sha256": "411c30d3b1a8e7843b71bf51f9736487f849b4bdf6ca620993b6f10b625d4f82"
+    "matrix_rows": 2828,
+    "matrix_sha256": "9da84f70e9f75918a6d6e7d5eb1de364d9917aa565e617bd2a5eac27cc267576"
   },
   "minimum_trades_per_candidate": 30,
   "payout_grid": [
@@ -297,13 +297,13 @@
   ],
   "protocol": "three-candidate-forward-validation-protocol-v1",
   "protocol_sha256": "0988e827803a8c5e84f5b4cb608e90b3edbbcc718bdd0924beac896fb98663db",
-  "raw_download_copy_sha256": "63b6e219e4a911c42f18ceddf926efefcd3278d5c27111123e93fd2b38af655a",
+  "raw_download_copy_sha256": "ba81dc250f6bc62358b1bc2949f81dc3eaa5bdc127a16e79d3db9307f26b7c06",
   "raw_download_file": "eurusd-m1-bid-2026-11-02-2026-11-14.csv",
-  "raw_download_sha256": "63b6e219e4a911c42f18ceddf926efefcd3278d5c27111123e93fd2b38af655a",
+  "raw_download_sha256": "ba81dc250f6bc62358b1bc2949f81dc3eaa5bdc127a16e79d3db9307f26b7c06",
   "requested_forward_end_utc": "2026-11-13",
   "script_sha256": "2bed70bb46859cf1e4cf01c70c560a27cc632ad3f2e08ec7447fbb92df8b9b19",
-  "warmup_csv_sha256": "81dae08ab585846ee3f83f86321077487822e59a6d430fc945c278fd771556df",
+  "warmup_csv_sha256": "f639f781a58e9d94e017f5f8f75568220c49f586c5a9471e66742ab59e41c476",
   "warmup_start_utc": "2026-11-02",
-  "workflow_run_id": "43688505373",
-  "workflow_run_url": "https://github.com/Levon4ik026/HydraAI/actions/runs/43688505373"
+  "workflow_run_id": "43828801852",
+  "workflow_run_url": "https://github.com/Levon4ik026/HydraAI/actions/runs/43828801852"
 }
