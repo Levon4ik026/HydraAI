@@ -27,6 +27,7 @@
 
 | HYD-CAND-012 | Bearish EMA20/EMA50 cross, inverted CALL | Fresh EMA20 cross below EMA50 with close below EMA20; exact-event inverse | CALL (inverse) | 5m | VALIDATION 58.67% (n=229); TEST 54.26% (n=193); positive net all splits | Exploratory lead — inverse direction; not confirmed |
 | HYD-CAND-013 | Bullish abnormal impulse continuation, inverted PUT | M5 range ≥2.0× prior 20-bar mean TR; body ≥60%; close in upper 25%; exact-event inverse | PUT (inverse) | 20m | VALIDATION 62.60% (n=380); TEST May 56.72% (n=69), October 58.67% (n=76) | Candidate — market-situation profiling required |
+| HYD-CAND-014 | NY downside-shock CALL | Completed NY session return ≤ −1.0× mean absolute return of prior 20 valid sessions; next NY session open | CALL | 30m | Historical exploratory split 67.74% (n=62); forward N=0 at latest audit | Exploratory — frozen forward monitoring only; not confirmed |
 ---
 
 ## HYD-CAND-001 — RSI14-70 bearish reversal, PUT, 5m
@@ -329,3 +330,15 @@ New candidates are appended here as separate cards. Do not begin market-situatio
   - **Interpretation:** strong Validation-specific result, but no TRAIN analog-control separation; the combined paired interval crosses zero. The analog rule covers 92.81% of historical candidate events, so it is not a selective market-state filter. Keep as a specialized catalog hypothesis, not a confirmed strategy.
 - **Next research step:** preserve R2.0/C0.75, 20m expiry and the profile unchanged; run a genuinely prospective window after 2026-11-08 with the same next-M5-open execution and a non-overlapping all-eligible M5 CALL/PUT baseline. Do not re-fit the radius on the already-inspected TEST seed months.
 - **Earlier discovery / code:** eleventh-wave discovery run 42976524995 and frozen calendar audit run 42980368158; `research/eleventh_wave_impulse_screen.py`; `research/eleventh_wave_impulse_calendar_audit.py`; discovery commit `0cd5ba8f10e351b393cb744578a1e2db6a4a2e7e`.
+
+
+## HYD-CAND-014 — NY downside-shock CALL, 30m
+
+- **Status:** Exploratory hypothesis; frozen forward monitoring only. Not a confirmed strategy and not approved for practical trading.
+- **Discovery context:** post-hoc directional split of a previously screened pooled NY-session shock-fade rule; selection/multiple-testing bias applies.
+- **Exact frozen rule:** completed 18:00–17:00 America/New_York session (rollover excluded); require exact session boundary bars, at least 99% minute coverage, no within-session gap >5 minutes, and 20 preceding valid sessions. Trigger when the completed session log return is ≤ −1.0× the mean absolute log return of those 20 prior sessions. Enter CALL at the next 18:00 America/New_York M1 open; fixed 30-minute expiry; settle at close of entry+29m. Otherwise WAIT. No PUT signals.
+- **Historical exploratory result:** TRAIN 22/10/0 (68.75%, n=32, +10.24u); VALIDATION 11/6/0 (64.71%, n=17, +4.12u); TEST 9/4/0 (69.23%, n=13, +4.28u); pooled 42/20/0 (67.74%, n=62, +18.64u), assuming +0.92u/-1u/0u. These are not independent confirmation; TEST n=13 and the direction split was inspected post hoc.
+- **Forward audit:** frozen cutoff 2026-11-13T21:59:00Z exclusive; latest audit reported 0 eligible forward trades, therefore no forward WR estimate. Zero trades is insufficient sample, not 0% WR.
+- **Promotion gate:** minimum 100 forward trades before statistical review; require positive net at 92% and decisive WR >52.0833%, with confidence intervals and dependence-aware uncertainty; then compare Pocket Option DEMO executable quotes, payout, timing and settlement. Do not change threshold, direction, expiry, session or filters.
+- **Data limitations:** Dukascopy EUR/USD M1 BID is not Pocket Option executable pricing; spread, platform quotes, latency and payout variation are not modeled. No real trades, OTC, or auto-trading.
+- **Protocol:** `research-artifacts/NY_DOWNSIDE_SHOCK_CALL_FORWARD_PREREG_V1.md`; forward report: `research-artifacts/ny-downside-shock-call-forward/report.md`.
