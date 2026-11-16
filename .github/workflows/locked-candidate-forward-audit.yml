@@ -29,7 +29,8 @@ jobs:
       - name: Set latest completed UTC date
         shell: bash
         run: |
-          END_DATE=$(date -u -d yesterday +%F)
+          # Dukascopy --to is a UTC-midnight boundary; use today's date to include the full prior UTC day.
+          END_DATE=$(date -u +%F)
           echo "END_DATE=$END_DATE" >> "$GITHUB_ENV"
       - name: Download EURUSD M1 BID history
         run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
