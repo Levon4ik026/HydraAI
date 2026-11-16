@@ -1,6 +1,8 @@
 name: NY downside-shock CALL forward-only audit
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "45 10 * * *"
   push:
     branches: [hydra/research-validation]
     paths:
