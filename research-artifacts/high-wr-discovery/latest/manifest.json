@@ -1,31 +1,31 @@
 {
-  "captured_at_utc": "2026-11-16T07:27:50.495967+00:00",
+  "captured_at_utc": "2026-11-17T07:41:19.652809+00:00",
   "branch": "hydra/research-validation",
   "dataset": {
     "source": "Dukascopy EURUSD M1 BID",
     "first_utc": "2024-01-01T22:00:00+00:00",
-    "last_utc": "2026-11-13T21:59:00+00:00",
+    "last_utc": "2026-11-15T23:58:00+00:00",
     "m1_integrity": {
-      "raw_rows": 1068882,
-      "valid_unique_rows": 1068882,
+      "raw_rows": 1069000,
+      "valid_unique_rows": 1069000,
       "invalid_rows": 0,
       "duplicate_rows": 0,
       "conflicting_duplicate_timestamps": 0,
       "out_of_range_rows": 0
     },
     "m1_gaps": {
-      "gap_intervals": 3643,
-      "missing_minutes": 438798,
+      "gap_intervals": 3644,
+      "missing_minutes": 441679,
       "largest_missing_interval_minutes": 2944
     },
-    "complete_m5_bars": 211338,
-    "incomplete_m5_buckets": 3372,
+    "complete_m5_bars": 211360,
+    "incomplete_m5_buckets": 3374,
     "continuity_segments": 2667,
-    "raw_csv_sha256": "ccb581f1abc029ffff9a271f90e4482cb0c529381df137214edf6070c2b97358"
+    "raw_csv_sha256": "c42e809c69c21c4259c91f1fdbd452c5ee3f4cb8daedde1dd298e4c4b0ad2482"
   },
   "split": {
-    "train_before_utc_date": "2025-09-21",
-    "validation_before_utc_date": "2026-04-19",
+    "train_before_utc_date": "2025-09-22",
+    "validation_before_utc_date": "2026-04-20",
     "train_ratio_target": 0.6,
     "validation_ratio_target": 0.2,
     "test_is_historically_exposed_not_pristine": true
@@ -67,8 +67,8 @@
       },
       "status": "SCREENED_NO_EDGE_AT_92_OR_WR_TARGET_NOT_MET",
       "batch_eligible": true,
-      "raw_events": 686,
-      "accepted_trades": 686,
+      "raw_events": 687,
+      "accepted_trades": 687,
       "overlap_suppressed": 0,
       "boundary_purged": 0,
       "periods": {
@@ -404,36 +404,36 @@
           ]
         },
         "TEST": {
-          "n": 143,
-          "w": 65,
+          "n": 144,
+          "w": 66,
           "l": 76,
           "d": 2,
-          "decisive": 141,
-          "wr_pct": 46.099,
+          "decisive": 142,
+          "wr_pct": 46.479,
           "wilson_95_pct": [
-            38.084,
-            54.321
+            38.476,
+            54.667
           ],
-          "net_units": -16.2,
-          "expectancy_units_per_trade": -0.11329,
-          "roi_pct": -11.329,
-          "profit_factor": 0.7868,
+          "net_units": -15.28,
+          "expectancy_units_per_trade": -0.10611,
+          "roi_pct": -10.611,
+          "profit_factor": 0.7989,
           "max_drawdown_units": 23.92,
           "longest_losing_streak": 9,
-          "active_days": 143,
+          "active_days": 144,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3368,
-          "wait_share_pct": 99.6632,
+          "signal_frequency_pct": 0.3392,
+          "wait_share_pct": 99.6608,
           "payout_sensitivity": {
-            "0.5": -43.5,
-            "0.6": -37.0,
-            "0.7": -30.5,
-            "0.8": -24.0,
-            "0.85": -20.75,
-            "0.9": -17.5,
-            "0.92": -16.2,
-            "0.95": -14.25,
-            "1.0": -11.0
+            "0.5": -43.0,
+            "0.6": -36.4,
+            "0.7": -29.8,
+            "0.8": -23.2,
+            "0.85": -19.9,
+            "0.9": -16.6,
+            "0.92": -15.28,
+            "0.95": -13.3,
+            "1.0": -10.0
           },
           "monthly": [
             {
@@ -501,12 +501,12 @@
             },
             {
               "month_utc": "2026-11",
-              "n": 6,
-              "w": 1,
+              "n": 7,
+              "w": 2,
               "l": 5,
               "d": 0,
-              "wr_pct": 16.667,
-              "net_92_units": -4.08
+              "wr_pct": 28.571,
+              "net_92_units": -3.16
             }
           ]
         }
@@ -611,8 +611,8 @@
           "longest_losing_streak": 6,
           "active_days": 446,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3517,
-          "wait_share_pct": 99.6483,
+          "signal_frequency_pct": 0.3516,
+          "wait_share_pct": 99.6484,
           "payout_sensitivity": {
             "0.5": -92.0,
             "0.6": -68.6,
@@ -942,8 +942,8 @@
           "longest_losing_streak": 5,
           "active_days": 150,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3533,
-          "wait_share_pct": 99.6467,
+          "signal_frequency_pct": 0.3534,
+          "wait_share_pct": 99.6466,
           "payout_sensitivity": {
             "0.5": -39.0,
             "0.6": -31.8,
@@ -1131,8 +1131,8 @@
           "longest_losing_streak": 8,
           "active_days": 444,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3501,
-          "wait_share_pct": 99.6499,
+          "signal_frequency_pct": 0.35,
+          "wait_share_pct": 99.65,
           "payout_sensitivity": {
             "0.5": -74.0,
             "0.6": -49.6,
@@ -1462,8 +1462,8 @@
           "longest_losing_streak": 7,
           "active_days": 150,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3533,
-          "wait_share_pct": 99.6467,
+          "signal_frequency_pct": 0.3534,
+          "wait_share_pct": 99.6466,
           "payout_sensitivity": {
             "0.5": -45.0,
             "0.6": -38.0,
@@ -1651,8 +1651,8 @@
           "longest_losing_streak": 8,
           "active_days": 447,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3525,
-          "wait_share_pct": 99.6475,
+          "signal_frequency_pct": 0.3524,
+          "wait_share_pct": 99.6476,
           "payout_sensitivity": {
             "0.5": -89.0,
             "0.6": -65.4,
@@ -1875,8 +1875,8 @@
           "longest_losing_streak": 13,
           "active_days": 146,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3471,
-          "wait_share_pct": 99.6529,
+          "signal_frequency_pct": 0.347,
+          "wait_share_pct": 99.653,
           "payout_sensitivity": {
             "0.5": -47.5,
             "0.6": -41.0,
@@ -1982,8 +1982,8 @@
           "longest_losing_streak": 5,
           "active_days": 150,
           "trades_per_active_day": 1.0,
-          "signal_frequency_pct": 0.3533,
-          "wait_share_pct": 99.6467,
+          "signal_frequency_pct": 0.3534,
+          "wait_share_pct": 99.6466,
           "payout_sensitivity": {
             "0.5": -27.5,
             "0.6": -19.4,
@@ -2171,8 +2171,8 @@
           "longest_losing_streak": 10,
           "active_days": 430,
           "trades_per_active_day": 4.258,
-          "signal_frequency_pct": 1.4439,
-          "wait_share_pct": 98.5561,
+          "signal_frequency_pct": 1.4435,
+          "wait_share_pct": 98.5565,
           "payout_sensitivity": {
             "0.5": -529.0,
             "0.6": -443.4,
@@ -2395,8 +2395,8 @@
           "longest_losing_streak": 9,
           "active_days": 146,
           "trades_per_active_day": 3.925,
-          "signal_frequency_pct": 1.3621,
-          "wait_share_pct": 98.6379,
+          "signal_frequency_pct": 1.362,
+          "wait_share_pct": 98.638,
           "payout_sensitivity": {
             "0.5": -151.0,
             "0.6": -123.2,
@@ -2502,8 +2502,8 @@
           "longest_losing_streak": 11,
           "active_days": 145,
           "trades_per_active_day": 3.959,
-          "signal_frequency_pct": 1.3519,
-          "wait_share_pct": 98.6481,
+          "signal_frequency_pct": 1.3523,
+          "wait_share_pct": 98.6477,
           "payout_sensitivity": {
             "0.5": -165.0,
             "0.6": -138.6,
