@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "instrument": "EURUSD",
+  "timeframe": "M1 source; M5 strategy bars unless specified",
+  "execution_policy": {
+    "mode": "shadow_only",
+    "broker": "Pocket Option",
+    "account": "DEMO_ONLY",
+    "allow_otc": false,
+    "allow_real": false,
+    "allow_martingale": false,
+    "note": "No broker order adapter is enabled. Candidate signals are recorded for forward observation only."
+  },
+  "candidates": [
+    {
+      "id": "CAND-001",
+      "name": "RSI14 overbought + bearish M5",
+      "direction": "PUT",
+      "signal": "On a completed M5 bar RSI14 >= 70 and the bar closes below its open.",
+      "entry": "Next M5 bar open",
+      "expiry_minutes": 5,
+      "state_filter": "EMA20 > EMA50 and ATR percentile > 67 using prior 120 completed M5 bars",
+      "reported_train": {"win_rate_pct": 55.39, "trades": 735},
+      "reported_validation": {"win_rate_pct": 57.89, "trades": 192},
+      "reported_test": {"win_rate_pct": 57.14, "trades": 218},
+      "status": "shadow_only",
+      "caveats": ["Historical research figures are not a live result.", "Must be independently forward-validated on the live guest feed."]
+    },
+    {
+      "id": "CAND-008",
+      "name": "Previous UTC-week low sweep/reclaim",
+      "direction": "CALL",
+      "signal": "Completed bullish M5 bar sweeps below the previous completed UTC-week low and closes back above it.",
+      "entry": "Next M5 bar open",
+      "expiry_minutes": 30,
+      "reported_train": {"win_rate_pct": 57.27, "trades": 227},
+      "reported_validation": {"win_rate_pct": 55.56, "trades": 45},
+      "reported_test": {"win_rate_pct": 61.84, "trades": 76},
+      "status": "research_only",
+      "caveats": ["Validation sample is small and below the 57% review threshold.", "Sweep/reclaim wording must be checked against the original research implementation before promotion."]
+    },
+    {
+      "id": "CAND-010",
+      "name": "Previous UTC-day low breakdown",
+      "direction": "PUT",
+      "signal": "Completed M5 close crosses below the previous completed UTC-day low; previous M5 close was at or above the level.",
+      "entry": "Next M5 bar open",
+      "expiry_minutes": 60,
+      "reported_train": {"win_rate_pct": 52.35, "trades": 578},
+      "reported_validation": {"win_rate_pct": 57.71, "trades": 202},
+      "reported_test": {"win_rate_pct": 54.59, "trades": 198},
+      "status": "research_only",
+      "caveats": ["Held-out test result is below the 57% review threshold."]
+    },
+    {
+      "id": "CAND-012",
+      "name": "EMA20/EMA50 bearish cross",
+      "direction": "PUT",
+      "signal": "On a completed M5 bar EMA20 crosses below EMA50 and close is below EMA20.",
+      "entry": "Next M5 bar open",
+      "expiry_minutes": 5,
+      "reported_train": {"win_rate_pct": 52.28, "trades": 627},
+      "reported_validation": {"win_rate_pct": 58.67, "trades": 229},
+      "reported_test": {"win_rate_pct": 54.26, "trades": 193},
+      "status": "research_only",
+      "caveats": ["Held-out test result is below the 57% review threshold."]
+    },
+    {
+      "id": "CAND-014",
+      "name": "NY downside shock rebound",
+      "direction": "CALL",
+      "signal": "Completed 18:00–17:00 America/New_York session log return <= -1.0 times mean absolute log return of previous 20 valid sessions.",
+      "entry": "Next 18:00 America/New_York M1 open",
+      "expiry_minutes": 30,
+      "reported_train": {"win_rate_pct": 68.75, "trades": 32},
+      "reported_validation": {"win_rate_pct": 64.71, "trades": 17},
+      "reported_test": {"win_rate_pct": 69.23, "trades": 13},
+      "status": "research_only",
+      "caveats": ["Only 62 pooled trades.", "Zero eligible forward trades through 2026-11-13; require at least 100 forward trades before review.", "Session timezone and completeness checks are mandatory."]
+    }
+  ]
+}
