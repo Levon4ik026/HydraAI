@@ -34,7 +34,7 @@
         ],
         "n": 1,
         "net_92_units": -1.0,
-        "observed_forward_days": 7,
+        "observed_forward_days": 8,
         "payout_sensitivity": {
           "0.50": -1.0,
           "0.60": -1.0,
@@ -120,7 +120,7 @@
         ],
         "n": 6,
         "net_92_units": 1.68,
-        "observed_forward_days": 7,
+        "observed_forward_days": 8,
         "payout_sensitivity": {
           "0.50": 0.0,
           "0.60": 0.4,
@@ -175,13 +175,13 @@
       "side": "PUT"
     },
     {
-      "accepted_forward_events_before_cutoff_guard": 16,
+      "accepted_forward_events_before_cutoff_guard": 21,
       "boundary_purged_m5_windows": 9,
       "candidate_id": "HYD-CAND-010",
       "excluded_after_forward_cutoff": 0,
       "expiry_minutes": 60,
       "metrics": {
-        "active_days": 5,
+        "active_days": 6,
         "d": 0,
         "daily_profit_concentration": {
           "share_pct": 65.6716,
@@ -189,40 +189,40 @@
           "top_positive_net_units": 1.76,
           "total_positive_period_net_units": 2.68
         },
-        "decisive": 16,
-        "l": 9,
+        "decisive": 21,
+        "l": 12,
         "longest_losing_streak": 5,
-        "max_drawdown_92_units": 5.0,
+        "max_drawdown_92_units": 5.32,
         "monthly_stability": [
           {
             "d": 0,
-            "l": 9,
-            "n": 16,
-            "net_units": -2.56,
+            "l": 12,
+            "n": 21,
+            "net_units": -3.72,
             "period": "2026-11",
-            "w": 7,
-            "wr_pct": 43.75
+            "w": 9,
+            "wr_pct": 42.8571
           }
         ],
-        "n": 16,
-        "net_92_units": -2.56,
-        "observed_forward_days": 7,
+        "n": 21,
+        "net_92_units": -3.72,
+        "observed_forward_days": 8,
         "payout_sensitivity": {
-          "0.50": -5.5,
-          "0.60": -4.8,
-          "0.70": -4.1,
-          "0.80": -3.4,
-          "0.85": -3.05,
-          "0.90": -2.7,
-          "0.92": -2.56,
-          "0.95": -2.35,
-          "1.00": -2.0
+          "0.50": -7.5,
+          "0.60": -6.6,
+          "0.70": -5.7,
+          "0.80": -4.8,
+          "0.85": -4.35,
+          "0.90": -3.9,
+          "0.92": -3.72,
+          "0.95": -3.45,
+          "1.00": -3.0
         },
-        "profit_factor_92": 0.71555556,
-        "roi_92_pct": -16.0,
+        "profit_factor_92": 0.69,
+        "roi_92_pct": -17.7143,
         "sample_status": "DESCRIPTIVE_ONLY_INSUFFICIENT_N",
-        "trades_per_active_day": 3.2,
-        "w": 7,
+        "trades_per_active_day": 3.5,
+        "w": 9,
         "weekly_profit_concentration": {
           "share_pct": null,
           "top_period": null,
@@ -241,43 +241,43 @@
           },
           {
             "d": 0,
-            "l": 6,
-            "n": 10,
-            "net_units": -2.32,
+            "l": 9,
+            "n": 15,
+            "net_units": -3.48,
             "period": "2026-W47",
-            "w": 4,
+            "w": 6,
             "wr_pct": 40.0
           }
         ],
         "wilson_95_pct": [
-          23.0987,
-          66.8214
+          24.47,
+          63.4534
         ],
-        "wins_all_pct": 43.75,
-        "wr_pct": 43.75
+        "wins_all_pct": 42.8571,
+        "wr_pct": 42.8571
       },
-      "overlap_suppressed_events": 8,
-      "raw_forward_events": 24,
+      "overlap_suppressed_events": 13,
+      "raw_forward_events": 34,
       "side": "CALL"
     }
   ],
-  "captured_at_utc": "2026-11-18T07:06:24.576588+00:00",
-  "combined_csv_sha256": "0bee33ec8d7bf73f0e52fe512030df8c4acd34682dd590a8016d7be7b9c2b070",
+  "captured_at_utc": "2026-11-19T07:07:59.228566+00:00",
+  "combined_csv_sha256": "14f9f71168602c73d2fa639321932ee46c2ddc2d7ea648cbf2f580062440d58e",
   "data": {
     "duplicate_timestamp_rows": 0,
     "forward_first_utc": "2026-11-10T00:00:00+00:00",
-    "forward_last_utc": "2026-11-17T23:58:00+00:00",
+    "forward_last_utc": "2026-11-18T23:58:00+00:00",
     "forward_m1_gaps": {
       "gap_intervals": 17,
       "largest_missing_interval_minutes": 2881,
       "missing_m1_minutes": 2898
     },
-    "forward_observed_days": 7,
-    "forward_rows": 8621,
+    "forward_observed_days": 8,
+    "forward_rows": 10061,
     "invalid_rows": 0,
     "out_of_range_rows": 0,
-    "raw_download_rows": 17240,
-    "valid_unique_rows": 17240,
+    "raw_download_rows": 18680,
+    "valid_unique_rows": 18680,
     "warmup_first_utc": "2026-11-02T00:00:00+00:00",
     "warmup_last_utc": "2026-11-09T23:59:00+00:00",
     "warmup_m1_gaps": {
@@ -289,10 +289,10 @@
   },
   "execution_caveat": "Dukascopy EURUSD BID is not Pocket Option executable pricing; spread, quote construction, platform payout, latency and settlement are not modeled.",
   "forward_continuity_segments": 15,
-  "forward_csv_sha256": "816eb3441c6aa3e213a1f4c8fb6fa18cdd471497277ca62140400c7acfd75061",
-  "forward_m5_bars": 1711,
+  "forward_csv_sha256": "6ff8760a3a93e77327fa4b03059e863c34c0a96b679c2bf0a6c458c39fa4636a",
+  "forward_m5_bars": 1999,
   "forward_start_utc": "2026-11-10",
-  "git_sha": "7d24b3f76d52dae8d7ef9be014c8826a7b9076a6",
+  "git_sha": "93695cfcb2e1b48da4192e8eb074a616b973ca56",
   "incomplete_m5_buckets": 31,
   "matrix": {
     "causality": {
@@ -304,14 +304,14 @@
       "signal": "completed UTC-aligned M5 bar close"
     },
     "combined_m1_file": "combined-feature-input.csv",
-    "combined_m1_sha256": "0bee33ec8d7bf73f0e52fe512030df8c4acd34682dd590a8016d7be7b9c2b070",
+    "combined_m1_sha256": "14f9f71168602c73d2fa639321932ee46c2ddc2d7ea648cbf2f580062440d58e",
     "feature_version": "hydra_m5_causal_features_v1",
     "gap_separated_segments": 27,
-    "m1_valid_rows": 17240,
-    "m5_complete_rows": 3425,
+    "m1_valid_rows": 18680,
+    "m5_complete_rows": 3713,
     "matrix_file": "causal-m5-feature-matrix.csv.gz",
-    "matrix_rows": 3425,
-    "matrix_sha256": "8f9367ba4bf8bb3ddf584d471e8f722a8e814c3d72dc468201a89420b1789afa"
+    "matrix_rows": 3713,
+    "matrix_sha256": "5d485315964654d42e3e0d6572047d10537c9be817edf5ce529bc311940d19d9"
   },
   "minimum_trades_per_candidate": 30,
   "payout_grid": [
@@ -327,13 +327,13 @@
   ],
   "protocol": "three-candidate-forward-validation-protocol-v1",
   "protocol_sha256": "0988e827803a8c5e84f5b4cb608e90b3edbbcc718bdd0924beac896fb98663db",
-  "raw_download_copy_sha256": "657b52e97909ad4b5d2e2f17a4ffde98d3f3cbee844b1663793351ae1ac44223",
-  "raw_download_file": "eurusd-m1-bid-2026-11-02-2026-11-18.csv",
-  "raw_download_sha256": "657b52e97909ad4b5d2e2f17a4ffde98d3f3cbee844b1663793351ae1ac44223",
-  "requested_forward_end_utc": "2026-11-17",
+  "raw_download_copy_sha256": "6877c125ab24bb9ae5b69ac09f4d1fd194d71d50689a491c8fb86208c3a5ead4",
+  "raw_download_file": "eurusd-m1-bid-2026-11-02-2026-11-19.csv",
+  "raw_download_sha256": "6877c125ab24bb9ae5b69ac09f4d1fd194d71d50689a491c8fb86208c3a5ead4",
+  "requested_forward_end_utc": "2026-11-18",
   "script_sha256": "2bed70bb46859cf1e4cf01c70c560a27cc632ad3f2e08ec7447fbb92df8b9b19",
   "warmup_csv_sha256": "7d9548d701297dea295c262ece21f0e6c63201fe89e31e7b813d2d65fc87fca8",
   "warmup_start_utc": "2026-11-02",
-  "workflow_run_id": "44256258247",
-  "workflow_run_url": "https://github.com/Levon4ik026/HydraAI/actions/runs/44256258247"
+  "workflow_run_id": "44477227941",
+  "workflow_run_url": "https://github.com/Levon4ik026/HydraAI/actions/runs/44477227941"
 }
