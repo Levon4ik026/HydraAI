@@ -35,3 +35,7 @@ This split was inspected after seeing the pooled screen. It is exploratory, subj
 - Require positive net at 92% and WR above 52.0833% in the forward sample; the lower confidence bound and dependence-aware uncertainty must also be discussed. A nominal pass is only a lead, not live-trading approval.
 - Compare live Pocket Option DEMO executable quotes, payout, timing and settlement before any practical use. No real trades, OTC instruments, or auto-trading.
 - If fewer than 100 forward trades, report as insufficient sample and continue unchanged. Never fill a five-candidate batch with this single under-sampled hypothesis.
+
+## Execution log
+
+- 2026-11-20: requested a fresh forward-only audit after the latest completed UTC session became available. This entry is operational only; the frozen signal rule, cutoff, session definition, 30-minute expiry, direction, payout accounting, and promotion gates are unchanged.
