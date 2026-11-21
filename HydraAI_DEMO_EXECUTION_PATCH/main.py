@@ -589,6 +589,10 @@ class HydraWindow(QMainWindow):
             self.log('???????: ' + text)
 
     def observer_finished(self, *args):
+        if self.execution_worker.state() == QProcess.ProcessState.Running:
+            self.demo_autotrade_enabled = False
+            self.execution_worker.write(b'{"command":"STOP"}\n')
+            self.execution_worker.waitForBytesWritten(1000)
         self.live_price = None
         self.live_candle = None
         self.connection_status = "STOPPED"
