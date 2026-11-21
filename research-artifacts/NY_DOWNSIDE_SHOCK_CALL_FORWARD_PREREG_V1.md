@@ -39,3 +39,4 @@ This split was inspected after seeing the pooled screen. It is exploratory, subj
 ## Execution log
 
 - 2026-11-20: requested a fresh forward-only audit after the latest completed UTC session became available. This entry is operational only; the frozen signal rule, cutoff, session definition, 30-minute expiry, direction, payout accounting, and promotion gates are unchanged.
+- 2026-11-21: requested a fresh forward-only audit including the newly completed 2026-11-20 UTC trading day. This entry is operational only; the frozen signal rule, cutoff, session definition, 30-minute expiry, direction, payout accounting, and promotion gates are unchanged.
