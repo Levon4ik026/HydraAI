@@ -66,8 +66,8 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
     reason = market_rejection(snapshot, expiry)
     if reason: emit("REJECTED", candidate_id=candidate_id, reason=reason, market=snapshot); return
     if state.get("halted"): emit("HALTED", reason="manual review required"); return
-    if float(state.get("daily_loss_units", 0.0)) >= DAILY_LOSS_LIMIT:
-        emit("DAILY_STOP", reason=f"daily loss limit {DAILY_LOSS_LIMIT:.1f} units reached"); return
+    if float(state.get("daily_loss_units", 0.0)) + 1.0 > DAILY_LOSS_LIMIT:
+        emit("DAILY_STOP", reason=f"next full-stake loss would exceed {DAILY_LOSS_LIMIT:.1f} units"); return
     signal_key = candidate_id + "|" + str(command.get("signal_time", ""))
     if signal_key in state["signals"]: emit("DUPLICATE_BLOCKED", candidate_id=candidate_id, signal_key=signal_key); return
     gate = DemoExecutionGate(account_mode="DEMO", instrument="EURUSD", otc=False,
@@ -125,8 +125,11 @@ async def main() -> int:
                 emit("STOPPING", reason="no new signals accepted; waiting for current operation"); break
             if state.get("halted"): emit("HALTED", reason="manual review required"); break
             await handle_signal(adapter, command, state)
-            if state.get("halted") or float(state.get("daily_loss_units", 0.0)) >= DAILY_LOSS_LIMIT:
+            if state.get("halted"):
                 emit("PAUSED", reason="risk halt active; no further trades")
+                break
+            if float(state.get("daily_loss_units", 0.0)) + 1.0 > DAILY_LOSS_LIMIT:
+                emit("PAUSED", reason="next full-stake loss would exceed daily stop")
     except Exception as exc:
         emit("ERROR", reason=f"{type(exc).__name__}: {exc}"); return 4
     finally:
