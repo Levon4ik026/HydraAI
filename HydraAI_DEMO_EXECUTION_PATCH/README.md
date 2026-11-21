@@ -31,7 +31,7 @@ Back up destination files first. Do not copy over C:\HydraAI_Desktop.
 
 ## Verify before enabling
 PowerShell from the experimental project:
-.\.venv\Scripts\python.exe -m py_compile .\main.py .\demo_execution_worker.py .\hydra_demo\engine.py .\hydra_demo\adaptive.py .\hydra_demo\runtime.py .\hydra_demo\pocket_option_demo.py
+.\.venv\Scripts\python.exe -m py_compile .\main.py .\demo_execution_worker.py .\verify_demo_order.py .\hydra_demo\engine.py .\hydra_demo\adaptive.py .\hydra_demo\runtime.py .\hydra_demo\pocket_option_demo.py
 
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_execution_gate.py" -v
 
@@ -39,7 +39,7 @@ The GUI button DEMO AUTO is OFF by default. It requires a separate confirmation,
 
 Before automatic execution, run this once while EURUSD is open and the live payout is at least 92%:
 
-.\\.venv\\Scripts\\python.exe .\\verify_demo_order.py
+.\.venv\Scripts\python.exe .\verify_demo_order.py
 
 The script prompts for CALL or PUT and asks you to type YES before sending exactly one 1-unit, 5-minute DEMO EURUSD order. It writes observer_data\\demo_order_adapter_verified.json only after the SDK returns the matching DEMO EURUSD deal with a non-empty close timestamp. If the order result is uncertain, no verification record is written and automatic execution remains locked.
 
