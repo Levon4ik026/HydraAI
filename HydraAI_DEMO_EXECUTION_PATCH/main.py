@@ -101,6 +101,7 @@ class HydraWindow(QMainWindow):
         self.execution_worker.finished.connect(self.execution_finished)
         self.demo_autotrade_enabled = False
         self.execution_stdout_buffer = ''
+        self.last_live_signal_minute = None
         self.build_ui(); self.apply_style()
         self.timer=QTimer(self); self.timer.timeout.connect(self.refresh_data); self.timer.start(4000); self.refresh_data(); self.check_ollama()
     def build_ui(self):
@@ -353,6 +354,9 @@ class HydraWindow(QMainWindow):
             tick_age = (datetime.now(timezone.utc) - tick_utc).total_seconds()
             if (live_time - last_time) != timedelta(minutes=1) or tick_age < -2 or tick_age > 5:
                 return
+            if self.last_live_signal_minute == live_time:
+                return
+            self.last_live_signal_minute = live_time
             recent = completed[-200:]
             if any((b["time"] - a["time"]).total_seconds() != 60 for a, b in zip(recent[:-1], recent[1:])):
                 return
@@ -445,7 +449,7 @@ class HydraWindow(QMainWindow):
         self.execution_stdout_buffer += chunk
         while "\n" in self.execution_stdout_buffer:
             line, self.execution_stdout_buffer = self.execution_stdout_buffer.split("\n", 1)
-            line = line.rstrip("\\r")
+            line = line.rstrip("\r")
             if not line:
                 continue
             if line.startswith("HYDRA_EXECUTION|"):
