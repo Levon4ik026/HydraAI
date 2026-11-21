@@ -407,6 +407,14 @@ class HydraWindow(QMainWindow):
         if self.execution_worker.state() == QProcess.ProcessState.Running:
             QMessageBox.information(self, "DEMO", "Исполнитель ещё завершает предыдущую операцию. Дождись статуса STOPPED.")
             return
+        verification_path = BASE / "observer_data" / "demo_order_adapter_verified.json"
+        try:
+            verification = json.loads(verification_path.read_text(encoding="utf-8"))
+        except Exception:
+            verification = {}
+        if verification.get("status") != "VERIFIED":
+            QMessageBox.warning(self, "DEMO пока заблокирован", "Сначала выполни verify_demo_order.py: одна DEMO-сделка EURUSD на 1 единицу и 5 минут должна успешно закрыться. До этого автоисполнение заблокировано.")
+            return
         if self.connection_status != "CONNECTED" or not self.last_quality or self.last_quality.get("status") != "FRESH":
             QMessageBox.warning(self, "DEMO заблокирован", "Сначала запусти сбор данных и дождись свежего непрерывного потока EURUSD.")
             return
