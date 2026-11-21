@@ -208,6 +208,11 @@ class PocketOptionDemoAdapter:
                 ) from exc
 
             # check_deal_result() returns the closed deal according to SDK contract.
+            if getattr(result, "close_timestamp", None) is None:
+                raise DemoAdapterError(
+                    "closed deal has no close_timestamp; closure is not confirmed; lock remains engaged"
+                )
+
             if getattr(result, "id", None) != getattr(deal, "id", None):
                 raise DemoAdapterError(
                     "returned deal ID mismatch; lock remains engaged"
