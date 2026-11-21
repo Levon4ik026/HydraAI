@@ -24,6 +24,7 @@ jobs:
           python -m py_compile \
             HydraAI_DEMO_EXECUTION_PATCH/main.py \
             HydraAI_DEMO_EXECUTION_PATCH/demo_execution_worker.py \
+            HydraAI_DEMO_EXECUTION_PATCH/verify_demo_order.py \
             HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/__init__.py \
             HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/engine.py \
             HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/adaptive.py \
