@@ -152,15 +152,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Determine latest completed UTC weekday
+        id: dates
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from datetime import datetime, timedelta, timezone
+          end = datetime.now(timezone.utc).date() - timedelta(days=1)
+          while end.weekday() >= 5:
+              end -= timedelta(days=1)
+          download_to = end + timedelta(days=1)
+          data_path = f"download/eurusd-m1-bid-2024-01-01-{download_to.isoformat()}.csv"
+          print(f"download_to={download_to.isoformat()}")
+          print(f"data_path={data_path}")
+          PY
       - name: Download multi-year EURUSD M1 BID history from Dukascopy
-        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "${{ steps.dates.outputs.download_to }}" -t m1 -f csv -v
       - name: Verify long-history dataset
         run: |
           python - <<'PY'
           import csv
           from datetime import datetime, timezone
           from pathlib import Path
-          path = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          path = Path("${{ steps.dates.outputs.data_path }}")
           if not path.exists():
               raise SystemExit(f"Missing downloaded dataset: {path}")
           with path.open(newline="", encoding="utf-8-sig") as f:
@@ -185,7 +199,7 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
 
-          path = Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          path = Path("${{ steps.dates.outputs.data_path }}")
           digest = hashlib.sha256()
           with path.open("rb") as f:
               for chunk in iter(lambda: f.read(1024 * 1024), b""):
@@ -228,17 +242,17 @@ jobs:
           print(json.dumps(manifest, indent=2))
           PY
       - name: Run standalone strategy screen on multi-year history
-        run: python research/standalone_strategy_screen.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_STANDALONE_SCREEN.md
+        run: python research/standalone_strategy_screen.py --data "${{ steps.dates.outputs.data_path }}" --out research/LONG_HISTORY_STANDALONE_SCREEN.md
       - name: Run exact inverse audit on multi-year history
-        run: python research/reversal_strategy_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_AUDIT.md
+        run: python research/reversal_strategy_audit.py --data "${{ steps.dates.outputs.data_path }}" --out research/LONG_HISTORY_REVERSAL_AUDIT.md
       - name: Run prior-only regime and daily diagnostic
-        run: python research/reversal_regime_diagnostic.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_REGIME.md
+        run: python research/reversal_regime_diagnostic.py --data "${{ steps.dates.outputs.data_path }}" --out research/LONG_HISTORY_REVERSAL_REGIME.md
       - name: Run quarterly and payout-stress robustness audit
-        run: python research/reversal_robustness_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
+        run: python research/reversal_robustness_audit.py --data "${{ steps.dates.outputs.data_path }}" --out research/LONG_HISTORY_REVERSAL_ROBUSTNESS.md
       - name: Run day-cluster bootstrap on frozen reversals
-        run: python research/reversal_day_cluster_bootstrap.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
+        run: python research/reversal_day_cluster_bootstrap.py --data "${{ steps.dates.outputs.data_path }}" --out research/LONG_HISTORY_REVERSAL_DAY_BOOTSTRAP.md
       - name: Run TRAIN-frozen multi-feature context screen for reversals
-        run: python research/multifeature_reversal_context.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
+        run: python research/multifeature_reversal_context.py --data "${{ steps.dates.outputs.data_path }}" --out research/LONG_HISTORY_MULTI_FEATURE_REVERSAL.md
       - name: Upload multi-year reversal research
         uses: actions/upload-artifact@v4
         with:
