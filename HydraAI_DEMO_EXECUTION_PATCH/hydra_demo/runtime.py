@@ -43,7 +43,7 @@ class CandidateMonitor:
             with self.outcome_path.open("r",newline="",encoding="utf-8") as f:
                 for row in csv.DictReader(f): self.seen_outcomes.add((row["candidate_id"],row["signal_time"]))
 
-    def process(self, candles, feed_ok: bool, completed_candles=None, allow_new_signals: bool = True):
+    def process(self, candles, feed_ok: bool, completed_candles=None, allow_new_signals: bool = True, eligible_candidates: set[str] | None = None):
         if not feed_ok: return {"new_signals":0,"new_outcomes":0,"new_signal_records":[],"blocked":"feed is not fresh/continuous","regime":"UNKNOWN","selected_candidate":None,"selection_reason":"WAIT: feed blocked"}
         regime_candles = completed_candles if completed_candles is not None else candles
         regime=classify_regime(regime_candles)
@@ -78,6 +78,8 @@ class CandidateMonitor:
         for outcome in new_out: self.seen_outcomes.add((outcome.candidate_id,outcome.signal_time))
 
         stats=self._forward_stats()
+        if eligible_candidates is not None:
+            stats=[item for item in stats if item.candidate_id in eligible_candidates]
         selected,why=select_candidate(regime,stats,payout=self.payout,min_trades=self.min_trades,max_drawdown_units=self.max_drawdown_units)
         return {"new_signals":n_signals,"new_outcomes":n_outcomes,"blocked":None,"signals_total":len(self.seen_signals),"outcomes_total":len(self.seen_outcomes),"regime":regime.name,"regime_confidence":regime.confidence,"regime_details":regime.details,"selected_candidate":selected,"selection_reason":why,"candidate_stats":stats,"new_signal_records":[asdict(s) for s in fresh]}
 
