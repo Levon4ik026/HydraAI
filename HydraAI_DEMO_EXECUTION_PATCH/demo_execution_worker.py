@@ -36,6 +36,33 @@ def save_state(state: dict) -> None:
     tmp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(STATE_PATH)
 
+def verification_rejection(data: dict, now: datetime) -> str | None:
+    try:
+        verified_at = parse_utc(data["verified_at_utc"])
+    except Exception:
+        return "missing or invalid verification timestamp"
+    age = (now - verified_at).total_seconds()
+    if age < -60 or age > 30 * 24 * 3600:
+        return "DEMO order verification is older than 30 days or timestamp is in the future"
+    if data.get("status") != "VERIFIED":
+        return "DEMO order verification status is not VERIFIED"
+    if data.get("asset") != "EURUSD" or data.get("is_demo") is not True:
+        return "verification was not for DEMO EURUSD"
+    if data.get("closed") is not True or not data.get("deal_id"):
+        return "verification does not prove a closed broker deal"
+    if data.get("amount") != 1 or data.get("expiry_seconds") != 300:
+        return "verification must be a one-unit, five-minute DEMO order"
+    return None
+
+
+def adapter_verification_ok() -> bool:
+    try:
+        data = json.loads((BASE / "observer_data" / "demo_order_adapter_verified.json").read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    return verification_rejection(data, datetime.now(timezone.utc)) is None
+
+
 def market_rejection(snapshot: dict, expiry_minutes: int) -> str | None:
     if snapshot.get("status") != "ACTIVE": return f"market status {snapshot.get('status')}: {snapshot.get('reason', '')}"
     if snapshot.get("symbol") != "EURUSD" or snapshot.get("is_otc") is not False: return "asset identity mismatch or OTC is prohibited"
@@ -71,7 +98,7 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
     signal_key = candidate_id + "|" + str(command.get("signal_time", ""))
     if signal_key in state["signals"]: emit("DUPLICATE_BLOCKED", candidate_id=candidate_id, signal_key=signal_key); return
     gate = DemoExecutionGate(account_mode="DEMO", instrument="EURUSD", otc=False,
-                             broker_adapter_verified=True, explicit_live_authorization=False)
+                             broker_adapter_verified=adapter_verification_ok(), explicit_live_authorization=False)
     ok, gate_reason = gate.can_submit(feed_ok=True, payout=float(snapshot["payout_ratio"]),
                                      open_positions=0, daily_loss_units=float(state.get("daily_loss_units", 0.0)),
                                      max_daily_loss_units=DAILY_LOSS_LIMIT)
@@ -108,6 +135,9 @@ async def main() -> int:
     if os.getenv("HYDRA_ACCOUNT_MODE", "DEMO").upper() != "DEMO": emit("ERROR", reason="REAL mode rejected"); return 2
     if os.getenv("HYDRA_INSTRUMENT", "EURUSD").upper() != "EURUSD" or os.getenv("HYDRA_ALLOW_OTC", "0") != "0":
         emit("ERROR", reason="only non-OTC EURUSD is permitted"); return 2
+    if not adapter_verification_ok():
+        emit("BLOCKED", reason="broker order adapter is not verified; run verify_demo_order.py and confirm one closed 1-unit DEMO EURUSD trade first")
+        return 5
     state = load_state()
     if state.get("halted"): emit("HALTED", reason="previous unresolved order requires manual review"); return 3
     adapter = PocketOptionDemoAdapter(amount=STAKE)
