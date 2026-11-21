@@ -18,6 +18,7 @@ Target: C:\HydraAI_ADAPTIVE_DEMO\HydraAI_CURRENT_INTEGRATED
 Copy each file into the matching destination:
 - main.py -> project root main.py
 - demo_execution_worker.py -> project root
+- verify_demo_order.py -> project root
 - HydraDemoExecution.spec -> project root
 - hydra_demo\engine.py -> hydra_demo\engine.py
 - hydra_demo\adaptive.py -> hydra_demo\adaptive.py
@@ -34,7 +35,13 @@ PowerShell from the experimental project:
 
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_execution_gate.py" -v
 
-The GUI button DEMO AUTO is OFF by default. It requires a separate confirmation and a fresh connected feed.
+The GUI button DEMO AUTO is OFF by default. It requires a separate confirmation, a fresh connected feed, and a verification record created by verify_demo_order.py.
+
+Before automatic execution, run this once while EURUSD is open and the live payout is at least 92%:
+
+.\\.venv\\Scripts\\python.exe .\\verify_demo_order.py
+
+The script prompts for CALL or PUT and asks you to type YES before sending exactly one 1-unit, 5-minute DEMO EURUSD order. It writes observer_data\\demo_order_adapter_verified.json only after the SDK returns the matching DEMO EURUSD deal with a non-empty close timestamp. If the order result is uncertain, no verification record is written and automatic execution remains locked.
 
 For EXE distribution:
 .\.venv\Scripts\pyinstaller.exe --clean --noconfirm .\HydraDemoExecution.spec
