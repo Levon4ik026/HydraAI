@@ -1,8 +1,8 @@
 # NY downside-shock CALL — locked forward audit
 
-Source: Dukascopy EURUSD M1 BID; valid unique rows=1,035,670; invalid or pre-2024 rows excluded=39,087.
-Coverage: 2024-01-01T22:00:00+00:00 — 2026-11-19T23:58:00+00:00.
-Valid NY sessions=580; raw shock matches=118.
+Source: Dukascopy EURUSD M1 BID; valid unique rows=1,036,990; invalid or pre-2024 rows excluded=39,087.
+Coverage: 2024-01-01T22:00:00+00:00 — 2026-11-20T21:59:00+00:00.
+Valid NY sessions=581; raw shock matches=118.
 Frozen cutoff=2026-11-13T21:59:00+00:00 exclusive; only later entries scored.
 Frozen rule: 18:00–16:59 America/New_York completed session; >=99% minute coverage; no gap >5m; after 20 preceding valid sessions, current log return <= -1.0x their mean absolute return; CALL at next 18:00 NY open only.
 Expiry fixed 30m: entry M1 open, settlement close of entry+29m. All 30 bars required. No PUT signals.
