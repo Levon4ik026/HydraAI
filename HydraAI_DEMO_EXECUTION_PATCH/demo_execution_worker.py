@@ -129,6 +129,13 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
         save_state(state)
         emit("HALTED", candidate_id=candidate_id, reason="order outcome uncertain; no retry; manual broker-history check required", error=str(exc))
 
+async def publish_market_status(adapter: PocketOptionDemoAdapter) -> None:
+    while True:
+        await asyncio.sleep(10)
+        snapshot = await adapter.get_market_snapshot()
+        emit("MARKET", market=snapshot)
+
+
 async def main() -> int:
     if os.name != "nt": emit("ERROR", reason="Windows only"); return 2
     if os.getenv("HYDRA_DEMO_AUTOTRADE") != "1": emit("ERROR", reason="explicit GUI authorization required"); return 2
@@ -141,8 +148,10 @@ async def main() -> int:
     state = load_state()
     if state.get("halted"): emit("HALTED", reason="previous unresolved order requires manual review"); return 3
     adapter = PocketOptionDemoAdapter(amount=STAKE)
+    market_task = None
     try:
         await adapter.connect()
+        market_task = asyncio.create_task(publish_market_status(adapter))
         snapshot = await adapter.get_market_snapshot()
         emit("READY", mode="DEMO", symbol="EURUSD", stake=STAKE, market=snapshot,
              daily_loss_units=state.get("daily_loss_units", 0.0))
@@ -163,6 +172,10 @@ async def main() -> int:
     except Exception as exc:
         emit("ERROR", reason=f"{type(exc).__name__}: {exc}"); return 4
     finally:
+        if market_task is not None:
+            market_task.cancel()
+            try: await market_task
+            except asyncio.CancelledError: pass
         try: await adapter.disconnect()
         except Exception: pass
     emit("STOPPED")
