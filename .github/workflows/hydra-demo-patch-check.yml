@@ -7,6 +7,9 @@ on:
     paths:
       - "HydraAI_DEMO_EXECUTION_PATCH/**"
       - ".github/workflows/hydra-demo-patch-check.yml"
+  pull_request:
+    branches:
+      - hydra/stabilization
 
 jobs:
   validate:
