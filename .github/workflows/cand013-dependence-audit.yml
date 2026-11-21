@@ -1,0 +1,45 @@
+name: HYD-CAND-013 dependence-aware situation audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/cand013_dependence_audit.py"
+      - ".github/workflows/cand013-dependence-audit.yml"
+permissions:
+  contents: read
+jobs:
+  dependence-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Download EURUSD M1 BID history
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+      - name: Verify raw data
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p=Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+          if not p.exists(): raise SystemExit("Dukascopy CSV missing")
+          with p.open(newline="",encoding="utf-8-sig") as f:
+              r=csv.DictReader(f); rows=list(r)
+          if len(rows)<100000 or not {"timestamp","open","high","low","close"}.issubset(r.fieldnames or []):
+              raise SystemExit("Raw CSV validation failed")
+          print(f"Verified {len(rows):,} M1 rows")
+          PY
+      - name: Run dependence-aware audit
+        run: python research/cand013_dependence_audit.py --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv --out research/CAND013_DEPENDENCE_AUDIT.md --reps 10000
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-cand013-dependence-audit
+          path: research/CAND013_DEPENDENCE_AUDIT.md
+          if-no-files-found: error

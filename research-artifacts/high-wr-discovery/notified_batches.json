@@ -1,0 +1,16 @@
+{
+  "reported_batches": [
+    {
+      "candidate_config_sha256": "f80f5dbbc3d3ab2a4ac67f9c10a958c7b571f213f5d881189117443c97582ae3",
+      "candidate_ids": [
+        "HYD-NEW-001",
+        "HYD-NEW-002",
+        "HYD-NEW-003",
+        "HYD-NEW-004",
+        "HYD-NEW-005"
+      ],
+      "reported_at_utc": "2026-11-15T08:30:00Z",
+      "report_path": "research-artifacts/high-wr-discovery/latest/report.md"
+    }
+  ]
+}

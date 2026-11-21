@@ -1,0 +1,75 @@
+name: Locked BB Williams ADX CALL forward audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 10 * * *"
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/bb_williams_call_forward.py"
+      - "research/reproduce_m5_bb_williams_adx.py"
+      - "research-artifacts/BB_WILLIAMS_CALL_FORWARD_PREREG_V1.md"
+      - ".github/workflows/bb-williams-call-forward.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hydra-bb-williams-call-forward
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hydra/research-validation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Determine data end date
+        shell: bash
+        run: |
+          END_DATE=$(date -u +%F)
+          echo "END_DATE=$END_DATE" >> "$GITHUB_ENV"
+      - name: Download EURUSD M1 BID warm-up and forward data
+        run: |
+          npx --yes dukascopy-node -i eurusd -from 2026-10-07 -to "$END_DATE" -t m1 -f csv -v
+          test -s "download/eurusd-m1-bid-2026-10-07-$END_DATE.csv"
+      - name: Verify source data
+        shell: bash
+        run: |
+          python - "download/eurusd-m1-bid-2026-10-07-$END_DATE.csv" <<'PY'
+          import csv,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          with p.open(newline="",encoding="utf-8-sig") as f:
+              r=csv.DictReader(f)
+              cols={x.lower() for x in (r.fieldnames or [])}
+              if not {"timestamp","open","high","low","close"}.issubset(cols):
+                  raise SystemExit(f"Unexpected header: {r.fieldnames}")
+              n=sum(1 for _ in r)
+          if n<10000: raise SystemExit(f"Insufficient M1 rows: {n}")
+          print(f"Verified {n:,} M1 rows")
+          PY
+      - name: Run frozen forward-only audit
+        run: |
+          python research/bb_williams_call_forward.py \
+            --data "download/eurusd-m1-bid-2026-10-07-$END_DATE.csv" \
+            --out research-artifacts/bb-williams-call-forward/report.md \
+            --ledger research-artifacts/bb-williams-call-forward/trades.csv
+      - name: Upload report and trade ledger
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-bb-williams-call-forward-${{ github.run_id }}
+          path: |
+            research-artifacts/bb-williams-call-forward/report.md
+            research-artifacts/bb-williams-call-forward/trades.csv
+          if-no-files-found: error
+          retention-days: 90

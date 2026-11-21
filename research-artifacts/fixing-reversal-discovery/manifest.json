@@ -1,0 +1,880 @@
+{
+  "batch_ready": false,
+  "bootstrap_reps": 2000,
+  "bootstrap_seed": 20261115,
+  "branch": "hydra/research-validation",
+  "candidate_results": [
+    {
+      "bootstrap": {
+        "days": 49,
+        "net_95_units": [
+          -12.52,
+          13.440000000000001
+        ],
+        "replicates": 2000,
+        "wr_95_pct": [
+          38.297872340425535,
+          66.66666666666667
+        ]
+      },
+      "candidate_id": "FXFIX-TOKYO-FADE-60",
+      "eligible_windows": 49,
+      "excluded_windows": 701,
+      "expiry_minutes": 60,
+      "market_regime": "fixing-time pre-move / post-fixing reversal",
+      "matched_continuation_control": {
+        "active_days": 49,
+        "d": 1,
+        "decisive": 48,
+        "expectancy_units": -0.0783673469387755,
+        "l": 25,
+        "longest_losing_streak": 11,
+        "max_drawdown_units": 13.88,
+        "n": 49,
+        "net_units": -3.84,
+        "profit_factor": 0.8464,
+        "roi_pct": -7.836734693877551,
+        "trades_per_active_day": 1.0,
+        "w": 23,
+        "wilson_95_pct": [
+          34.47131617695162,
+          61.6707676966572
+        ],
+        "wr_pct": 47.916666666666664
+      },
+      "overall": {
+        "active_days": 49,
+        "d": 1,
+        "decisive": 48,
+        "expectancy_units": 0.0,
+        "l": 23,
+        "longest_losing_streak": 6,
+        "max_drawdown_units": 9.64,
+        "n": 49,
+        "net_units": 0.0,
+        "profit_factor": 1.0,
+        "roi_pct": 0.0,
+        "trades_per_active_day": 1.0,
+        "w": 25,
+        "wilson_95_pct": [
+          38.329232303342806,
+          65.52868382304838
+        ],
+        "wr_pct": 52.083333333333336
+      },
+      "purged": {
+        "TRAIN": 0,
+        "VALIDATION": 0
+      },
+      "raw_signal_events": 49,
+      "rule": "Fade the completed EUR/USD return over 240 minutes before 09:55 Asia/Tokyo fixing; enter at fixing-time M1 open; 60-minute expiry.",
+      "side_stats": {
+        "CALL": {
+          "active_days": 22,
+          "d": 1,
+          "decisive": 21,
+          "expectancy_units": 0.09272727272727277,
+          "l": 9,
+          "longest_losing_streak": 3,
+          "max_drawdown_units": 4.0,
+          "n": 22,
+          "net_units": 2.040000000000001,
+          "profit_factor": 1.2266666666666668,
+          "roi_pct": 9.272727272727277,
+          "trades_per_active_day": 1.0,
+          "w": 12,
+          "wilson_95_pct": [
+            36.54655436930671,
+            75.53003107462403
+          ],
+          "wr_pct": 57.142857142857146
+        },
+        "PUT": {
+          "active_days": 27,
+          "d": 0,
+          "decisive": 27,
+          "expectancy_units": -0.07555555555555553,
+          "l": 14,
+          "longest_losing_streak": 6,
+          "max_drawdown_units": 6.24,
+          "n": 27,
+          "net_units": -2.039999999999999,
+          "profit_factor": 0.8542857142857143,
+          "roi_pct": -7.555555555555553,
+          "trades_per_active_day": 1.0,
+          "w": 13,
+          "wilson_95_pct": [
+            30.74322697621846,
+            66.01438424504771
+          ],
+          "wr_pct": 48.148148148148145
+        }
+      },
+      "splits": {
+        "TEST": {
+          "active_days": 3,
+          "d": 0,
+          "decisive": 3,
+          "expectancy_units": -0.36000000000000004,
+          "l": 2,
+          "longest_losing_streak": 2,
+          "max_drawdown_units": 2.0,
+          "n": 3,
+          "net_units": -1.08,
+          "profit_factor": 0.46,
+          "roi_pct": -36.0,
+          "trades_per_active_day": 1.0,
+          "w": 1,
+          "wilson_95_pct": [
+            6.149194472039621,
+            79.23403991979522
+          ],
+          "wr_pct": 33.333333333333336
+        },
+        "TRAIN": {
+          "active_days": 37,
+          "d": 0,
+          "decisive": 37,
+          "expectancy_units": 0.1935135135135135,
+          "l": 14,
+          "longest_losing_streak": 4,
+          "max_drawdown_units": 4.24,
+          "n": 37,
+          "net_units": 7.16,
+          "profit_factor": 1.5114285714285713,
+          "roi_pct": 19.35135135135135,
+          "trades_per_active_day": 1.0,
+          "w": 23,
+          "wilson_95_pct": [
+            46.100430439217654,
+            75.93600082420173
+          ],
+          "wr_pct": 62.16216216216216
+        },
+        "VALIDATION": {
+          "active_days": 9,
+          "d": 1,
+          "decisive": 8,
+          "expectancy_units": -0.6755555555555556,
+          "l": 7,
+          "longest_losing_streak": 4,
+          "max_drawdown_units": 7.0,
+          "n": 9,
+          "net_units": -6.08,
+          "profit_factor": 0.13142857142857142,
+          "roi_pct": -67.55555555555556,
+          "trades_per_active_day": 1.0,
+          "w": 1,
+          "wilson_95_pct": [
+            2.241749145005667,
+            47.08881822128535
+          ],
+          "wr_pct": 12.5
+        }
+      },
+      "status": "INSUFFICIENT_SAMPLE"
+    },
+    {
+      "bootstrap": {
+        "days": 701,
+        "net_95_units": [
+          -96.19999999999999,
+          0.9600000000000364
+        ],
+        "replicates": 2000,
+        "wr_95_pct": [
+          44.90674318507891,
+          52.1551724137931
+        ]
+      },
+      "candidate_id": "FXFIX-ECB-FADE-60",
+      "eligible_windows": 702,
+      "excluded_windows": 48,
+      "expiry_minutes": 60,
+      "market_regime": "fixing-time pre-move / post-fixing reversal",
+      "matched_continuation_control": {
+        "active_days": 701,
+        "d": 3,
+        "decisive": 698,
+        "expectancy_units": -0.009700427960057078,
+        "l": 338,
+        "longest_losing_streak": 8,
+        "max_drawdown_units": 37.71999999999988,
+        "n": 701,
+        "net_units": -6.800000000000011,
+        "profit_factor": 0.9798816568047337,
+        "roi_pct": -0.9700427960057078,
+        "trades_per_active_day": 1.0,
+        "w": 360,
+        "wilson_95_pct": [
+          47.87001191137564,
+          55.26459914978433
+        ],
+        "wr_pct": 51.57593123209169
+      },
+      "overall": {
+        "active_days": 701,
+        "d": 3,
+        "decisive": 698,
+        "expectancy_units": -0.06995720399429381,
+        "l": 360,
+        "longest_losing_streak": 10,
+        "max_drawdown_units": 59.95999999999988,
+        "n": 701,
+        "net_units": -49.039999999999964,
+        "profit_factor": 0.8637777777777779,
+        "roi_pct": -6.9957203994293815,
+        "trades_per_active_day": 1.0,
+        "w": 338,
+        "wilson_95_pct": [
+          44.73540085021567,
+          52.12998808862436
+        ],
+        "wr_pct": 48.42406876790831
+      },
+      "purged": {
+        "TRAIN": 0,
+        "VALIDATION": 0
+      },
+      "raw_signal_events": 701,
+      "rule": "Fade the completed EUR/USD return from 07:00 to 14:15 Europe/Berlin; enter at fixing-time M1 open; 60-minute expiry.",
+      "side_stats": {
+        "CALL": {
+          "active_days": 362,
+          "d": 0,
+          "decisive": 362,
+          "expectancy_units": -0.07712707182320439,
+          "l": 188,
+          "longest_losing_streak": 10,
+          "max_drawdown_units": 30.35999999999995,
+          "n": 362,
+          "net_units": -27.919999999999987,
+          "profit_factor": 0.8514893617021277,
+          "roi_pct": -7.712707182320438,
+          "trades_per_active_day": 1.0,
+          "w": 174,
+          "wilson_95_pct": [
+            42.96683789205417,
+            53.20636783341782
+          ],
+          "wr_pct": 48.06629834254144
+        },
+        "PUT": {
+          "active_days": 339,
+          "d": 3,
+          "decisive": 336,
+          "expectancy_units": -0.06230088495575223,
+          "l": 172,
+          "longest_losing_streak": 11,
+          "max_drawdown_units": 36.63999999999997,
+          "n": 339,
+          "net_units": -21.120000000000005,
+          "profit_factor": 0.8772093023255814,
+          "roi_pct": -6.230088495575223,
+          "trades_per_active_day": 1.0,
+          "w": 164,
+          "wilson_95_pct": [
+            43.508532427212174,
+            54.13742871367943
+          ],
+          "wr_pct": 48.80952380952381
+        }
+      },
+      "splits": {
+        "TEST": {
+          "active_days": 147,
+          "d": 1,
+          "decisive": 146,
+          "expectancy_units": -0.1442176870748299,
+          "l": 81,
+          "longest_losing_streak": 7,
+          "max_drawdown_units": 26.07999999999996,
+          "n": 147,
+          "net_units": -21.199999999999996,
+          "profit_factor": 0.7382716049382717,
+          "roi_pct": -14.42176870748299,
+          "trades_per_active_day": 1.0,
+          "w": 65,
+          "wilson_95_pct": [
+            36.70225125367676,
+            52.619796111634756
+          ],
+          "wr_pct": 44.52054794520548
+        },
+        "TRAIN": {
+          "active_days": 413,
+          "d": 2,
+          "decisive": 411,
+          "expectancy_units": -0.028184019370460014,
+          "l": 203,
+          "longest_losing_streak": 9,
+          "max_drawdown_units": 23.440000000000005,
+          "n": 413,
+          "net_units": -11.639999999999986,
+          "profit_factor": 0.9426600985221676,
+          "roi_pct": -2.8184019370460014,
+          "trades_per_active_day": 1.0,
+          "w": 208,
+          "wilson_95_pct": [
+            45.7915310796401,
+            55.413748646791774
+          ],
+          "wr_pct": 50.60827250608273
+        },
+        "VALIDATION": {
+          "active_days": 141,
+          "d": 0,
+          "decisive": 141,
+          "expectancy_units": -0.11489361702127657,
+          "l": 76,
+          "longest_losing_streak": 10,
+          "max_drawdown_units": 27.84,
+          "n": 141,
+          "net_units": -16.199999999999996,
+          "profit_factor": 0.7868421052631579,
+          "roi_pct": -11.489361702127656,
+          "trades_per_active_day": 1.0,
+          "w": 65,
+          "wilson_95_pct": [
+            38.084142318172375,
+            54.321347042703636
+          ],
+          "wr_pct": 46.09929078014184
+        }
+      },
+      "status": "NOT_PASS_PRIMARY_SCREEN"
+    },
+    {
+      "bootstrap": {
+        "days": 729,
+        "net_95_units": [
+          -40.47999999999996,
+          63.20199999999998
+        ],
+        "replicates": 2000,
+        "wr_95_pct": [
+          49.17355371900826,
+          56.63029338393964
+        ]
+      },
+      "candidate_id": "FXFIX-LONDON-FADE-60",
+      "eligible_windows": 731,
+      "excluded_windows": 19,
+      "expiry_minutes": 60,
+      "market_regime": "fixing-time pre-move / post-fixing reversal",
+      "matched_continuation_control": {
+        "active_days": 729,
+        "d": 4,
+        "decisive": 725,
+        "expectancy_units": -0.09640603566529489,
+        "l": 384,
+        "longest_losing_streak": 7,
+        "max_drawdown_units": 73.47999999999946,
+        "n": 729,
+        "net_units": -70.27999999999997,
+        "profit_factor": 0.8169791666666667,
+        "roi_pct": -9.640603566529489,
+        "trades_per_active_day": 1.0,
+        "w": 341,
+        "wilson_95_pct": [
+          43.426511747303124,
+          50.67371410022529
+        ],
+        "wr_pct": 47.03448275862069
+      },
+      "overall": {
+        "active_days": 729,
+        "d": 4,
+        "decisive": 725,
+        "expectancy_units": 0.01684499314128948,
+        "l": 341,
+        "longest_losing_streak": 6,
+        "max_drawdown_units": 31.959999999999788,
+        "n": 729,
+        "net_units": 12.28000000000003,
+        "profit_factor": 1.0360117302052787,
+        "roi_pct": 1.6844993141289477,
+        "trades_per_active_day": 1.0,
+        "w": 384,
+        "wilson_95_pct": [
+          49.326285899774696,
+          56.573488252696855
+        ],
+        "wr_pct": 52.96551724137931
+      },
+      "purged": {
+        "TRAIN": 0,
+        "VALIDATION": 0
+      },
+      "raw_signal_events": 729,
+      "rule": "Fade the completed EUR/USD return from 07:00 to 16:00 Europe/London; enter at fixing-time M1 open; 60-minute expiry.",
+      "side_stats": {
+        "CALL": {
+          "active_days": 366,
+          "d": 3,
+          "decisive": 363,
+          "expectancy_units": -0.03704918032786886,
+          "l": 181,
+          "longest_losing_streak": 6,
+          "max_drawdown_units": 37.39999999999999,
+          "n": 366,
+          "net_units": -13.560000000000002,
+          "profit_factor": 0.9250828729281768,
+          "roi_pct": -3.704918032786886,
+          "trades_per_active_day": 1.0,
+          "w": 182,
+          "wilson_95_pct": [
+            45.01974823494158,
+            55.25284908903995
+          ],
+          "wr_pct": 50.137741046831955
+        },
+        "PUT": {
+          "active_days": 363,
+          "d": 1,
+          "decisive": 362,
+          "expectancy_units": 0.07118457300275483,
+          "l": 160,
+          "longest_losing_streak": 6,
+          "max_drawdown_units": 10.799999999999983,
+          "n": 363,
+          "net_units": 25.840000000000003,
+          "profit_factor": 1.1615,
+          "roi_pct": 7.118457300275483,
+          "trades_per_active_day": 1.0,
+          "w": 202,
+          "wilson_95_pct": [
+            50.65087038944428,
+            60.82951243413969
+          ],
+          "wr_pct": 55.80110497237569
+        }
+      },
+      "splits": {
+        "TEST": {
+          "active_days": 150,
+          "d": 0,
+          "decisive": 150,
+          "expectancy_units": -0.06560000000000002,
+          "l": 77,
+          "longest_losing_streak": 4,
+          "max_drawdown_units": 14.160000000000004,
+          "n": 150,
+          "net_units": -9.840000000000003,
+          "profit_factor": 0.8722077922077922,
+          "roi_pct": -6.560000000000002,
+          "trades_per_active_day": 1.0,
+          "w": 73,
+          "wilson_95_pct": [
+            40.80171192238753,
+            56.598208729260676
+          ],
+          "wr_pct": 48.666666666666664
+        },
+        "TRAIN": {
+          "active_days": 435,
+          "d": 3,
+          "decisive": 432,
+          "expectancy_units": 0.02648275862068968,
+          "l": 201,
+          "longest_losing_streak": 6,
+          "max_drawdown_units": 25.479999999999784,
+          "n": 435,
+          "net_units": 11.52000000000001,
+          "profit_factor": 1.057313432835821,
+          "roi_pct": 2.6482758620689677,
+          "trades_per_active_day": 1.0,
+          "w": 231,
+          "wilson_95_pct": [
+            48.75873478636636,
+            58.124502086319964
+          ],
+          "wr_pct": 53.47222222222222
+        },
+        "VALIDATION": {
+          "active_days": 144,
+          "d": 1,
+          "decisive": 143,
+          "expectancy_units": 0.07361111111111117,
+          "l": 63,
+          "longest_losing_streak": 5,
+          "max_drawdown_units": 8.16,
+          "n": 144,
+          "net_units": 10.600000000000009,
+          "profit_factor": 1.1682539682539683,
+          "roi_pct": 7.361111111111118,
+          "trades_per_active_day": 1.0,
+          "w": 80,
+          "wilson_95_pct": [
+            47.757282816089145,
+            63.81982908168794
+          ],
+          "wr_pct": 55.94405594405595
+        }
+      },
+      "status": "NOT_PASS_PRIMARY_SCREEN"
+    },
+    {
+      "bootstrap": {
+        "days": 36,
+        "net_95_units": [
+          4.32,
+          23.52
+        ],
+        "replicates": 2000,
+        "wr_95_pct": [
+          58.333333333333336,
+          86.11111111111111
+        ]
+      },
+      "candidate_id": "NY17-DAILY-SHOCK-FADE-60",
+      "eligible_windows": 131,
+      "excluded_windows": 512,
+      "expiry_minutes": 60,
+      "market_regime": "large completed NY trading-session move",
+      "matched_continuation_control": {
+        "active_days": 36,
+        "d": 0,
+        "decisive": 36,
+        "expectancy_units": -0.46666666666666656,
+        "l": 26,
+        "longest_losing_streak": 9,
+        "max_drawdown_units": 18.479999999999997,
+        "n": 36,
+        "net_units": -16.799999999999997,
+        "profit_factor": 0.35384615384615387,
+        "roi_pct": -46.66666666666666,
+        "trades_per_active_day": 1.0,
+        "w": 10,
+        "wilson_95_pct": [
+          15.848337940134611,
+          43.99248999739711
+        ],
+        "wr_pct": 27.77777777777778
+      },
+      "overall": {
+        "active_days": 36,
+        "d": 0,
+        "decisive": 36,
+        "expectancy_units": 0.3866666666666667,
+        "l": 10,
+        "longest_losing_streak": 3,
+        "max_drawdown_units": 3.24,
+        "n": 36,
+        "net_units": 13.920000000000002,
+        "profit_factor": 2.3920000000000003,
+        "roi_pct": 38.66666666666667,
+        "trades_per_active_day": 1.0,
+        "w": 26,
+        "wilson_95_pct": [
+          56.00751000260289,
+          84.1516620598654
+        ],
+        "wr_pct": 72.22222222222223
+      },
+      "purged": {
+        "TRAIN": 0,
+        "VALIDATION": 0
+      },
+      "raw_signal_events": 36,
+      "rule": "Completed 17:00\u201317:00 New York session absolute log return >= 1.5x mean absolute return of preceding 20 valid sessions (current excluded); fade at next 17:00 NY open; 60-minute expiry.",
+      "side_stats": {
+        "CALL": {
+          "active_days": 17,
+          "d": 0,
+          "decisive": 17,
+          "expectancy_units": 0.4682352941176471,
+          "l": 4,
+          "longest_losing_streak": 2,
+          "max_drawdown_units": 2.08,
+          "n": 17,
+          "net_units": 7.960000000000001,
+          "profit_factor": 2.99,
+          "roi_pct": 46.82352941176471,
+          "trades_per_active_day": 1.0,
+          "w": 13,
+          "wilson_95_pct": [
+            52.73820188043501,
+            90.44495567791988
+          ],
+          "wr_pct": 76.47058823529412
+        },
+        "PUT": {
+          "active_days": 19,
+          "d": 0,
+          "decisive": 19,
+          "expectancy_units": 0.31368421052631584,
+          "l": 6,
+          "longest_losing_streak": 2,
+          "max_drawdown_units": 2.0,
+          "n": 19,
+          "net_units": 5.960000000000001,
+          "profit_factor": 1.9933333333333334,
+          "roi_pct": 31.368421052631586,
+          "trades_per_active_day": 1.0,
+          "w": 13,
+          "wilson_95_pct": [
+            46.01040767532748,
+            84.63562091220773
+          ],
+          "wr_pct": 68.42105263157895
+        }
+      },
+      "splits": {
+        "TEST": {
+          "active_days": 2,
+          "d": 0,
+          "decisive": 2,
+          "expectancy_units": -0.03999999999999998,
+          "l": 1,
+          "longest_losing_streak": 1,
+          "max_drawdown_units": 1.0,
+          "n": 2,
+          "net_units": -0.07999999999999996,
+          "profit_factor": 0.92,
+          "roi_pct": -3.9999999999999982,
+          "trades_per_active_day": 1.0,
+          "w": 1,
+          "wilson_95_pct": [
+            9.453120573423075,
+            90.54687942657694
+          ],
+          "wr_pct": 50.0
+        },
+        "TRAIN": {
+          "active_days": 24,
+          "d": 0,
+          "decisive": 24,
+          "expectancy_units": 0.6000000000000001,
+          "l": 4,
+          "longest_losing_streak": 2,
+          "max_drawdown_units": 2.0,
+          "n": 24,
+          "net_units": 14.400000000000002,
+          "profit_factor": 4.6000000000000005,
+          "roi_pct": 60.00000000000001,
+          "trades_per_active_day": 1.0,
+          "w": 20,
+          "wilson_95_pct": [
+            64.14692935030095,
+            93.32132367136705
+          ],
+          "wr_pct": 83.33333333333333
+        },
+        "VALIDATION": {
+          "active_days": 10,
+          "d": 0,
+          "decisive": 10,
+          "expectancy_units": -0.039999999999999945,
+          "l": 5,
+          "longest_losing_streak": 3,
+          "max_drawdown_units": 3.16,
+          "n": 10,
+          "net_units": -0.39999999999999947,
+          "profit_factor": 0.9200000000000002,
+          "roi_pct": -3.9999999999999942,
+          "trades_per_active_day": 1.0,
+          "w": 5,
+          "wilson_95_pct": [
+            23.6593090512564,
+            76.3406909487436
+          ],
+          "wr_pct": 50.0
+        }
+      },
+      "status": "INSUFFICIENT_SAMPLE"
+    },
+    {
+      "bootstrap": {
+        "days": 9,
+        "net_95_units": [
+          -9.0,
+          2.5200000000000005
+        ],
+        "replicates": 2000,
+        "wr_95_pct": [
+          0.0,
+          66.66666666666667
+        ]
+      },
+      "candidate_id": "NY17-WEEKLY-SHOCK-FADE-60",
+      "eligible_windows": 19,
+      "excluded_windows": 82,
+      "expiry_minutes": 60,
+      "market_regime": "large completed NY trading-week move",
+      "matched_continuation_control": {
+        "active_days": 9,
+        "d": 0,
+        "decisive": 9,
+        "expectancy_units": 0.28,
+        "l": 3,
+        "longest_losing_streak": 1,
+        "max_drawdown_units": 1.08,
+        "n": 9,
+        "net_units": 2.5200000000000005,
+        "profit_factor": 1.84,
+        "roi_pct": 28.000000000000007,
+        "trades_per_active_day": 1.0,
+        "w": 6,
+        "wilson_95_pct": [
+          35.420213558039634,
+          87.9416181613089
+        ],
+        "wr_pct": 66.66666666666667
+      },
+      "overall": {
+        "active_days": 9,
+        "d": 0,
+        "decisive": 9,
+        "expectancy_units": -0.36,
+        "l": 6,
+        "longest_losing_streak": 5,
+        "max_drawdown_units": 5.08,
+        "n": 9,
+        "net_units": -3.2399999999999998,
+        "profit_factor": 0.46,
+        "roi_pct": -36.0,
+        "trades_per_active_day": 1.0,
+        "w": 3,
+        "wilson_95_pct": [
+          12.05838183869109,
+          64.57978644196037
+        ],
+        "wr_pct": 33.333333333333336
+      },
+      "purged": {
+        "TRAIN": 0,
+        "VALIDATION": 0
+      },
+      "raw_signal_events": 9,
+      "rule": "Completed Sunday 17:00\u2013Friday 17:00 New York session absolute log return >= 1.0x mean absolute return of preceding 13 valid weeks (current excluded); fade at next Sunday 17:00 NY open; 60-minute expiry.",
+      "side_stats": {
+        "CALL": {
+          "active_days": 4,
+          "d": 0,
+          "decisive": 4,
+          "expectancy_units": -0.52,
+          "l": 3,
+          "longest_losing_streak": 2,
+          "max_drawdown_units": 2.08,
+          "n": 4,
+          "net_units": -2.08,
+          "profit_factor": 0.3066666666666667,
+          "roi_pct": -52.0,
+          "trades_per_active_day": 1.0,
+          "w": 1,
+          "wilson_95_pct": [
+            4.558726080970055,
+            69.93581574175981
+          ],
+          "wr_pct": 25.0
+        },
+        "PUT": {
+          "active_days": 5,
+          "d": 0,
+          "decisive": 5,
+          "expectancy_units": -0.23199999999999998,
+          "l": 3,
+          "longest_losing_streak": 3,
+          "max_drawdown_units": 3.0,
+          "n": 5,
+          "net_units": -1.16,
+          "profit_factor": 0.6133333333333334,
+          "roi_pct": -23.199999999999996,
+          "trades_per_active_day": 1.0,
+          "w": 2,
+          "wilson_95_pct": [
+            11.762077423264783,
+            76.9275718723987
+          ],
+          "wr_pct": 40.0
+        }
+      },
+      "splits": {
+        "TEST": {
+          "active_days": 0,
+          "d": 0,
+          "decisive": 0,
+          "expectancy_units": null,
+          "l": 0,
+          "longest_losing_streak": 0,
+          "max_drawdown_units": 0.0,
+          "n": 0,
+          "net_units": 0.0,
+          "profit_factor": null,
+          "roi_pct": null,
+          "trades_per_active_day": 0.0,
+          "w": 0,
+          "wilson_95_pct": null,
+          "wr_pct": null
+        },
+        "TRAIN": {
+          "active_days": 5,
+          "d": 0,
+          "decisive": 5,
+          "expectancy_units": -0.23199999999999998,
+          "l": 3,
+          "longest_losing_streak": 2,
+          "max_drawdown_units": 2.08,
+          "n": 5,
+          "net_units": -1.16,
+          "profit_factor": 0.6133333333333334,
+          "roi_pct": -23.199999999999996,
+          "trades_per_active_day": 1.0,
+          "w": 2,
+          "wilson_95_pct": [
+            11.762077423264783,
+            76.9275718723987
+          ],
+          "wr_pct": 40.0
+        },
+        "VALIDATION": {
+          "active_days": 4,
+          "d": 0,
+          "decisive": 4,
+          "expectancy_units": -0.52,
+          "l": 3,
+          "longest_losing_streak": 3,
+          "max_drawdown_units": 3.0,
+          "n": 4,
+          "net_units": -2.08,
+          "profit_factor": 0.3066666666666667,
+          "roi_pct": -52.0,
+          "trades_per_active_day": 1.0,
+          "w": 1,
+          "wilson_95_pct": [
+            4.558726080970055,
+            69.93581574175981
+          ],
+          "wr_pct": 25.0
+        }
+      },
+      "status": "INSUFFICIENT_SAMPLE"
+    }
+  ],
+  "captured_at_utc": "2026-11-15T08:01:36.920511+00:00",
+  "data": {
+    "continuity_segments": 3644,
+    "duplicate_timestamp_rows": 0,
+    "first_utc": "2024-01-01T22:00:00+00:00",
+    "gap_intervals": 3643,
+    "invalid_rows": 0,
+    "largest_missing_interval_minutes": 2944,
+    "last_utc": "2026-11-13T21:59:00+00:00",
+    "missing_m1_minutes": 438798,
+    "raw_csv_sha256": "1ab0157ed2507ce4e62bede90376736dbbe8ec271b0543e28752f37a1d7229f4",
+    "raw_rows": 1068882,
+    "valid_unique_rows": 1068882
+  },
+  "execution_caveat": "Dukascopy EUR/USD BID is not Pocket Option executable pricing.",
+  "expiry_minutes": 60,
+  "payout": 0.92,
+  "preliminary_leads": [],
+  "protocol": "research-artifacts/fixing-reversal-discovery-protocol-v1.md",
+  "protocol_sha256": "95c1c5afc5f79011176cf4de39b429ccd63bb9f37ca03c46734e1ed8ed7e3f0a",
+  "script_sha256": "568012494b65a1b1aa591088b3446c96999264b5fceda26673f727565c642606",
+  "split_boundaries": {
+    "train_end_exclusive": "2025-09-20",
+    "validation_end_exclusive": "2026-04-17"
+  }
+}

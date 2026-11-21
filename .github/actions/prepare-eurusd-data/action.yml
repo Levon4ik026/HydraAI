@@ -1,0 +1,48 @@
+name: Prepare cached EURUSD M1 BID research data
+description: Restore a verified shared Dukascopy EURUSD M1 history cache or download it once.
+runs:
+  using: composite
+  steps:
+    - name: Restore shared EURUSD M1 cache
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: download/eurusd-m1-bid-2024-01-01-2026-11-09.csv
+        key: eurusd-m1-bid-2024-01-01-2026-11-09-v1-${{ runner.os }}
+    - name: Set up Node.js
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Download EURUSD M1 BID history
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to 2026-11-09 -t m1 -f csv -v
+    - name: Verify cached/downloaded raw data
+      shell: bash
+      run: |
+        python - <<'PY'
+        import csv
+        from pathlib import Path
+        p=Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.csv")
+        if not p.exists(): raise SystemExit("Dukascopy CSV missing")
+        with p.open(newline="",encoding="utf-8-sig") as f:
+            r=csv.DictReader(f); rows=list(r)
+        if len(rows) != 1_061_819 or not {"timestamp","open","high","low","close"}.issubset(r.fieldnames or []):
+            raise SystemExit(f"Frozen EURUSD snapshot mismatch: expected 1,061,819 rows, got {len(rows):,}")
+        import hashlib
+        digest=hashlib.sha256(p.read_bytes()).hexdigest()
+        expected_sha256="4a084d3af598342e2b55e52bb79558825797c64410b875ff8e83ec019972decd"
+        if digest != expected_sha256:
+            raise SystemExit(f"Frozen EURUSD snapshot SHA-256 mismatch: {digest} != {expected_sha256}")
+        manifest=Path("download/eurusd-m1-bid-2024-01-01-2026-11-09.manifest.txt")
+        manifest.write_text(
+            "dataset_id=EURUSD_M1_BID_DUKASCOPY_2024-01-01_to-2026-11-09_capture_2026-11-12_v1" + chr(10)
+            + f"rows={len(rows)}" + chr(10) + f"sha256={digest}" + chr(10),
+            encoding="utf-8"
+        )
+        parsed=dict(line.split("=",1) for line in manifest.read_text(encoding="utf-8").splitlines())
+        if parsed.get("rows") != str(len(rows)) or parsed.get("sha256") != digest:
+            raise SystemExit("Snapshot manifest round-trip validation failed")
+        print(f"Verified frozen snapshot: rows={len(rows):,}; sha256={digest}; cache_hit=${{ steps.cache.outputs.cache-hit }}")
+        PY

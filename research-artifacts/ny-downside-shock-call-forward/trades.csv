@@ -1,0 +1,2 @@
+prior_session_utc,entry_utc,prior20_mean_abs_log_return,shock_log_return,session_coverage,outcome
+2026-11-12T23:00:00+00:00,2026-11-15T23:00:00+00:00,0.00287840925499,-0.00296234776427,0.999275,LOSS

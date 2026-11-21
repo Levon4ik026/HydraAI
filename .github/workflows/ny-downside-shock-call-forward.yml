@@ -1,0 +1,81 @@
+name: NY downside-shock CALL forward-only audit
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 10 * * *"
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/ny_downside_shock_call_forward.py"
+      - "research-artifacts/NY_DOWNSIDE_SHOCK_CALL_FORWARD_PREREG_V1.md"
+      - ".github/workflows/ny-downside-shock-call-forward.yml"
+permissions:
+  contents: write
+concurrency:
+  group: hydra-ny-downside-shock-call-forward
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hydra/research-validation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Set latest completed UTC date
+        shell: bash
+        run: |
+          END_DATE=$(date -u +%F)
+          echo "END_DATE=$END_DATE" >> "$GITHUB_ENV"
+      - name: Download EURUSD M1 BID
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
+      - name: Verify data
+        shell: bash
+        run: |
+          FILE=$(find download -maxdepth 1 -type f -name "eurusd-m1-bid-2024-01-01-*.csv" -printf '%f\n' | sort | tail -n 1)
+          test -n "$FILE"
+          test -s "download/$FILE"
+          python - "$FILE" <<'PY'
+          import csv,sys
+          from pathlib import Path
+          p=Path("download")/sys.argv[1]
+          with p.open(newline="",encoding="utf-8-sig") as f:
+              r=csv.DictReader(f)
+              cols={x.lower() for x in (r.fieldnames or [])}
+              if not {"timestamp","open","high","low","close"}.issubset(cols): raise SystemExit(f"Unexpected columns: {r.fieldnames}")
+              n=sum(1 for _ in r)
+          if n<100000: raise SystemExit(f"Too few rows: {n}")
+          print(f"Verified {n:,} rows")
+          PY
+          echo "DATA_FILE=download/$FILE" >> "$GITHUB_ENV"
+      - name: Run frozen audit
+        run: python research/ny_downside_shock_call_forward.py --data "$DATA_FILE"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-ny-downside-shock-call-forward-${{ github.run_id }}
+          path: |
+            research-artifacts/ny-downside-shock-call-forward/report.md
+            research-artifacts/ny-downside-shock-call-forward/trades.csv
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish report on research branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research-artifacts/ny-downside-shock-call-forward/report.md research-artifacts/ny-downside-shock-call-forward/trades.csv
+          if git diff --cached --quiet; then
+            echo "No report changes."
+          else
+            git commit -m "research: publish NY downside-shock CALL forward audit"
+            git fetch origin hydra/research-validation
+            git rebase origin/hydra/research-validation
+            git push origin HEAD:hydra/research-validation
+          fi

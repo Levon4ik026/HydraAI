@@ -1,0 +1,121 @@
+name: Hydra shared EURUSD M5 feature matrix
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/build_m5_feature_matrix.py"
+      - "research/reproduce_m5_bb_williams_adx.py"
+      - "research/universal_profile_engine.py"
+      - "research/universal_profile_parity_audit.py"
+      - "research/matched_control_block_bootstrap.py"
+      - "research/matched_control_block_bootstrap_v3.py"
+      - "research/matched_control_block_bootstrap_v4.py"
+      - "research/candidate_profile_config_v1.json"
+      - "research/candidate_profile_config_v2.json"
+      - ".github/workflows/research-feature-matrix.yml"
+      - ".github/actions/prepare-eurusd-data/action.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: ./.github/actions/prepare-eurusd-data
+      - name: Build causal M5 feature matrix
+        run: |
+          python research/build_m5_feature_matrix.py \
+            --data download/eurusd-m1-bid-2024-01-01-2026-11-09.csv \
+            --out research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+      - name: Run universal candidate situation profiles
+        run: |
+          python research/universal_profile_engine.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v1.json \
+            --out research-artifacts/universal-candidate-profiles.md
+      - name: Upload universal profile report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-universal-candidate-profiles-v1
+          path: research-artifacts/universal-candidate-profiles.md
+          if-no-files-found: error
+      - name: Run legacy timestamp parity audit for blocked cohorts
+        run: |
+          python research/universal_profile_parity_audit.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v1.json \
+            --out research-artifacts/universal-profile-parity-audit.md
+      - name: Upload legacy parity audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-universal-profile-parity-audit-v1
+          path: research-artifacts/universal-profile-parity-audit.md
+          if-no-files-found: error
+      - name: Run current-snapshot v2 candidate profiles
+        run: |
+          python research/universal_profile_engine.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v2.json \
+            --out research-artifacts/universal-candidate-profiles-v2.md
+      - name: Upload current-snapshot v2 profile report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-universal-candidate-profiles-v2
+          path: research-artifacts/universal-candidate-profiles-v2.md
+          if-no-files-found: error
+      - name: Run matched controls and calendar-day block bootstrap
+        run: |
+          python research/matched_control_block_bootstrap.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v2.json \
+            --out research-artifacts/matched-control-block-bootstrap-v2.md
+      - name: Run v3 cross-segment matched controls and calendar-day block bootstrap
+        run: |
+          python research/matched_control_block_bootstrap_v3.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v2.json \
+            --out research-artifacts/matched-control-block-bootstrap-v3.md
+      - name: Upload v3 matched-control bootstrap report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-matched-control-block-bootstrap-v3
+          path: research-artifacts/matched-control-block-bootstrap-v3.md
+          if-no-files-found: error
+      - name: Run v4 date-level matched controls and calendar-day block bootstrap
+        run: |
+          python research/matched_control_block_bootstrap_v4.py \
+            --matrix research-artifacts/eurusd-m5-causal-features-v1.csv.gz \
+            --manifest research-artifacts/eurusd-m5-causal-features-v1.manifest.json \
+            --config research/candidate_profile_config_v2.json \
+            --out research-artifacts/matched-control-block-bootstrap-v4.md
+      - name: Upload v4 date-matched bootstrap report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-matched-control-block-bootstrap-v4
+          path: research-artifacts/matched-control-block-bootstrap-v4.md
+          if-no-files-found: error
+      - name: Upload matched-control bootstrap report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-matched-control-block-bootstrap-v2
+          path: research-artifacts/matched-control-block-bootstrap-v2.md
+          if-no-files-found: error
+      - name: Upload shared matrix and manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-eurusd-m5-causal-feature-matrix-v1
+          path: |
+            research-artifacts/eurusd-m5-causal-features-v1.csv.gz
+            research-artifacts/eurusd-m5-causal-features-v1.manifest.json
+          if-no-files-found: error

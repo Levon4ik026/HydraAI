@@ -1,0 +1,3 @@
+Initial fifth-wave EURUSD research run requested 2026-11-15 UTC. Update this file on later automation runs to trigger the research-only workflow.
+Automation cycle requested 2026-11-16T07:24:43Z.
+Automation cycle requested 2026-11-17T07:36:55Z.
