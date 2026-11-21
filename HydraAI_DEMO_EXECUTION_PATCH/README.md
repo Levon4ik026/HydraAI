@@ -6,6 +6,7 @@ Separate patch package. Existing research branch and original C:\HydraAI_Desktop
 - Connects the existing five-candidate forward monitor to the first live M1 candle after a completed M5 trigger.
 - Uses completed candles for regime classification and outcome scoring; live M1 is only the next-minute entry reference.
 - Runs broker I/O in a separate worker process, not in the PySide6 GUI thread.
+- Strategy selection is filtered by the live expiry durations Pocket Option currently advertises; unsupported 30/60-minute candidates are not selected for execution.
 - Reads EURUSD metadata from Pocket Option updateAssets. Metadata is trusted only when that event was seen within 45 seconds.
 - Checks active status, EURUSD identity, non-OTC, live payout >= 92%, and broker-listed expiry.
 - Fixed stake 1, one unresolved position at a time, no martingale, no blind retry.
