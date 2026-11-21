@@ -1,0 +1,37 @@
+name: HydraAI DEMO patch validation
+
+on:
+  push:
+    branches:
+      - hydra/demo-execution-v1-20261121
+    paths:
+      - "HydraAI_DEMO_EXECUTION_PATCH/**"
+      - ".github/workflows/hydra-demo-patch-check.yml"
+  pull_request:
+    branches:
+      - hydra/stabilization
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Compile all patch Python files
+        run: |
+          python -m py_compile \
+            HydraAI_DEMO_EXECUTION_PATCH/main.py \
+            HydraAI_DEMO_EXECUTION_PATCH/demo_execution_worker.py \
+            HydraAI_DEMO_EXECUTION_PATCH/verify_demo_order.py \
+            HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/__init__.py \
+            HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/engine.py \
+            HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/adaptive.py \
+            HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/runtime.py \
+            HydraAI_DEMO_EXECUTION_PATCH/hydra_demo/pocket_option_demo.py
+      - name: Run fail-closed execution gate tests
+        env:
+          PYTHONPATH: HydraAI_DEMO_EXECUTION_PATCH
+        run: |
+          python -m unittest discover -s HydraAI_DEMO_EXECUTION_PATCH/tests -p "test_execution_gate.py" -v
