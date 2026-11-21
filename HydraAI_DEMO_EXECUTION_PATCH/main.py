@@ -102,6 +102,7 @@ class HydraWindow(QMainWindow):
         self.demo_autotrade_enabled = False
         self.execution_stdout_buffer = ''
         self.last_live_signal_minute = None
+        self.demo_eligible_candidates = None
         self.build_ui(); self.apply_style()
         self.timer=QTimer(self); self.timer.timeout.connect(self.refresh_data); self.timer.start(4000); self.refresh_data(); self.check_ollama()
     def build_ui(self):
@@ -184,7 +185,7 @@ class HydraWindow(QMainWindow):
                                 self.last_adaptive_result = None
                                 self.adaptive_status.set('WAIT', f'Для расчёта всех пяти кандидатов нужно минимум 275 завершённых свечей; сейчас {len(demo_candles)}')
                             else:
-                                adaptive = self.candidate_monitor.process(demo_candles, feed_ok=True, completed_candles=demo_candles, allow_new_signals=False)
+                                adaptive = self.candidate_monitor.process(demo_candles, feed_ok=True, completed_candles=demo_candles, allow_new_signals=False, eligible_candidates=self.demo_eligible_candidates if self.demo_autotrade_enabled else None)
                                 self.last_adaptive_result = adaptive
                                 selected = adaptive.get('selected_candidate')
                                 regime = adaptive.get('regime', 'UNKNOWN')
@@ -370,7 +371,8 @@ class HydraWindow(QMainWindow):
                                    float(live_candle["close"]))
             adaptive = self.candidate_monitor.process(
                 demo_completed + [live_demo], feed_ok=True,
-                completed_candles=demo_completed, allow_new_signals=True
+                completed_candles=demo_completed, allow_new_signals=True,
+                eligible_candidates=self.demo_eligible_candidates if self.demo_autotrade_enabled else None
             )
             self.last_adaptive_result = adaptive
             selected = adaptive.get("selected_candidate")
@@ -432,6 +434,7 @@ class HydraWindow(QMainWindow):
         env.insert("HYDRA_INSTRUMENT", "EURUSD")
         env.insert("HYDRA_ALLOW_OTC", "0")
         self.execution_worker.setProcessEnvironment(env)
+        self.demo_eligible_candidates = set()
         if getattr(sys, "frozen", False):
             worker_exe = BASE / "HydraDemoExecution" / "HydraDemoExecution.exe"
             if not worker_exe.exists():
@@ -463,6 +466,20 @@ class HydraWindow(QMainWindow):
             if line.startswith("HYDRA_EXECUTION|"):
                 try:
                     payload = json.loads(line.split("|", 1)[1])
+                    market = payload.get("market")
+                    if isinstance(market, dict):
+                        expiry_seconds = set(market.get("timeframes_seconds", []))
+                        if market.get("status") == "ACTIVE":
+                            expiry_by_candidate = {
+                                "CAND-001": 300, "CAND-008": 1800,
+                                "CAND-010": 3600, "CAND-012": 300, "CAND-014": 1800
+                            }
+                            self.demo_eligible_candidates = {
+                                candidate_id for candidate_id, expiry in expiry_by_candidate.items()
+                                if expiry in expiry_seconds
+                            }
+                        else:
+                            self.demo_eligible_candidates = set()
                     self.log("DEMO исполнитель: " + str(payload))
                     if payload.get("status") == "STOPPED":
                         self.demo_autotrade_enabled = False
@@ -479,6 +496,7 @@ class HydraWindow(QMainWindow):
 
     def execution_finished(self, code, status):
         self.demo_autotrade_enabled = False
+        self.demo_eligible_candidates = None
         self.demo_btn.setText("DEMO АВТО: ВЫКЛ")
         self.log(f"DEMO исполнитель завершён; code={code}, status={status}.")
 
