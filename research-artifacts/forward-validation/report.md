@@ -1,7 +1,7 @@
 # HydraAI — three-candidate prospective forward validation
 
-- Captured UTC: 2026-11-21T07:22:26.856123+00:00
-- Branch / code commit: hydra/research-validation / cf1b390086678a311f9f85784e6aa9feba3b56d6
+- Captured UTC: 2026-11-22T07:07:52.855655+00:00
+- Branch / code commit: hydra/research-validation / eafc7d717282de874dbef8401d3c94e5fac74935
 - Forward cohort: 2026-11-10 through requested UTC date 2026-11-20
 - Actual forward M1 range: 2026-11-10T00:00:00+00:00 — 2026-11-20T21:59:00+00:00
 - Forward M1 rows: 12,819; observed UTC dates: 10
@@ -114,8 +114,8 @@
 
 ## Reproducibility
 
-- Workflow run ID: 44879924801
-- Workflow URL: https://github.com/Levon4ik026/HydraAI/actions/runs/44879924801
+- Workflow run ID: 44996799567
+- Workflow URL: https://github.com/Levon4ik026/HydraAI/actions/runs/44996799567
 - Machine-readable manifest: manifest.json.
 - Trade-level outcomes: trades.csv.
 - Validated warm-up, forward-only, combined M1 files, and causal M5 matrix are retained in the workflow artifact.
