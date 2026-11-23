@@ -8,8 +8,8 @@ import demo_execution_worker as worker
 from demo_execution_worker import candidate_rule_rejection, market_rejection, signal_rejection, verification_rejection
 
 class ExecutionGateTests(unittest.TestCase):
-    def test_cand010_is_blocked_until_exact_breakout_trigger_is_confirmed(self):
-        self.assertIn("exact Previous Day Low Breakout CALL trigger", candidate_rule_rejection("CAND-010"))
+    def test_cand010_downside_breakout_rule_is_no_longer_ambiguous_or_blocked(self):
+        self.assertIsNone(candidate_rule_rejection("CAND-010"))
         self.assertIsNone(candidate_rule_rejection("CAND-001"))
 
     def test_closed_market_is_blocked(self):
