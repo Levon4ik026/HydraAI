@@ -37,6 +37,41 @@ class CandidateStrategyTests(unittest.TestCase):
         self.assertTrue(all(s.direction == "CALL" for s in signals))
         self.assertTrue(all(s.expiry_minutes == 5 for s in signals))
 
+    def test_cand010_previous_day_low_breakdown_is_put_60m(self):
+        start = datetime(2026, 1, 5, tzinfo=timezone.utc)
+        m1 = []
+        price = 1.1000
+        total_minutes = 2 * 24 * 60
+        breakout_minute = 24 * 60 + 5 * 60
+        for minute in range(total_minutes):
+            ts = start + timedelta(minutes=minute)
+            op = price
+            if minute < 24 * 60:
+                # Previous UTC day: fixed low is 1.0990.
+                close = 1.1000
+                low = 1.0990
+                high = 1.1010
+            elif minute < breakout_minute:
+                close = 1.1000
+                low = 1.0995
+                high = 1.1005
+            elif minute < breakout_minute + 5:
+                # One completed M5 candle closes through yesterday's low.
+                close = 1.0985
+                low = min(op, close) - 0.0001
+                high = max(op, close) + 0.0001
+            else:
+                close = 1.0985
+                low = 1.0983
+                high = 1.0987
+            m1.append(Candle(ts, op, high, low, close))
+            price = close
+
+        signals = [s for s in candidate_signals(m1) if s.candidate_id == "CAND-010"]
+        self.assertTrue(signals, "a completed M5 close below the prior UTC-day low must signal")
+        self.assertTrue(all(s.direction == "PUT" for s in signals))
+        self.assertTrue(all(s.expiry_minutes == 60 for s in signals))
+
 
 if __name__ == "__main__":
     unittest.main()
