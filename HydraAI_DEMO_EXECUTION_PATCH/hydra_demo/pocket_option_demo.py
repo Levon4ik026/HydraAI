@@ -26,8 +26,12 @@ class PocketOptionDemoAdapter:
         self.storage = None
         self.assets = None
         self._asset_update_at = None
+        self._opened_deals_event = None
+        self._opened_deals_snapshot = None
         self._connected = False
         self._position_unresolved = False
+        self._opened_deals_event = None
+        self._opened_deals_snapshot = None
         self._order_lock = asyncio.Lock()
 
     async def connect(self):
@@ -93,8 +97,34 @@ class PocketOptionDemoAdapter:
             await client.wait_for_authorization(timeout=30)
             if not client.is_authorized:
                 raise DemoAdapterError("DEMO authorization was not confirmed")
+
+            # MemoryDealsStorage starts empty. Request the broker's current
+            # opened-deals snapshot and require an explicit response before
+            # allowing any order; a local empty cache is not proof of zero
+            # account positions.
+            opened_deals_event = asyncio.Event()
+            opened_deals_snapshot = {"items": None}
+
+            async def on_opened_deals(items):
+                if not isinstance(items, list):
+                    opened_deals_snapshot["items"] = None
+                else:
+                    opened_deals_snapshot["items"] = list(items)
+                opened_deals_event.set()
+
+            client.on.deals_update_opened(on_opened_deals)
             # Same construction/order as the user's proven test script.
             storage = MemoryDealsStorage(client)
+            await client.emit.deals_update_opened()
+            try:
+                await asyncio.wait_for(opened_deals_event.wait(), timeout=10)
+            except asyncio.TimeoutError as exc:
+                raise DemoAdapterError(
+                    "broker did not confirm the current opened-deals list; "
+                    "one-position safety check cannot be completed"
+                ) from exc
+            if opened_deals_snapshot["items"] is None:
+                raise DemoAdapterError("broker returned an invalid opened-deals snapshot")
         except Exception:
             try:
                 await client.disconnect()
@@ -104,6 +134,8 @@ class PocketOptionDemoAdapter:
         self.client = client
         self.storage = storage
         self.assets = assets
+        self._opened_deals_event = opened_deals_event
+        self._opened_deals_snapshot = opened_deals_snapshot["items"]
         self._connected = True
         return True
 
@@ -147,6 +179,23 @@ class PocketOptionDemoAdapter:
             "updated_at": self._asset_update_at.isoformat(),
         }
 
+    async def get_open_positions(self):
+        """Refresh and return the broker-confirmed account-wide open-deals list."""
+        if not self._connected or self.client is None or self._opened_deals_event is None:
+            raise DemoAdapterError("broker open-position state is not initialized")
+        self._opened_deals_event.clear()
+        self._opened_deals_snapshot = None
+        await self.client.emit.deals_update_opened()
+        try:
+            await asyncio.wait_for(self._opened_deals_event.wait(), timeout=10)
+        except asyncio.TimeoutError as exc:
+            raise DemoAdapterError(
+                "broker did not refresh opened deals; refusing to assume zero positions"
+            ) from exc
+        if not isinstance(self._opened_deals_snapshot, list):
+            raise DemoAdapterError("broker opened-deals response is invalid")
+        return list(self._opened_deals_snapshot)
+
     async def open_and_wait(self, direction: str, expiry_minutes: int, payout: float | None = None):
         if os.getenv("HYDRA_DEMO_AUTOTRADE") != "1":
             raise DemoAdapterError("orders disabled: explicit HYDRA_DEMO_AUTOTRADE=1 is required")
@@ -171,6 +220,12 @@ class PocketOptionDemoAdapter:
         async with self._order_lock:
             if self._position_unresolved:
                 raise DemoAdapterError("previous trade unresolved; one-position lock remains engaged")
+            open_positions = await self.get_open_positions()
+            if open_positions:
+                raise DemoAdapterError(
+                    f"broker confirms {len(open_positions)} existing open position(s); "
+                    "one-position limit blocks a new order"
+                )
 
             from pocket_option.models import Asset, DealAction
             action = DealAction.CALL if direction == "CALL" else DealAction.PUT
