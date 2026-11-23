@@ -26,6 +26,16 @@ def load_state() -> dict:
     state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     if not isinstance(state, dict) or not isinstance(state.get("signals"), dict):
         raise RuntimeError("execution state is corrupt; refusing to trade")
+    # A process crash can leave a persisted SUBMITTING record before the
+    # exception handler marks it UNRESOLVED. Never clear that evidence on a
+    # new UTC day: broker history must be reconciled manually first.
+    unresolved = [
+        key for key, item in state["signals"].items()
+        if isinstance(item, dict) and item.get("status") in {"SUBMITTING", "UNRESOLVED"}
+    ]
+    if unresolved:
+        state["halted"] = True
+        state["halt_reason"] = "persisted order outcome requires manual broker-history reconciliation"
     today = datetime.now(timezone.utc).date().isoformat()
     if state.get("date_utc") != today and not state.get("halted"):
         state = {"date_utc": today, "daily_loss_units": 0.0, "signals": {}, "halted": False}
