@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 import demo_execution_worker as worker
-from demo_execution_worker import market_rejection, signal_rejection, verification_rejection
+from demo_execution_worker import candidate_rule_rejection, market_rejection, signal_rejection, verification_rejection
 
 class ExecutionGateTests(unittest.TestCase):
     def test_closed_market_is_blocked(self):
@@ -59,5 +59,10 @@ class ExecutionGateTests(unittest.TestCase):
                   "deal_id":"demo-123","asset":"EURUSD","is_demo":True,
                   "closed":True,"amount":1,"expiry_seconds":300}
         self.assertIn("older than 30 days", verification_rejection(record, now))
+
+
+    def test_cand010_is_blocked_until_approved_call_rule_exists(self):
+        self.assertIn("Previous Day Low Breakout CALL", candidate_rule_rejection("CAND-010"))
+        self.assertIsNone(candidate_rule_rejection("CAND-001"))
 
 if __name__ == "__main__": unittest.main()
