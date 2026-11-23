@@ -1,0 +1,26 @@
+name: Hydra DEMO safety tests
+
+on:
+  push:
+    branches:
+      - hydra/adaptive-demo-release-20261123
+  pull_request:
+    branches:
+      - hydra/demo-execution-v1-20261121
+
+jobs:
+  safety-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: HydraAI_DEMO_EXECUTION_PATCH
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile Python modules
+        run: |
+          python -m py_compile main.py demo_execution_worker.py verify_demo_order.py hydra_demo/engine.py hydra_demo/adaptive.py hydra_demo/runtime.py hydra_demo/pocket_option_demo.py
+      - name: Run DEMO execution safety tests
+        run: python -m unittest discover -s tests -p "test_execution_gate.py" -v
