@@ -59,4 +59,4 @@ Source-level safety tests pass, but the following release blockers remain:
 - This repository folder is an overlay patch, not a complete standalone HydraAI distribution. The target integrated project must already contain its base GUI/feed modules and dependencies.
 - Broker connectivity, account-wide open-position refresh, the explicit one-trade verification, and a Windows EXE build have not been exercised in the user's DEMO environment.
 
-Do not run verify_demo_order.py or enable DEMO auto execution until the strategy-rule blockers and the broker/Windows checks above are resolved. REAL and OTC remain prohibited.
+Do not run verify_demo_order.py or enable DEMO auto execution until the integrated Windows project, broker connectivity, and account-wide open-position checks have been verified. CAND-010's rule is now explicit and covered by a synthetic test, but it is not forward-validated. REAL and OTC remain prohibited.
