@@ -5,7 +5,7 @@ from hydra_demo.engine import Candle, candidate_signals
 
 
 class CandidateStrategyTests(unittest.TestCase):
-    def test_cand012_bearish_cross_uses_approved_inverse_call(self):
+    def test_cand012_bearish_cross_uses_approved_put(self):
         start = datetime(2026, 1, 5, tzinfo=timezone.utc)
         m1 = []
         previous = 1.1000
