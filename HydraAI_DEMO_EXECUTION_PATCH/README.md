@@ -52,9 +52,10 @@ The worker EXE must be at HydraDemoExecution\HydraDemoExecution.exe under the Hy
 
 Source-level safety tests pass, but the following release blockers remain:
 
-- Frozen candidate directions: CAND-008 weekly-low sweep/reclaim → inverse PUT, 30m; CAND-010 previous UTC-day low breakdown → inverse CALL, 60m; CAND-012 bearish EMA20/EMA50 cross with close below EMA20 → inverse CALL, 5m.
+- Frozen candidate directions: CAND-008 weekly-low sweep/reclaim → PUT, 30m; CAND-010 completed M5 close crossing below the previous completed UTC-day low → PUT, 60m; CAND-012 bearish EMA20/EMA50 cross with close below EMA20 → CALL, 5m. A reclaim above the prior-day low is a distinct reversal setup and is not mixed into CAND-010.
 - The adaptive selector requires at least 100 forward outcomes per candidate in the matching regime, positive expectancy, a 95% Wilson lower bound above break-even, and drawdown <= 3 units. The patch does not include a validated seed-statistics file, so a fresh install will remain WAIT until enough forward data has accumulated.
 - The user confirmed Pocket Option supports 30- and 60-minute expiries (and longer). Keep a runtime check against live EURUSD expiry availability as a final safeguard.
+- CAND-010 direction was corrected from CALL to PUT for the conventional downside-breakout continuation rule; synthetic coverage asserts direction and 60-minute expiry. This is a code/specification decision, not proof of profitability. The prior CALL label was inconsistent with the actual downside-break trigger.
 - This repository folder is an overlay patch, not a complete standalone HydraAI distribution. The target integrated project must already contain its base GUI/feed modules and dependencies.
 - Broker connectivity, account-wide open-position refresh, the explicit one-trade verification, and a Windows EXE build have not been exercised in the user's DEMO environment.
 
