@@ -357,7 +357,6 @@ class HydraWindow(QMainWindow):
                 return
             if self.last_live_signal_minute == live_time:
                 return
-            self.last_live_signal_minute = live_time
             recent = completed[-200:]
             if any((b["time"] - a["time"]).total_seconds() != 60 for a, b in zip(recent[:-1], recent[1:])):
                 return
@@ -375,6 +374,9 @@ class HydraWindow(QMainWindow):
                 eligible_candidates=self.demo_eligible_candidates if self.demo_autotrade_enabled else None
             )
             self.last_adaptive_result = adaptive
+            # Mark this minute only after the complete validation + evaluation
+            # path succeeded. A temporary gap/exception must be retryable.
+            self.last_live_signal_minute = live_time
             selected = adaptive.get("selected_candidate")
             regime = adaptive.get("regime", "UNKNOWN")
             self.adaptive_status.set(
@@ -532,6 +534,15 @@ class HydraWindow(QMainWindow):
             if tick_time.tzinfo is None or minute.tzinfo is None:
                 raise ValueError("LIVE timestamps must include timezone")
 
+            # Ignore delayed/out-of-order websocket frames so an older tick
+            # cannot roll the displayed price or live candle backwards.
+            previous_tick = getattr(self, "last_live_tick_time", None)
+            if previous_tick is not None and tick_time.astimezone(timezone.utc) < previous_tick:
+                return
+            previous_candle = getattr(self, "live_candle", None)
+            if previous_candle is not None and minute.astimezone(timezone.utc) < previous_candle["time"].astimezone(timezone.utc):
+                return
+            self.last_live_tick_time = tick_time.astimezone(timezone.utc)
             self.live_price = price
             self.live_candle = candle
 
