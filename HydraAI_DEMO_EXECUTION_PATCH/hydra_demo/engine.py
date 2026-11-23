@@ -127,6 +127,51 @@ def _atr_series(m5:list[Candle], period:int=14)->list[Optional[float]]:
         if i>=period-1: out[i]=sum(trs[i-period+1:i+1])/period
     return out
 
+def _complete_utc_day_lows(daily: dict[date, list[Candle]]) -> dict[date, float]:
+    """Return lows only for fully observed FX trading days (Mon-Fri).
+
+    Mon-Thu require all 288 M5 bars. Friday ends at 17:00 New York time,
+    with the last expected M5 candle starting five minutes before that close.
+    Weekend/holiday/partial days are excluded rather than treated as complete.
+    """
+    complete = {}
+    for day, bars in daily.items():
+        if day.weekday() > 4:
+            continue
+        start = datetime.combine(day, time(0, 0), timezone.utc)
+        if day.weekday() < 4:
+            expected_last = start + timedelta(days=1, minutes=-5)
+        else:
+            ny_close = datetime.combine(day, time(17, 0), NY)
+            expected_last = ny_close.astimezone(timezone.utc) - timedelta(minutes=5)
+        expected_count = int((expected_last - start).total_seconds() // 300) + 1
+        ordered = sorted(bars, key=lambda x: x.timestamp)
+        if len(ordered) != expected_count:
+            continue
+        if ordered[0].timestamp != start or ordered[-1].timestamp != expected_last:
+            continue
+        if any((b.timestamp - a.timestamp).total_seconds() != 300
+               for a, b in zip(ordered, ordered[1:])):
+            continue
+        complete[day] = min(x.low for x in ordered)
+    return complete
+
+
+def _complete_utc_week_lows(daily_lows: dict[date, float]) -> dict[tuple[int, int], float]:
+    """Use a UTC week's low only when all five FX weekdays are complete."""
+    by_week = {}
+    for day, low in daily_lows.items():
+        iso = day.isocalendar()
+        by_week.setdefault((iso.year, iso.week), {})[day] = low
+    complete = {}
+    for week, days in by_week.items():
+        monday = date.fromisocalendar(week[0], week[1], 1)
+        weekdays = [monday + timedelta(days=i) for i in range(5)]
+        if all(day in days for day in weekdays):
+            complete[week] = min(days[day] for day in weekdays)
+    return complete
+
+
 def candidate_signals(candles:list[Candle])->list[Signal]:
     """Evaluate all five candidates on completed candles only; no future candle is used for a trigger."""
     if len(candles)<60:return []
@@ -153,8 +198,8 @@ def candidate_signals(candles:list[Candle])->list[Signal]:
     for c in m5:
         d=c.timestamp.date(); iso=c.timestamp.isocalendar(); wk=(iso.year,iso.week)
         daily.setdefault(d,[]).append(c); weekly.setdefault(wk,[]).append(c)
-    day_low={d:min(x.low for x in arr) for d,arr in daily.items()}
-    week_low={w:min(x.low for x in arr) for w,arr in weekly.items()}
+    day_low=_complete_utc_day_lows(daily)
+    week_low=_complete_utc_week_lows(day_low)
     # CAND-001, 008, 010, 012 enter at the first M1 open of the next M5 bucket.
     # The first M1 candle may be the live, still-forming candle supplied by the observer.
     for i in range(1,len(m5)):
