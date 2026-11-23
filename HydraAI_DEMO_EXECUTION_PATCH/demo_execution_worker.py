@@ -47,11 +47,9 @@ def save_state(state: dict) -> None:
     tmp.replace(STATE_PATH)
 
 def candidate_rule_rejection(candidate_id: str) -> str | None:
-    # The chosen candidate is Previous Day Low Breakout CALL, but the exact
-    # price-action trigger was never finalized. The checked-in condition is
-    # a close crossing below the prior low; do not execute on an assumption.
-    if candidate_id == "CAND-010":
-        return "CAND-010 blocked: exact Previous Day Low Breakout CALL trigger needs confirmation"
+    # CAND-010 is a directional downside breakout: a completed M5 candle
+    # crosses and closes below the previous completed UTC-day low -> PUT.
+    # A reclaim above that level is a separate reversal setup, not this rule.
     return None
 
 
