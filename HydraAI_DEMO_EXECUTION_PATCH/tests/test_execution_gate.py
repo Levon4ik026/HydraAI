@@ -1,5 +1,10 @@
 import unittest
+import json
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
+import demo_execution_worker as worker
 from demo_execution_worker import market_rejection, signal_rejection, verification_rejection
 
 class ExecutionGateTests(unittest.TestCase):
@@ -26,5 +31,33 @@ class ExecutionGateTests(unittest.TestCase):
         self.assertIsNone(verification_rejection(record, now))
         record["is_demo"] = False
         self.assertIn("DEMO EURUSD", verification_rejection(record, now))
+
+
+    def test_interrupted_submission_halts_on_restart_even_after_utc_day_change(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state_path = Path(folder) / "demo_execution_state.json"
+            state_path.write_text(json.dumps({
+                "date_utc": "2000-01-01",
+                "daily_loss_units": 0.0,
+                "signals": {"CAND-001|2026-11-22T12:00:00+00:00": {
+                    "status": "SUBMITTING", "candidate_id": "CAND-001"
+                }},
+                "halted": False,
+            }), encoding="utf-8")
+            with patch.object(worker, "STATE_PATH", state_path):
+                state = worker.load_state()
+            self.assertTrue(state["halted"])
+            self.assertIn("CAND-001|2026-11-22T12:00:00+00:00", state["signals"])
+            self.assertEqual(
+                state["halt_reason"],
+                "persisted order outcome requires manual broker-history reconciliation",
+            )
+
+    def test_stale_verification_is_rejected(self):
+        now = datetime.now(timezone.utc)
+        record = {"status":"VERIFIED","verified_at_utc":(now-timedelta(days=31)).isoformat(),
+                  "deal_id":"demo-123","asset":"EURUSD","is_demo":True,
+                  "closed":True,"amount":1,"expiry_seconds":300}
+        self.assertIn("older than 30 days", verification_rejection(record, now))
 
 if __name__ == "__main__": unittest.main()
