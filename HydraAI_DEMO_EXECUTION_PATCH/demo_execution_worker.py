@@ -107,10 +107,21 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
         emit("DAILY_STOP", reason=f"next full-stake loss would exceed {DAILY_LOSS_LIMIT:.1f} units"); return
     signal_key = candidate_id + "|" + str(command.get("signal_time", ""))
     if signal_key in state["signals"]: emit("DUPLICATE_BLOCKED", candidate_id=candidate_id, signal_key=signal_key); return
+    try:
+        open_positions = await adapter.get_open_positions()
+    except Exception as exc:
+        emit("BLOCKED", candidate_id=candidate_id,
+             reason=f"broker open-position state is unverified; no order sent: {exc}")
+        return
+    if not isinstance(open_positions, list):
+        emit("BLOCKED", candidate_id=candidate_id,
+             reason="broker open-position response is invalid; no order sent")
+        return
     gate = DemoExecutionGate(account_mode="DEMO", instrument="EURUSD", otc=False,
                              broker_adapter_verified=adapter_verification_ok(), explicit_live_authorization=False)
     ok, gate_reason = gate.can_submit(feed_ok=True, payout=float(snapshot["payout_ratio"]),
-                                     open_positions=0, daily_loss_units=float(state.get("daily_loss_units", 0.0)),
+                                     open_positions=len(open_positions),
+                                     daily_loss_units=float(state.get("daily_loss_units", 0.0)),
                                      max_daily_loss_units=DAILY_LOSS_LIMIT)
     if not ok: emit("REJECTED", candidate_id=candidate_id, reason=gate_reason); return
     state["signals"][signal_key] = {"status":"SUBMITTING","candidate_id":candidate_id,
