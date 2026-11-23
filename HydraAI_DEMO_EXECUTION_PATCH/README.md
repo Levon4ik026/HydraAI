@@ -55,9 +55,9 @@ The previous closed-market diagnostic reported EURUSD timeframes [60, 120, 180, 
 
 Source-level safety tests pass, but the following release blockers remain:
 
-- CAND-010 is fail-closed in the worker. Its checked-in signal is a downside break/PUT, while the approved candidate is Previous Day Low Breakout/CALL; the exact CALL trigger still needs implementation and a dedicated test.
+- CAND-010 is the previously agreed Previous UTC-day low breakdown: a completed M5 candle crosses the prior UTC-day low from above; direction PUT; expiry 60 minutes. A regression test should preserve this exact rule.
 - The adaptive selector requires at least 100 forward outcomes per candidate in the matching regime, positive expectancy, a 95% Wilson lower bound above break-even, and drawdown <= 3 units. The patch does not include a validated seed-statistics file, so a fresh install will remain WAIT until enough forward data has accumulated.
-- CAND-008 and CAND-010 require 30/60-minute expiry respectively. They may only execute when Pocket Option's live EURUSD metadata explicitly advertises those durations; do not infer expiry support from chart timeframes.
+- CAND-008 uses 30-minute expiry and CAND-010 uses 60-minute expiry. The user confirmed both durations are available in Pocket Option. Keep a runtime expiry check as a final safeguard.
 - This repository folder is an overlay patch, not a complete standalone HydraAI distribution. The target integrated project must already contain its base GUI/feed modules and dependencies.
 - Broker connectivity, account-wide open-position refresh, the explicit one-trade verification, and a Windows EXE build have not been exercised in the user's DEMO environment.
 
