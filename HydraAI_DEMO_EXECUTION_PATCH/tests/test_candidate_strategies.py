@@ -105,17 +105,25 @@ class CandidateStrategyTests(unittest.TestCase):
     def test_cand008_weekly_low_sweep_reclaim_uses_approved_put_30m(self):
         start = datetime(2026, 1, 5, tzinfo=timezone.utc)  # Monday 00:00 UTC
         m1 = []
-        total_minutes = 7 * 24 * 60 + 6
+        # Four full UTC weekdays plus Friday through the New York 17:00 close.
+        previous_week_minutes = 4 * 24 * 60 + 22 * 60
         price = 1.1000
-        for minute in range(total_minutes):
+        for minute in range(previous_week_minutes):
             ts = start + timedelta(minutes=minute)
             op = price
             if minute == 100:
                 low, close, high = 1.0990, 1.1000, 1.1002
-            elif 7 * 24 * 60 <= minute < 7 * 24 * 60 + 5:
-                low, close, high = 1.0985, 1.1002, 1.1003
             else:
                 low, close, high = 1.0998, 1.1000, 1.1002
+            m1.append(Candle(ts, op, high, low, close))
+            price = close
+
+        # New UTC week starts after the weekend; first M5 candle sweeps/reclaims.
+        current_week_start = start + timedelta(days=7)
+        for minute in range(6):
+            ts = current_week_start + timedelta(minutes=minute)
+            op = price
+            low, close, high = 1.0985, 1.1002, 1.1003
             m1.append(Candle(ts, op, high, low, close))
             price = close
 
@@ -155,6 +163,43 @@ class CandidateStrategyTests(unittest.TestCase):
         self.assertTrue(signals, "a downside shock beyond the prior-20-session threshold should signal")
         self.assertTrue(all(s.direction == "CALL" for s in signals))
         self.assertTrue(all(s.expiry_minutes == 30 for s in signals))
+
+
+    def test_cand010_ignores_partial_previous_utc_day(self):
+        start = datetime(2026, 1, 5, 12, 0, tzinfo=timezone.utc)
+        m1 = []
+        price = 1.1000
+        for minute in range(12 * 60 + 6):
+            ts = start + timedelta(minutes=minute)
+            op = price
+            if minute < 12 * 60:
+                low, close, high = 1.0990, 1.1000, 1.1002
+            else:
+                low, close, high = 1.0980, 1.0985, 1.0987
+            m1.append(Candle(ts, op, high, low, close))
+            price = close
+        signals = [s for s in candidate_signals(m1) if s.candidate_id == "CAND-010"]
+        self.assertFalse(signals, "a partial previous UTC day must not define a breakout level")
+
+    def test_cand008_ignores_partial_previous_utc_week(self):
+        start = datetime(2026, 1, 5, 12, 0, tzinfo=timezone.utc)
+        m1 = []
+        price = 1.1000
+        # Partial days cannot be promoted to a completed weekly reference level.
+        for minute in range(4 * 12 * 60):
+            ts = start + timedelta(minutes=minute)
+            op = price
+            low, close, high = 1.0990, 1.1000, 1.1002
+            m1.append(Candle(ts, op, high, low, close))
+            price = close
+        current_week_start = datetime(2026, 1, 12, tzinfo=timezone.utc)
+        for minute in range(6):
+            ts = current_week_start + timedelta(minutes=minute)
+            op = price
+            m1.append(Candle(ts, op, 1.1003, 1.0980, 1.1002))
+            price = 1.1002
+        signals = [s for s in candidate_signals(m1) if s.candidate_id == "CAND-008"]
+        self.assertFalse(signals, "a partial prior UTC week must not define a sweep level")
 
 
 if __name__ == "__main__":
