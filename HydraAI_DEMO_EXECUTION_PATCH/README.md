@@ -48,9 +48,6 @@ For EXE distribution:
 .\.venv\Scripts\pyinstaller.exe --clean --noconfirm .\HydraDemoExecution.spec
 The worker EXE must be at HydraDemoExecution\HydraDemoExecution.exe under the HydraAI distribution root.
 
-## Expiry caveat
-The previous closed-market diagnostic reported EURUSD timeframes [60, 120, 180, 300] seconds. That does not establish availability of 30- or 60-minute expiries. The worker rejects any expiry absent from current live metadata. With that reported list, five-minute candidates may pass; 30- and 60-minute candidates are blocked until the broker actually advertises those durations.
-
 ## Release status — not yet approved for automatic DEMO trading
 
 Source-level safety tests pass, but the following release blockers remain:
