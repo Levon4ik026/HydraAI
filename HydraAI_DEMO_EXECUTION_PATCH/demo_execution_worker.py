@@ -83,15 +83,6 @@ def market_rejection(snapshot: dict, expiry_minutes: int) -> str | None:
     if float(snapshot.get("metadata_age_seconds", 999999)) > 45: return "broker asset metadata is stale"
     return None
 
-def candidate_rule_rejection(candidate_id: str) -> str | None:
-    # CAND-010's checked-in trigger is a downside break (PUT), while the
-    # approved candidate is Previous Day Low Breakout CALL. The exact CALL
-    # trigger was not finalized, so fail closed rather than send the inverse.
-    if candidate_id == "CAND-010":
-        return "CAND-010 is disabled: approved Previous Day Low Breakout CALL rule is not implemented"
-    return None
-
-
 def signal_rejection(command: dict, now: datetime) -> str | None:
     try:
         tick_time, entry_time = parse_utc(command["tick_time"]), parse_utc(command["entry_time"])
@@ -106,10 +97,6 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
     expiry = int(command.get("expiry_minutes", 0))
     if candidate_id not in ALLOWED_CANDIDATES or direction not in {"CALL", "PUT"} or expiry not in {5, 30, 60}:
         emit("REJECTED", reason="invalid candidate/direction/expiry"); return
-    rule_reason = candidate_rule_rejection(candidate_id)
-    if rule_reason:
-        emit("BLOCKED_SPEC", candidate_id=candidate_id, reason=rule_reason)
-        return
     reason = signal_rejection(command, datetime.now(timezone.utc))
     if reason: emit("REJECTED", candidate_id=candidate_id, reason=reason); return
     snapshot = await adapter.get_market_snapshot()
