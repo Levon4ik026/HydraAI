@@ -47,6 +47,8 @@ def save_state(state: dict) -> None:
     tmp.replace(STATE_PATH)
 
 def verification_rejection(data: dict, now: datetime) -> str | None:
+    if data.get("status") != "VERIFIED":
+        return "DEMO order verification status is not VERIFIED"
     try:
         verified_at = parse_utc(data["verified_at_utc"])
     except Exception:
@@ -54,8 +56,6 @@ def verification_rejection(data: dict, now: datetime) -> str | None:
     age = (now - verified_at).total_seconds()
     if age < -60 or age > 30 * 24 * 3600:
         return "DEMO order verification is older than 30 days or timestamp is in the future"
-    if data.get("status") != "VERIFIED":
-        return "DEMO order verification status is not VERIFIED"
     if data.get("asset") != "EURUSD" or data.get("is_demo") is not True:
         return "verification was not for DEMO EURUSD"
     if data.get("closed") is not True or not data.get("deal_id"):
