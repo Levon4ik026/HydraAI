@@ -172,7 +172,7 @@ def candidate_signals(candles:list[Candle])->list[Signal]:
         previous_weeks=[w for w in week_low if w<current_week]
         prev_key=max(previous_weeks) if previous_weeks else None
         if prev_key is not None and c.low<week_low[prev_key] and c.close>week_low[prev_key] and c.close>c.open:
-            out.append(Signal("CAND-008","Previous UTC-week low sweep/reclaim","CALL",c.timestamp.isoformat(),entry_time.isoformat(),30,entry_candle.open,f"M5 swept and reclaimed prior UTC-week low {week_low[prev_key]:.5f}"))
+            out.append(Signal("CAND-008","Previous UTC-week low sweep/reclaim","PUT",c.timestamp.isoformat(),entry_time.isoformat(),30,entry_candle.open,f"M5 swept and reclaimed prior UTC-week low {week_low[prev_key]:.5f}; approved PUT direction"))
         # CAND-010: close crosses below previous completed UTC-day low.
         previous_days=[d for d in day_low if d<c.timestamp.date()]
         prev_day=max(previous_days) if previous_days else None
