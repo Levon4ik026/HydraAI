@@ -34,7 +34,7 @@ class CandidateStrategyTests(unittest.TestCase):
 
         signals = [s for s in candidate_signals(m1) if s.candidate_id == "CAND-012"]
         self.assertTrue(signals, "synthetic trend reversal should produce a CAND-012 signal")
-        self.assertTrue(all(s.direction == "CALL" for s in signals))
+        self.assertTrue(all(s.direction == "PUT" for s in signals))
         self.assertTrue(all(s.expiry_minutes == 5 for s in signals))
 
 
