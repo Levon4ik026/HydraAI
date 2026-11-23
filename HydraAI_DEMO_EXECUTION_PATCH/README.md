@@ -7,6 +7,7 @@ Separate patch package. Existing research branch and original C:\HydraAI_Desktop
 - Uses completed candles for regime classification and outcome scoring; live M1 is only the next-minute entry reference.
 - Runs broker I/O in a separate worker process, not in the PySide6 GUI thread.
 - Strategy selection is filtered by the live expiry durations Pocket Option currently advertises; unsupported 30/60-minute candidates are not selected for execution.
+- Previous UTC day/week levels are calculated only from fully covered FX trading periods (Mon-Thu full UTC days; Friday through 17:00 New York). Partial days/weeks, weekends and missing M5 bars cannot create breakout/sweep levels. EMA warmup is required only by candidates that actually use EMA/RSI/ATR.
 - Reads EURUSD metadata from Pocket Option updateAssets. Metadata is trusted only when that event was seen within 45 seconds.
 - Checks active status, EURUSD identity, non-OTC, live payout >= 92%, and broker-listed expiry.
 - Fixed stake 1, one unresolved position at a time, no martingale, no blind retry.
