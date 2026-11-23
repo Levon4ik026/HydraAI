@@ -26,6 +26,16 @@ def load_state() -> dict:
     state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     if not isinstance(state, dict) or not isinstance(state.get("signals"), dict):
         raise RuntimeError("execution state is corrupt; refusing to trade")
+    # A process crash can leave a persisted SUBMITTING record before the
+    # exception handler marks it UNRESOLVED. Never clear that evidence on a
+    # new UTC day: broker history must be reconciled manually first.
+    unresolved = [
+        key for key, item in state["signals"].items()
+        if isinstance(item, dict) and item.get("status") in {"SUBMITTING", "UNRESOLVED"}
+    ]
+    if unresolved:
+        state["halted"] = True
+        state["halt_reason"] = "persisted order outcome requires manual broker-history reconciliation"
     today = datetime.now(timezone.utc).date().isoformat()
     if state.get("date_utc") != today and not state.get("halted"):
         state = {"date_utc": today, "daily_loss_units": 0.0, "signals": {}, "halted": False}
@@ -36,7 +46,16 @@ def save_state(state: dict) -> None:
     tmp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(STATE_PATH)
 
+def candidate_rule_rejection(candidate_id: str) -> str | None:
+    # CAND-010 is a directional downside breakout: a completed M5 candle
+    # crosses and closes below the previous completed UTC-day low -> PUT.
+    # A reclaim above that level is a separate reversal setup, not this rule.
+    return None
+
+
 def verification_rejection(data: dict, now: datetime) -> str | None:
+    if data.get("status") != "VERIFIED":
+        return "DEMO order verification status is not VERIFIED"
     try:
         verified_at = parse_utc(data["verified_at_utc"])
     except Exception:
@@ -44,8 +63,6 @@ def verification_rejection(data: dict, now: datetime) -> str | None:
     age = (now - verified_at).total_seconds()
     if age < -60 or age > 30 * 24 * 3600:
         return "DEMO order verification is older than 30 days or timestamp is in the future"
-    if data.get("status") != "VERIFIED":
-        return "DEMO order verification status is not VERIFIED"
     if data.get("asset") != "EURUSD" or data.get("is_demo") is not True:
         return "verification was not for DEMO EURUSD"
     if data.get("closed") is not True or not data.get("deal_id"):
@@ -87,6 +104,10 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
     expiry = int(command.get("expiry_minutes", 0))
     if candidate_id not in ALLOWED_CANDIDATES or direction not in {"CALL", "PUT"} or expiry not in {5, 30, 60}:
         emit("REJECTED", reason="invalid candidate/direction/expiry"); return
+    rule_reason = candidate_rule_rejection(candidate_id)
+    if rule_reason:
+        emit("BLOCKED_SPEC", candidate_id=candidate_id, reason=rule_reason)
+        return
     reason = signal_rejection(command, datetime.now(timezone.utc))
     if reason: emit("REJECTED", candidate_id=candidate_id, reason=reason); return
     snapshot = await adapter.get_market_snapshot()
@@ -97,10 +118,21 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
         emit("DAILY_STOP", reason=f"next full-stake loss would exceed {DAILY_LOSS_LIMIT:.1f} units"); return
     signal_key = candidate_id + "|" + str(command.get("signal_time", ""))
     if signal_key in state["signals"]: emit("DUPLICATE_BLOCKED", candidate_id=candidate_id, signal_key=signal_key); return
+    try:
+        open_positions = await adapter.get_open_positions()
+    except Exception as exc:
+        emit("BLOCKED", candidate_id=candidate_id,
+             reason=f"broker open-position state is unverified; no order sent: {exc}")
+        return
+    if not isinstance(open_positions, list):
+        emit("BLOCKED", candidate_id=candidate_id,
+             reason="broker open-position response is invalid; no order sent")
+        return
     gate = DemoExecutionGate(account_mode="DEMO", instrument="EURUSD", otc=False,
                              broker_adapter_verified=adapter_verification_ok(), explicit_live_authorization=False)
     ok, gate_reason = gate.can_submit(feed_ok=True, payout=float(snapshot["payout_ratio"]),
-                                     open_positions=0, daily_loss_units=float(state.get("daily_loss_units", 0.0)),
+                                     open_positions=len(open_positions),
+                                     daily_loss_units=float(state.get("daily_loss_units", 0.0)),
                                      max_daily_loss_units=DAILY_LOSS_LIMIT)
     if not ok: emit("REJECTED", candidate_id=candidate_id, reason=gate_reason); return
     state["signals"][signal_key] = {"status":"SUBMITTING","candidate_id":candidate_id,

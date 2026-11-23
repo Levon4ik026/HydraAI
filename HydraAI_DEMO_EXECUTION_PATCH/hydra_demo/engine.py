@@ -127,6 +127,51 @@ def _atr_series(m5:list[Candle], period:int=14)->list[Optional[float]]:
         if i>=period-1: out[i]=sum(trs[i-period+1:i+1])/period
     return out
 
+def _complete_utc_day_lows(daily: dict[date, list[Candle]]) -> dict[date, float]:
+    """Return lows only for fully observed FX trading days (Mon-Fri).
+
+    Mon-Thu require all 288 M5 bars. Friday ends at 17:00 New York time,
+    with the last expected M5 candle starting five minutes before that close.
+    Weekend/holiday/partial days are excluded rather than treated as complete.
+    """
+    complete = {}
+    for day, bars in daily.items():
+        if day.weekday() > 4:
+            continue
+        start = datetime.combine(day, time(0, 0), timezone.utc)
+        if day.weekday() < 4:
+            expected_last = start + timedelta(days=1, minutes=-5)
+        else:
+            ny_close = datetime.combine(day, time(17, 0), NY)
+            expected_last = ny_close.astimezone(timezone.utc) - timedelta(minutes=5)
+        expected_count = int((expected_last - start).total_seconds() // 300) + 1
+        ordered = sorted(bars, key=lambda x: x.timestamp)
+        if len(ordered) != expected_count:
+            continue
+        if ordered[0].timestamp != start or ordered[-1].timestamp != expected_last:
+            continue
+        if any((b.timestamp - a.timestamp).total_seconds() != 300
+               for a, b in zip(ordered, ordered[1:])):
+            continue
+        complete[day] = min(x.low for x in ordered)
+    return complete
+
+
+def _complete_utc_week_lows(daily_lows: dict[date, float]) -> dict[tuple[int, int], float]:
+    """Use a UTC week's low only when all five FX weekdays are complete."""
+    by_week = {}
+    for day, low in daily_lows.items():
+        iso = day.isocalendar()
+        by_week.setdefault((iso.year, iso.week), {})[day] = low
+    complete = {}
+    for week, days in by_week.items():
+        monday = date.fromisocalendar(week[0], week[1], 1)
+        weekdays = [monday + timedelta(days=i) for i in range(5)]
+        if all(day in days for day in weekdays):
+            complete[week] = min(days[day] for day in weekdays)
+    return complete
+
+
 def candidate_signals(candles:list[Candle])->list[Signal]:
     """Evaluate all five candidates on completed candles only; no future candle is used for a trigger."""
     if len(candles)<60:return []
@@ -148,39 +193,39 @@ def candidate_signals(candles:list[Candle])->list[Signal]:
         vals=[x.close for x in segment]
         se20=ema(vals,20); se50=ema(vals,50); srsi=rsi(vals,14); satr=_atr_series(segment,14)
         e20[left:right]=se20; e50[left:right]=se50; r14[left:right]=srsi; atr[left:right]=satr
-    # Previous completed UTC day/week levels, computed from M5 bars strictly before each signal bar.
-    daily={}; weekly={}
+    # Previous completed UTC day/week levels, computed from complete M5 periods only.
+    daily={}
     for c in m5:
-        d=c.timestamp.date(); iso=c.timestamp.isocalendar(); wk=(iso.year,iso.week)
-        daily.setdefault(d,[]).append(c); weekly.setdefault(wk,[]).append(c)
-    day_low={d:min(x.low for x in arr) for d,arr in daily.items()}
-    week_low={w:min(x.low for x in arr) for w,arr in weekly.items()}
+        daily.setdefault(c.timestamp.date(),[]).append(c)
+    day_low=_complete_utc_day_lows(daily)
+    week_low=_complete_utc_week_lows(day_low)
     # CAND-001, 008, 010, 012 enter at the first M1 open of the next M5 bucket.
     # The first M1 candle may be the live, still-forming candle supplied by the observer.
     for i in range(1,len(m5)):
         c=m5[i]; entry_time=c.timestamp+timedelta(minutes=5); entry_candle=m1_by_time.get(entry_time)
         if entry_candle is None: continue
-        if e20[i] is None or e50[i] is None: continue
-        if r14[i] is not None and atr[i] is not None and r14[i]>=70 and c.close<c.open and e20[i]>e50[i]:
-            # Percentile against the preceding 120 completed M5 ATR values (current excluded).
-            prior=[x for x in atr[max(segment_starts[i],i-120):i] if x is not None]
-            rank=(sum(x<=atr[i] for x in prior)/len(prior)*100) if len(prior)==120 else 0
-            if len(prior)==120 and rank>67:
-                out.append(Signal("CAND-001","RSI14 overbought + bearish M5","PUT",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,f"RSI14={r14[i]:.2f}; bearish M5; EMA20>EMA50; ATR percentile={rank:.1f}"))
+        # EMA/RSI/ATR gates apply only to candidates that explicitly use those indicators.
+        if e20[i] is not None and e50[i] is not None:
+            if r14[i] is not None and atr[i] is not None and r14[i]>=70 and c.close<c.open and e20[i]>e50[i]:
+                # Percentile against the preceding 120 completed M5 ATR values (current excluded).
+                prior=[x for x in atr[max(segment_starts[i],i-120):i] if x is not None]
+                rank=(sum(x<=atr[i] for x in prior)/len(prior)*100) if len(prior)==120 else 0
+                if len(prior)==120 and rank>67:
+                    out.append(Signal("CAND-001","RSI14 overbought + bearish M5","PUT",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,f"RSI14={r14[i]:.2f}; bearish M5; EMA20>EMA50; ATR percentile={rank:.1f}"))
         # CAND-008: previous completed UTC week low sweep and reclaim, bullish close.
         iso=c.timestamp.isocalendar(); current_week=(iso.year,iso.week)
         previous_weeks=[w for w in week_low if w<current_week]
         prev_key=max(previous_weeks) if previous_weeks else None
         if prev_key is not None and c.low<week_low[prev_key] and c.close>week_low[prev_key] and c.close>c.open:
-            out.append(Signal("CAND-008","Previous UTC-week low sweep/reclaim","CALL",c.timestamp.isoformat(),entry_time.isoformat(),30,entry_candle.open,f"M5 swept and reclaimed prior UTC-week low {week_low[prev_key]:.5f}"))
+            out.append(Signal("CAND-008","Previous UTC-week low sweep/reclaim","PUT",c.timestamp.isoformat(),entry_time.isoformat(),30,entry_candle.open,f"M5 swept and reclaimed prior UTC-week low {week_low[prev_key]:.5f}; approved inverse PUT"))
         # CAND-010: close crosses below previous completed UTC-day low.
         previous_days=[d for d in day_low if d<c.timestamp.date()]
         prev_day=max(previous_days) if previous_days else None
         if prev_day is not None and i>0 and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and m5[i-1].close>=day_low[prev_day] and c.close<day_low[prev_day]:
-            out.append(Signal("CAND-010","Previous UTC-day low breakdown","PUT",c.timestamp.isoformat(),entry_time.isoformat(),60,entry_candle.open,f"M5 close crossed below prior UTC-day low {day_low[prev_day]:.5f}"))
+            out.append(Signal("CAND-010","Previous UTC-day low breakdown","PUT",c.timestamp.isoformat(),entry_time.isoformat(),60,entry_candle.open,f"M5 close crossed below prior UTC-day low {day_low[prev_day]:.5f}; downside breakout continuation PUT"))
         # CAND-012: fresh bearish EMA20/EMA50 cross on completed M5.
-        if i>0 and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and e20[i-1] is not None and e50[i-1] is not None and e20[i-1]>=e50[i-1] and e20[i]<e50[i] and c.close<e20[i]:
-            out.append(Signal("CAND-012","EMA20/EMA50 bearish cross","PUT",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,"EMA20 crossed below EMA50; close below EMA20"))
+        if i>0 and e20[i-1] is not None and e50[i-1] is not None and e20[i] is not None and e50[i] is not None and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and e20[i-1]>=e50[i-1] and e20[i]<e50[i] and c.close<e20[i]:
+            out.append(Signal("CAND-012","EMA20/EMA50 bearish cross","CALL",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,"EMA20 crossed below EMA50; close below EMA20; approved inverse CALL"))
     # CAND-014: completed NY 18:00->17:00 session downside shock; enter next 18:00 M1.
     # Session candle timestamps are 18:00 through 16:59 NY (1380 minutes); 17:00-17:59 is excluded.
     sessions={}

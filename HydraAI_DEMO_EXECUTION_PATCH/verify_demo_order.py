@@ -36,6 +36,19 @@ async def main() -> int:
         if not snapshot or snapshot.get("status") != "ACTIVE":
             print("BLOCKED: EURUSD must be active, non-OTC and have a live payout >=92%. No order was sent.")
             return 3
+        if snapshot.get("symbol") != "EURUSD" or snapshot.get("is_otc") is not False:
+            print("BLOCKED: broker metadata does not positively confirm non-OTC EURUSD. No order was sent.")
+            return 3
+        if snapshot.get("active") is not True:
+            print("BLOCKED: EURUSD is not confirmed active. No order was sent.")
+            return 3
+        payout = snapshot.get("payout_ratio")
+        if not isinstance(payout, (int, float)) or not 0.92 <= payout <= 1:
+            print("BLOCKED: live payout is missing, invalid or below 92%. No order was sent.")
+            return 3
+        if not isinstance(snapshot.get("metadata_age_seconds"), (int, float)) or snapshot["metadata_age_seconds"] > 45:
+            print("BLOCKED: broker asset metadata is stale or unverified. No order was sent.")
+            return 3
         if 300 not in snapshot.get("timeframes_seconds", []):
             print("BLOCKED: Pocket Option does not currently advertise 300-second expiry. No order was sent.")
             return 4

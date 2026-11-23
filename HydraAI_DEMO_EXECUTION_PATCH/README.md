@@ -7,6 +7,7 @@ Separate patch package. Existing research branch and original C:\HydraAI_Desktop
 - Uses completed candles for regime classification and outcome scoring; live M1 is only the next-minute entry reference.
 - Runs broker I/O in a separate worker process, not in the PySide6 GUI thread.
 - Strategy selection is filtered by the live expiry durations Pocket Option currently advertises; unsupported 30/60-minute candidates are not selected for execution.
+- Previous UTC day/week levels are calculated only from fully covered FX trading periods (Mon-Thu full UTC days; Friday through 17:00 New York). Partial days/weeks, weekends and missing M5 bars cannot create breakout/sweep levels. EMA warmup is required only by candidates that actually use EMA/RSI/ATR.
 - Reads EURUSD metadata from Pocket Option updateAssets. Metadata is trusted only when that event was seen within 45 seconds.
 - Checks active status, EURUSD identity, non-OTC, live payout >= 92%, and broker-listed expiry.
 - Fixed stake 1, one unresolved position at a time, no martingale, no blind retry.
@@ -48,8 +49,15 @@ For EXE distribution:
 .\.venv\Scripts\pyinstaller.exe --clean --noconfirm .\HydraDemoExecution.spec
 The worker EXE must be at HydraDemoExecution\HydraDemoExecution.exe under the HydraAI distribution root.
 
-## Expiry caveat
-The previous closed-market diagnostic reported EURUSD timeframes [60, 120, 180, 300] seconds. That does not establish availability of 30- or 60-minute expiries. The worker rejects any expiry absent from current live metadata. With that reported list, five-minute candidates may pass; 30- and 60-minute candidates are blocked until the broker actually advertises those durations.
+## Release status — not yet approved for automatic DEMO trading
 
-## Release status
-Integration candidate, not a claim that live-market order execution has already been tested. First run compile/tests, then connect while EURUSD is open and confirm worker reports READY with market.status=ACTIVE, payout_percent >= 92 and intended expiry present. Do not enable DEMO auto execution before those checks.
+Source-level safety tests pass, but the following release blockers remain:
+
+- Frozen candidate directions: CAND-008 weekly-low sweep/reclaim → PUT, 30m; CAND-010 completed M5 close crossing below the previous completed UTC-day low → PUT, 60m; CAND-012 bearish EMA20/EMA50 cross with close below EMA20 → CALL, 5m. A reclaim above the prior-day low is a distinct reversal setup and is not mixed into CAND-010.
+- The adaptive selector requires at least 100 forward outcomes per candidate in the matching regime, positive expectancy, a 95% Wilson lower bound above break-even, and drawdown <= 3 units. The patch does not include a validated seed-statistics file, so a fresh install will remain WAIT until enough forward data has accumulated.
+- The user confirmed Pocket Option supports 30- and 60-minute expiries (and longer). Keep a runtime check against live EURUSD expiry availability as a final safeguard.
+- CAND-010 direction was corrected from CALL to PUT for the conventional downside-breakout continuation rule; synthetic coverage asserts direction and 60-minute expiry. This is a code/specification decision, not proof of profitability. The prior CALL label was inconsistent with the actual downside-break trigger.
+- This repository folder is an overlay patch, not a complete standalone HydraAI distribution. The target integrated project must already contain its base GUI/feed modules and dependencies.
+- Broker connectivity, account-wide open-position refresh, the explicit one-trade verification, and a Windows EXE build have not been exercised in the user's DEMO environment.
+
+Do not run verify_demo_order.py or enable DEMO auto execution until the integrated Windows project, broker connectivity, and account-wide open-position checks have been verified. CAND-010's rule is now explicit and covered by a synthetic test, but it is not forward-validated. REAL and OTC remain prohibited.
