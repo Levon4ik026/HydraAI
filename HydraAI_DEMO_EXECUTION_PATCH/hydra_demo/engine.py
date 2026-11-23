@@ -172,15 +172,15 @@ def candidate_signals(candles:list[Candle])->list[Signal]:
         previous_weeks=[w for w in week_low if w<current_week]
         prev_key=max(previous_weeks) if previous_weeks else None
         if prev_key is not None and c.low<week_low[prev_key] and c.close>week_low[prev_key] and c.close>c.open:
-            out.append(Signal("CAND-008","Previous UTC-week low sweep/reclaim","CALL",c.timestamp.isoformat(),entry_time.isoformat(),30,entry_candle.open,f"M5 swept and reclaimed prior UTC-week low {week_low[prev_key]:.5f}"))
+            out.append(Signal("CAND-008","Previous UTC-week low sweep/reclaim","PUT",c.timestamp.isoformat(),entry_time.isoformat(),30,entry_candle.open,f"M5 swept and reclaimed prior UTC-week low {week_low[prev_key]:.5f}; approved inverse PUT"))
         # CAND-010: close crosses below previous completed UTC-day low.
         previous_days=[d for d in day_low if d<c.timestamp.date()]
         prev_day=max(previous_days) if previous_days else None
         if prev_day is not None and i>0 and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and m5[i-1].close>=day_low[prev_day] and c.close<day_low[prev_day]:
-            out.append(Signal("CAND-010","Previous UTC-day low breakdown","PUT",c.timestamp.isoformat(),entry_time.isoformat(),60,entry_candle.open,f"M5 close crossed below prior UTC-day low {day_low[prev_day]:.5f}"))
+            out.append(Signal("CAND-010","Previous UTC-day low breakdown","CALL",c.timestamp.isoformat(),entry_time.isoformat(),60,entry_candle.open,f"M5 close crossed below prior UTC-day low {day_low[prev_day]:.5f}; approved inverse CALL"))
         # CAND-012: fresh bearish EMA20/EMA50 cross on completed M5.
         if i>0 and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and e20[i-1] is not None and e50[i-1] is not None and e20[i-1]>=e50[i-1] and e20[i]<e50[i] and c.close<e20[i]:
-            out.append(Signal("CAND-012","EMA20/EMA50 bearish cross","PUT",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,"EMA20 crossed below EMA50; close below EMA20"))
+            out.append(Signal("CAND-012","EMA20/EMA50 bearish cross","CALL",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,"EMA20 crossed below EMA50; close below EMA20; approved inverse CALL"))
     # CAND-014: completed NY 18:00->17:00 session downside shock; enter next 18:00 M1.
     # Session candle timestamps are 18:00 through 16:59 NY (1380 minutes); 17:00-17:59 is excluded.
     sessions={}
