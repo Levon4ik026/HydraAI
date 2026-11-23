@@ -46,6 +46,15 @@ def save_state(state: dict) -> None:
     tmp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(STATE_PATH)
 
+def candidate_rule_rejection(candidate_id: str) -> str | None:
+    # The chosen candidate is Previous Day Low Breakout CALL, but the exact
+    # price-action trigger was never finalized. The checked-in condition is
+    # a close crossing below the prior low; do not execute on an assumption.
+    if candidate_id == "CAND-010":
+        return "CAND-010 blocked: exact Previous Day Low Breakout CALL trigger needs confirmation"
+    return None
+
+
 def verification_rejection(data: dict, now: datetime) -> str | None:
     if data.get("status") != "VERIFIED":
         return "DEMO order verification status is not VERIFIED"
@@ -97,6 +106,10 @@ async def handle_signal(adapter: PocketOptionDemoAdapter, command: dict, state: 
     expiry = int(command.get("expiry_minutes", 0))
     if candidate_id not in ALLOWED_CANDIDATES or direction not in {"CALL", "PUT"} or expiry not in {5, 30, 60}:
         emit("REJECTED", reason="invalid candidate/direction/expiry"); return
+    rule_reason = candidate_rule_rejection(candidate_id)
+    if rule_reason:
+        emit("BLOCKED_SPEC", candidate_id=candidate_id, reason=rule_reason)
+        return
     reason = signal_rejection(command, datetime.now(timezone.utc))
     if reason: emit("REJECTED", candidate_id=candidate_id, reason=reason); return
     snapshot = await adapter.get_market_snapshot()
