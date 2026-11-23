@@ -177,7 +177,7 @@ def candidate_signals(candles:list[Candle])->list[Signal]:
         previous_days=[d for d in day_low if d<c.timestamp.date()]
         prev_day=max(previous_days) if previous_days else None
         if prev_day is not None and i>0 and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and m5[i-1].close>=day_low[prev_day] and c.close<day_low[prev_day]:
-            out.append(Signal("CAND-010","Previous UTC-day low breakdown","CALL",c.timestamp.isoformat(),entry_time.isoformat(),60,entry_candle.open,f"M5 close crossed below prior UTC-day low {day_low[prev_day]:.5f}; approved inverse CALL"))
+            out.append(Signal("CAND-010","Previous UTC-day low breakdown","PUT",c.timestamp.isoformat(),entry_time.isoformat(),60,entry_candle.open,f"M5 close crossed below prior UTC-day low {day_low[prev_day]:.5f}; downside breakout continuation PUT"))
         # CAND-012: fresh bearish EMA20/EMA50 cross on completed M5.
         if i>0 and (c.timestamp-m5[i-1].timestamp).total_seconds()==300 and e20[i-1] is not None and e50[i-1] is not None and e20[i-1]>=e50[i-1] and e20[i]<e50[i] and c.close<e20[i]:
             out.append(Signal("CAND-012","EMA20/EMA50 bearish cross","CALL",c.timestamp.isoformat(),entry_time.isoformat(),5,entry_candle.open,"EMA20 crossed below EMA50; close below EMA20; approved inverse CALL"))
