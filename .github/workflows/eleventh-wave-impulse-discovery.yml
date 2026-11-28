@@ -1,0 +1,60 @@
+name: Eleventh-wave abnormal impulse discovery
+on:
+  workflow_dispatch:
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/eleventh_wave_impulse_screen.py"
+      - ".github/workflows/eleventh-wave-impulse-discovery.yml"
+permissions:
+  contents: read
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hydra/research-validation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Set latest completed UTC date
+        shell: bash
+        run: |
+          END_DATE=$(date -u -d yesterday +%F)
+          echo "END_DATE=$END_DATE" >> "$GITHUB_ENV"
+      - name: Download EURUSD M1 BID history
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
+      - name: Resolve and verify raw data
+        shell: bash
+        run: |
+          FILE=$(find download -maxdepth 1 -type f -name "eurusd-m1-bid-2024-01-01-${END_DATE}.csv" -printf '%f\n' | sort | tail -n 1)
+          test -n "$FILE"
+          test -s "download/$FILE"
+          python - "$FILE" <<'PY'
+          import csv, sys
+          from pathlib import Path
+          p=Path("download") / sys.argv[1]
+          with p.open(newline="", encoding="utf-8-sig") as f:
+              r=csv.DictReader(f)
+              if not {"timestamp","open","high","low","close"}.issubset(r.fieldnames or []):
+                  raise SystemExit("Required OHLC columns missing")
+              count=sum(1 for _ in r)
+          if count < 100000:
+              raise SystemExit(f"Insufficient M1 history: {count}")
+          print(f"Verified {count:,} M1 rows in {p}")
+          PY
+          echo "DATA_FILE=download/$FILE" >> "$GITHUB_ENV"
+      - name: Run eleventh-wave abnormal impulse screen
+        run: python research/eleventh_wave_impulse_screen.py --data "$DATA_FILE" --out research/ELEVENTH_WAVE_IMPULSE_DISCOVERY.md
+      - name: Upload reproducibility report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-eleventh-wave-impulse-discovery-${{ github.run_id }}
+          path: research/ELEVENTH_WAVE_IMPULSE_DISCOVERY.md
+          if-no-files-found: error
+          retention-days: 90

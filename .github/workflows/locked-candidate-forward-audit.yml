@@ -1,0 +1,72 @@
+name: Locked candidate forward audit
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * *"
+  push:
+    branches: [hydra/research-validation]
+    paths:
+      - "research/locked_candidate_forward_audit.py"
+      - "research/standalone_strategy_screen.py"
+      - "research/long_history_validation.py"
+      - ".github/workflows/locked-candidate-forward-audit.yml"
+  pull_request:
+    branches: [hydra/stabilization]
+    paths:
+      - "research/locked_candidate_forward_audit.py"
+      - "research/standalone_strategy_screen.py"
+      - "research/long_history_validation.py"
+      - ".github/workflows/locked-candidate-forward-audit.yml"
+permissions:
+  contents: read
+jobs:
+  forward-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hydra/research-validation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Set latest completed UTC date
+        shell: bash
+        run: |
+          # Dukascopy --to is a UTC-midnight boundary; use today's date to include the full prior UTC day.
+          END_DATE=$(date -u +%F)
+          echo "END_DATE=$END_DATE" >> "$GITHUB_ENV"
+      - name: Download EURUSD M1 BID history
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
+      - name: Verify dataset
+        shell: bash
+        run: |
+          FILE=$(find download -maxdepth 1 -type f -name "eurusd-m1-bid-2024-01-01-${END_DATE}.csv" -printf '%f\n' | sort | tail -n 1)
+          test -n "$FILE"
+          test -s "download/$FILE"
+          python - "$FILE" <<'PY'
+          import csv, sys
+          from pathlib import Path
+          p=Path("download") / sys.argv[1]
+          with p.open(newline="", encoding="utf-8-sig") as f:
+              r=csv.DictReader(f)
+              if not {"timestamp","open","high","low","close"}.issubset(r.fieldnames or []):
+                  raise SystemExit("Required OHLC columns missing")
+              count=sum(1 for _ in r)
+          if count < 100000:
+              raise SystemExit(f"Insufficient M1 history: {count}")
+          print(f"Verified {count:,} M1 rows in {p}")
+          PY
+          echo "DATA_FILE=download/$FILE" >> "$GITHUB_ENV"
+      - name: Run locked prospective audit
+        run: python research/locked_candidate_forward_audit.py --data "$DATA_FILE" --out research/LOCKED_CANDIDATE_FORWARD_AUDIT.md
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-locked-candidate-forward-audit-${{ github.run_id }}
+          path: research/LOCKED_CANDIDATE_FORWARD_AUDIT.md
+          if-no-files-found: error
+          retention-days: 90

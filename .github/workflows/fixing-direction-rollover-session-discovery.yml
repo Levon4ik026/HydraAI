@@ -1,0 +1,95 @@
+name: Hydra direct fixing and rollover-excluded session discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - hydra/research-validation
+    paths:
+      - "research/fixing_direction_rollover_session_screen.py"
+      - "research/tests/test_fixing_direction_rollover_session_screen.py"
+      - "research-artifacts/fixing-direction-rollover-session-protocol-v1.md"
+      - ".github/workflows/fixing-direction-rollover-session-discovery.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hydra-fixing-direction-rollover-session
+  cancel-in-progress: false
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: hydra/research-validation
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run direct fixing/session unit tests
+        run: python -m unittest research.tests.test_fixing_direction_rollover_session_screen -v
+
+      - name: Set exclusive Dukascopy download end
+        shell: bash
+        run: |
+          END=$(date -u -d tomorrow +%F)
+          echo "END_DATE=$END" >> "$GITHUB_ENV"
+
+      - name: Download EURUSD M1 BID history
+        run: npx --yes dukascopy-node -i eurusd -from 2024-01-01 -to "$END_DATE" -t m1 -f csv -v
+
+      - name: Resolve and verify data file
+        shell: bash
+        run: |
+          FILE=$(find download -maxdepth 1 -type f -name 'eurusd-m1-bid-2024-01-01-*.csv' -printf '%f\n' | sort | tail -n 1)
+          test -n "$FILE"
+          test -s "download/$FILE"
+          echo "DATA_FILE=download/$FILE" >> "$GITHUB_ENV"
+          ls -lh "download/$FILE"
+
+      - name: Run preregistered direct fixing/session screen
+        run: |
+          python research/fixing_direction_rollover_session_screen.py \
+            --data "$DATA_FILE" \
+            --protocol research-artifacts/fixing-direction-rollover-session-protocol-v1.md \
+            --out-dir research-artifacts/fixing-direction-rollover-session
+
+      - name: Upload reproducibility artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydra-direct-fixing-rollover-session-${{ github.run_id }}
+          path: |
+            research-artifacts/fixing-direction-rollover-session/report.md
+            research-artifacts/fixing-direction-rollover-session/manifest.json
+            research-artifacts/fixing-direction-rollover-session/trades.csv
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish verified report on research branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research-artifacts/fixing-direction-rollover-session/report.md \
+                  research-artifacts/fixing-direction-rollover-session/manifest.json \
+                  research-artifacts/fixing-direction-rollover-session/trades.csv
+          if git diff --cached --quiet; then
+            echo "Discovery report unchanged; no commit required."
+          else
+            git commit -m "research: publish direct fixing and rollover session screen"
+            git fetch origin hydra/research-validation
+            git rebase origin/hydra/research-validation
+            git push origin "HEAD:hydra/research-validation"
+          fi
